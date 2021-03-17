@@ -688,6 +688,11 @@ config TARGET_BRPPT2
           Support
           B&R BRPPT2 platform
           based on Freescale's iMX6 SoC
+
+config TARGET_LOGOSNI8
+	bool "Logos Ni8"
+	depends on MX6S
+
 endchoice
 
 config SYS_SOC
@@ -747,5 +752,6 @@ source "board/udoo/neo/Kconfig"
 source "board/wandboard/Kconfig"
 source "board/warp/Kconfig"
 source "board/BuR/brppt2/Kconfig"
+source "board/logos/ni8/Kconfig"
 
 endif
