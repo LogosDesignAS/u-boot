@@ -464,6 +464,17 @@ config TARGET_NPI_IMX6ULL
 	select DM_THERMAL
 	select SUPPORT_SPL
 
+config TARGET_LOGOSNI8
+	bool "logosni8"
+	depends on MX6S
+	imply USB_ETHER_ASIX
+	imply USB_ETHER_MCS7830
+	imply USB_ETHER_SMSC95XX
+	imply USB_HOST_ETHER
+	source "board/logos/ni8/Kconfig"
+
+
+
 config TARGET_OPOS6ULDEV
 	bool "Armadeus OPOS6ULDev board"
 	depends on MX6UL
