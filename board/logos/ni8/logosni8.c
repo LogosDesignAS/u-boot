@@ -38,7 +38,7 @@
 //#include <netdev.h>
 //#include <usb/ehci-ci.h>
 
-// Enum for LEDs on the Logosni8 board
+// Enum for LEDs on the Logosni8 board - enum idea came from board/beckhoff/mx53cx9020
 enum LED_GPIOS {
 	GPIO_LED_2 = IMX_GPIO_NR(6, 7),
 	GPIO_LED_3 = IMX_GPIO_NR(6, 9)
@@ -176,14 +176,28 @@ int dram_init(void)
 	return 0;
 }
 
-static iomux_v3_cfg_t const uart1_pads[] = {
-	IOMUX_PAD_CTRL(SD3_DAT6__UART1_RX_DATA, UART_PAD_CTRL),
-	IOMUX_PAD_CTRL(SD3_DAT7__UART1_TX_DATA, UART_PAD_CTRL),
-};
-
+/* Configuration of UART2 for Logosni8 */
 static iomux_v3_cfg_t const uart2_pads[] = {
 	IOMUX_PAD_CTRL(EIM_D26__UART2_TX_DATA, UART_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_D27__UART2_RX_DATA, UART_PAD_CTRL),
+};
+
+/* Configuration of UART4 for Logosni8 */
+static iomux_v3_cfg_t const uart4_pads[] = {
+	IOMUX_PAD_CTRL(CSI0_DAT12__UART4_RX_DATA, UART_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_DAT13__UART4_TX_DATA, UART_PAD_CTRL),
+	// Configuring CTS and RTS
+	IOMUX_PAD_CTRL(CSI0_DAT16__UART4_RTS_B, UART_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_DAT17__UART4_CTS_B, UART_PAD_CTRL),
+};
+
+/* Configuration of UART5 for Logosni8 */
+static iomux_v3_cfg_t const uart5_pads[] = {
+	IOMUX_PAD_CTRL(CSI0_DAT14__UART5_TX_DATA, UART_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_DAT15__UART5_RX_DATA, UART_PAD_CTRL),
+	// Configuring CTS and RTS
+	IOMUX_PAD_CTRL(CSI0_DAT18__UART5_RTS_B, UART_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
 
 static struct i2c_pads_info i2c_pads[] = {
@@ -491,9 +505,9 @@ static iomux_v3_cfg_t const usb_pads[] = {
 
 static void setup_iomux_uart(void)
 {
-	SETUP_IOMUX_PADS(uart1_pads);
-
 	SETUP_IOMUX_PADS(uart2_pads);
+	SETUP_IOMUX_PADS(uart4_pads);
+	SETUP_IOMUX_PADS(uart5_pads);
 }
 
 #ifdef CONFIG_USB_EHCI_MX6
@@ -1011,7 +1025,9 @@ static void led_logosni8_party_light(void)
 	// This function will create a simple light demo - using the LED2 and LED3 - will run for 20 seconds
 	for (int i = 0; i < 60; i++) {
 		set_gpios(gpios_led_logosni8, ARRAY_SIZE(gpios_led_logosni8), 1);
-		udelay(1000*1000);    /* Wait 1 s to create a heartbeat */
+		for (int j = 0; j < 1000000; j++) {
+			cpu_relax();   /* Wait some time to create a heartbeat - udelay() is not available at board_early_init() */
+		}
 		set_gpios(gpios_led_logosni8, ARRAY_SIZE(gpios_led_logosni8), 0);
 	}
 
@@ -1027,7 +1043,7 @@ int board_early_init_f(void)
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
 
-	// This function creates a short demo of LED2 and LED3 on the Ni8 board.
+	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 	led_logosni8_party_light();
 
 	// Setup of GPIOs
@@ -1036,7 +1052,7 @@ int board_early_init_f(void)
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
 
-	// Early setup of UART
+	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
 
 	// Early setup of I2C
@@ -1210,6 +1226,7 @@ static const struct boot_mode board_boot_modes[] = {
 
 int misc_init_r(void)
 {
+/*
 	gpio_request(RGB_BACKLIGHT_GP, "lvds backlight");
 	gpio_request(LVDS_BACKLIGHT_GP, "lvds backlight");
 	gpio_request(GP_USB_OTG_PWR, "usbotg power");
@@ -1220,6 +1237,7 @@ int misc_init_r(void)
 	gpio_request(IMX_GPIO_NR(2, 3), "search");
 	gpio_request(IMX_GPIO_NR(7, 13), "volup");
 	gpio_request(IMX_GPIO_NR(4, 5), "voldown");
+*/
 #ifdef CONFIG_PREBOOT
 	preboot_keys();
 #endif
