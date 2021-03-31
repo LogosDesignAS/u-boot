@@ -37,6 +37,46 @@
 #include <netdev.h>
 #include <usb/ehci-ci.h>
 
+// Enum for LEDs on the Logosni8 board
+enum LED_GPIOS {
+	GPIO_LED_2 = IMX_GPIO_NR(6, 7),
+	GPIO_LED_3 = IMX_GPIO_NR(6, 9)
+};
+
+// Enum for GPIOs[0-11] on the Logosni8 board
+enum GPIOS {
+	GPIO_0				= IMX_GPIO_NR(1,  1),
+	GPIO_1				= IMX_GPIO_NR(4,  5),
+	GPIO_2				= IMX_GPIO_NR(1,  3),
+	GPIO_3				= IMX_GPIO_NR(1,  4),
+	GPIO_4				= IMX_GPIO_NR(2, 23),
+	GPIO_5				= IMX_GPIO_NR(2, 24),
+	GPIO_6				= IMX_GPIO_NR(3, 19),
+	GPIO_7				= IMX_GPIO_NR(3, 23),
+	GPIO_8				= IMX_GPIO_NR(3, 24),
+	GPIO_9				= IMX_GPIO_NR(3, 25),
+	GPIO_10				= IMX_GPIO_NR(3, 29),
+	GPIO_11				= IMX_GPIO_NR(3, 31),
+	GPIO_RESET			= IMX_GPIO_NR(6,  8),
+	GPIO_MCLK			= IMX_GPIO_NR(1,  2),
+	GPIO_CHARGER_PRSNT	= IMX_GPIO_NR(1,  7),
+	GPIO_CHARGING		= IMX_GPIO_NR(1,  8),
+	GPIO_PMIC_INT_B		= IMX_GPIO_NR(7, 13),
+	GPIO_CARRIER_PWR_ON	= IMX_GPIO_NR(6, 31)
+};
+
+// Enum for AFB_GPIOs[0-7] on the Logosni8 board
+enum AFB_GPIOS {
+	AFB_GPIO_0				= IMX_GPIO_NR(5, 19),
+	AFB_GPIO_1				= IMX_GPIO_NR(5, 18),
+	AFB_GPIO_2				= IMX_GPIO_NR(5, 21),
+	AFB_GPIO_3				= IMX_GPIO_NR(5, 20),
+	AFB_GPIO_4				= IMX_GPIO_NR(5, 22),
+	AFB_GPIO_5				= IMX_GPIO_NR(5, 23),
+	AFB_GPIO_6				= IMX_GPIO_NR(5, 24),
+	AFB_GPIO_7				= IMX_GPIO_NR(5, 25)
+};
+
 DECLARE_GLOBAL_DATA_PTR;
 #define GP_USB_OTG_PWR	IMX_GPIO_NR(3, 22)
 
@@ -72,6 +112,10 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_HYS | PAD_CTL_SRE_SLOW)
 
 #define OUTPUT_40OHM (PAD_CTL_SPEED_MED|PAD_CTL_DSE_40ohm)
+
+// Added a define for the Watchdog Padding - from freescale
+#define WDOG_PAD_CTRL (PAD_CTL_PUE | PAD_CTL_PKE | PAD_CTL_SPEED_MED |	\
+	PAD_CTL_DSE_40ohm)
 
 /* Prevent compiler error if gpio number 08 or 09 is used */
 #define not_octal(gp) ((((0x##gp >> 4) & 0xf) * 10) + ((0x##gp & 0xf)))
@@ -205,30 +249,217 @@ static iomux_v3_cfg_t const misc_pads[] = {
 	IOMUX_PAD_CTRL(EIM_D22__GPIO3_IO22, OUTPUT_40OHM),
 };
 
-/* wl1271 pads on nitrogen6x */
-static iomux_v3_cfg_t const wl12xx_pads[] = {
-	IOMUX_PAD_CTRL(NANDF_CS1__GPIO6_IO14, WEAK_PULLDOWN),
-	IOMUX_PAD_CTRL(NANDF_CS2__GPIO6_IO15, OUTPUT_40OHM),
-	IOMUX_PAD_CTRL(NANDF_CS3__GPIO6_IO16, OUTPUT_40OHM),
+/* LED2 and LED3 pads on logosni8 */
+static iomux_v3_cfg_t const ni8_led_pads[] = {
+
+	/* Configuration of LED1 (GREEN)  - On the board this is LED2 - see schematic page 10 */
+	IOMUX_PAD_CTRL(NANDF_CLE__GPIO6_IO07, OUTPUT_40OHM), //RGB_PAD_CTRL),  - Configured as output 40Ohms 	// TODO: Verify Padding
+
+	/* Configuration of LED2 (GREEN)  - On the board this is LED3 - see schematic page 10
+	 * Here it should be noted that there might be an small error on the schematic, where this is called NANDF_WP
+	 * But should be NANDF_WP_B as on the nitrogen 6 lite schematic page 2
+	 */
+	IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), //RGB_PAD_CTRL), - Configured as output 40Ohm 	// TODO: Verify Padding
 };
+
+/* I2C Pin Configuration on logosni8 */
+static iomux_v3_cfg_t const conf_i2c_pads[] = {
+	// Pin configuration for I2C
+
+	/* Configuration of GPIO_5 to I2C3_SCL - Here called I2C3_SCL in schematic - see schematic page 10  - Here the I2C pad is used*/
+	IOMUX_PAD_CTRL(GPIO_5__I2C3_SCL, I2C_PAD_CTRL),
+	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
+	IOMUX_PAD_CTRL(GPIO_6__I2C3_SDA, I2C_PAD_CTRL),
+};
+
+/* WatchDog Pin Configuration on logosni8 */
+static iomux_v3_cfg_t const conf_wdog_pads[] = {
+	// Pin configuration for the Watchdog
+
+	/* Configuration of GPIO_9 to WDOG1_B - Here called WDOG1_B in schematic  - see schematic page 10 */
+	// TODO: Make sure the the watch dog initialisation doesnt reset the device
+	IOMUX_PAD_CTRL(GPIO_9__WDOG1_B, WDOG_PAD_CTRL),
+};
+
+/* USB Pin Configuration on logosni8 */
+static iomux_v3_cfg_t const conf_usb_pads[] = {
+	// Pin configuration for USB
+
+	/* Configuration of GPIO_0 to USB_H1_PWR - Here called USB_1_PWREN in schematic - see schematic page 10 - The Same padding is used for USB on Nitrogen */
+	IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLUP)
+};
+
+/* GPIO Pin Configuration on logosni8 */
+static iomux_v3_cfg_t const conf_gpio_pads[] = {
+
+	// Pin configuration for GPIO[0-3]
+
+	/* Configuration of GPIO_1 to GPIO1_IO01 - Here called GPIO0 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, OUTPUT_40OHM),	// TODO: Verify Padding
+	/* Configuration of GPIO_3 to GPIO1_IO03 - Here called GPIO1 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, OUTPUT_40OHM),	// TODO: Verify Padding
+	/* Configuration of GPIO_19 to GPIO4_IO05 - Here called GPIO2 on schematic- see schematic page 10 */
+	IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, OUTPUT_40OHM),	// TODO: Verify Padding
+	/* Configuration of GPIO_4 to GPIO1_IO04 - Here called GPIO3 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, OUTPUT_40OHM), 	// TODO: Verify Padding
+
+	// Pin configuration for GPIO[4-11]
+
+	/* Configuration of EIM_CS0 to GPIO2_IO23 - Here called GPIO4 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, WEAK_PULLDOWN), // Used as input for Audio_IRQ  TODO: Verify Padding
+	/* Configuration of EIM_CS1 to GPIO2_IO24 - Here called GPIO5 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, NO_PAD_CTRL),
+	/* Configuration of EIM_D19 to GPIO3_IO19 - Here called GPIO6 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, NO_PAD_CTRL),
+	/* Configuration of EIM_D23 to GPIO3_IO23 - Here called GPIO7 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, NO_PAD_CTRL),
+	/* Configuration of EIM_D24 to GPIO3_IO24 - Here called GPIO8 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, NO_PAD_CTRL),
+	/* Configuration of EIM_D25 to GPIO3_IO25 - Here called GPIO9 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, NO_PAD_CTRL),
+	/* Configuration of EIM_D29 to GPIO3_IO29 - Here called GPIO10 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, NO_PAD_CTRL),
+	/* Configuration of EIM_D31 to GPIO3_IO31 - Here called GPIO11 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, NO_PAD_CTRL),
+
+
+	// Pin Configuration of GPIO_MCLK
+
+	/* Configuration of GPIO_2 to GPIO1_IO02 - Here called GPIO_MCLK on schematic - see schematic page 10 */
+	// TODO: Do not know how to set this to MCLK - Shouldn't this be for the GPIO_3, which has a Clk?
+	IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, OUTPUT_40OHM),	// TODO: Verify Padding
+
+	// Pin Configuration of GPIO_RESET
+
+	/* Configuration of GPIO_1 to GPIO6_IO08 - Here called GPIO_RESET in schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, OUTPUT_40OHM),	// TODO: Verify Padding
+
+	// Pin configuration for SMARC inputs - Charging and Charger_PRSNT
+
+	/* Configuration of GPIO_7 to GPIO1_IO07 - Here called Charger_PRSNT# in schematic (This is pull up in the schematic) - see schematic page 10 */
+
+	IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, WEAK_PULLDOWN),	// TODO: Verify Padding
+	/* Configuration of GPIO_8 to GPIO1_IO08 - Here called Charging# in schematic (This is pull up in the schematic) - see schematic page 10 */
+
+	IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, WEAK_PULLDOWN),	// TODO: Verify Padding
+
+	// Pin configuration for SMARC inputs - PMIC_INT_B
+
+	/* Configuration of GPIO_18 to GPIO7_IO13 - Here called PMIC_INIT_B in schematic  - see schematic page 10 */
+	IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, WEAK_PULLDOWN), // TODO: Verify padding
+
+	// Pin configuration for SMARC inputs - CARRIER_PWR_ON
+
+	/* Configuration of EIM_BCLK to GPIO6_IO31 - Here called CARRIER_PWR_ON in schematic  - see schematic page 10 */
+	IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, WEAK_PULLDOWN), // TODO: Verify padding
+};
+
+/* AFB_GPIO Pin Configuration on logosni8 */
+static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
+
+	// Pin configuration for AFB_GPIO[0-7]
+
+	/* Configuration of CSI0_MCLK to GPIO5_IO19 - Here called AFB_GPIO0 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, NO_PAD_CTRL),
+	/* Configuration of CSI0_PIXCLK to GPIO5_IO18 - Here called AFB_GPIO1 on schematic  - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18, NO_PAD_CTRL),
+	/* Configuration of CSI0_VSYNC to GPIO5_IO21 - Here called AFB_GPIO2 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, NO_PAD_CTRL),
+	/* Configuration of CSI0_DATA_EN to GPIO5_IO20 - Here called AFB_GPIO3 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20, NO_PAD_CTRL),
+	/* Configuration of CSI0_DAT4 to GPIO5_IO22 - Here called AFB_GPIO4 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, OUTPUT_40OHM),  // Controls LED6 on the Test Carrier 	// TODO: Verify Padding
+	/* Configuration of CSI0_DAT5 to GPIO5_IO23 - Here called AFB_GPIO5 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, OUTPUT_40OHM), // Controls LED5 on the Test Carrier	// TODO: Verify Padding
+	/* Configuration of CSI0_DAT6 to GPIO5_IO24 - Here called AFB_GPIO6 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, OUTPUT_40OHM), // Controls LED4 on the Test Carrier	// TODO: Verify Padding
+	/* Configuration of CSI0_DAT7 to GPIO5_IO25 - Here called AFB_GPIO07 on schematic - see schematic page 10 */
+	IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, OUTPUT_40OHM), // Controls LED3 on the Test Carrier	// TODO: Verify Padding
+};
+
 #define WL12XX_WL_IRQ_GP	IMX_GPIO_NR(6, 14)
 #define WL12XX_WL_ENABLE_GP	IMX_GPIO_NR(6, 15)
 #define WL12XX_BT_ENABLE_GP	IMX_GPIO_NR(6, 16)
 
-/* Button assignments for J14 */
-static iomux_v3_cfg_t const button_pads[] = {
-	/* Menu */
-	IOMUX_PAD_CTRL(NANDF_D1__GPIO2_IO01, BUTTON_PAD_CTRL),
-	/* Back */
-	IOMUX_PAD_CTRL(NANDF_D2__GPIO2_IO02, BUTTON_PAD_CTRL),
-	/* Labelled Search (mapped to Power under Android) */
-	IOMUX_PAD_CTRL(NANDF_D3__GPIO2_IO03, BUTTON_PAD_CTRL),
-	/* Home */
-	IOMUX_PAD_CTRL(NANDF_D4__GPIO2_IO04, BUTTON_PAD_CTRL),
-	/* Volume Down */
-	IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, BUTTON_PAD_CTRL),
-	/* Volume Up */
-	IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, BUTTON_PAD_CTRL),
+// Setup the GPIO pins on the Logosni8 board
+static void setup_iomux_gpio(void)
+{
+	// Add a GPIO request for all the GPIOs - without requesting a gpio the driver will not let us use the GPIOs
+	gpio_request(GPIO_0,				"GPIO_0");
+	gpio_request(GPIO_1,				"GPIO_1");
+	gpio_request(GPIO_2,				"GPIO_2");
+	gpio_request(GPIO_3,				"GPIO_3");
+	gpio_request(GPIO_4,				"GPIO_4");
+	gpio_request(GPIO_5,				"GPIO_5");
+	gpio_request(GPIO_6,				"GPIO_6");
+	gpio_request(GPIO_7,				"GPIO_7");
+	gpio_request(GPIO_8,				"GPIO_8");
+	gpio_request(GPIO_9,				"GPIO_9");
+	gpio_request(GPIO_10,				"GPIO_10");
+	gpio_request(GPIO_11,				"GPIO_11");
+	gpio_request(GPIO_RESET,			"GPIO_RESET");
+	gpio_request(GPIO_MCLK,				"GPIO_MCLK");
+	gpio_request(GPIO_CHARGING,			"GPIO_CHARGING");
+	gpio_request(GPIO_PMIC_INT_B, 		"GPIO_PMIC_INT_B");
+    gpio_request(GPIO_CHARGER_PRSNT,	"GPIO_CHARGER_PRSNT");
+	gpio_request(GPIO_CARRIER_PWR_ON,	"GPIO_CARRIER_PWR_ON");
+
+	// Setup the rest of the GPIO pins and the corresponding padding for the i.MX6U -
+	SETUP_IOMUX_PADS(conf_gpio_pads);
+
+	// Setup the GPIOs as Input if specified on the Schematic and Test Carrier board
+	gpio_direction_input(GPIO_CHARGER_PRSNT);	// CHARGER_PRNST#
+	gpio_direction_input(GPIO_CHARGING);		// CHARGING#
+	gpio_direction_input(GPIO_PMIC_INT_B);		// PMIC_INT_B
+	gpio_direction_input(GPIO_4);				// GPIO_4 -> AUDIO_IRQ
+
+	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
+	gpio_direction_output(GPIO_MCLK, 0);		// GPIO_MCLK
+	gpio_direction_output(GPIO_RESET, 0);		// GPIO_RESET
+	gpio_direction_output(GPIO_0, 0);			// GPIO_0 -> S_D_INT
+	gpio_direction_output(GPIO_1, 0);			// GPIO_1 -> AUDIO_AMP_EN
+	gpio_direction_output(GPIO_2, 0);			// GPIO_2 -> SOUND2
+	gpio_direction_output(GPIO_3, 0);			// GPIO_3 -> SOUND1
+
+	// After setting up the GPIOs - Set one LED on and one off, to signal how fare the bootup is.
+	gpio_set_value(GPIO_LED_2, 1);
+	gpio_set_value(GPIO_LED_3, 0);
+};
+// Setup AFB_GPIOs - which goes to AFB[0-7] on the SMARC interface- Are mapped to GPIOs on the Test Carrier board
+static void setup_iomux_afb_gpio(void)
+{
+	// Add a GPIO request for all the GPIOs - without requesting a gpio the driver will not let us use the GPIOs
+	gpio_request(AFB_GPIO_0,				"AFB_GPIO_0");
+	gpio_request(AFB_GPIO_1,				"AFB_GPIO_1");
+	gpio_request(AFB_GPIO_2,				"AFB_GPIO_2");
+	gpio_request(AFB_GPIO_3,				"AFB_GPIO_3");
+	gpio_request(AFB_GPIO_4,				"AFB_GPIO_4");
+	gpio_request(AFB_GPIO_5,				"AFB_GPIO_5");
+	gpio_request(AFB_GPIO_6,				"AFB_GPIO_6");
+	gpio_request(AFB_GPIO_7,				"AFB_GPIO_7");
+
+	// Setup the rest of the AFB_GPIO pins and the corresponding padding for the i.MX6U -
+	SETUP_IOMUX_PADS(conf_afb_gpio_pads);
+
+	// Setup the AFB GPIOs as Output if specified on the Schematic - Also configured for the Test Carrier
+	gpio_direction_output(AFB_GPIO_4, 1);			// AFB_GPIO_4 -> LED6 on the Test Carrier Board
+	gpio_direction_output(AFB_GPIO_5, 0);			// AFB_GPIO_5 -> LED5 on the Test Carrier Board
+	gpio_direction_output(AFB_GPIO_6, 1);			// AFB_GPIO_6 -> LED4 on the Test Carrier Board
+	gpio_direction_output(AFB_GPIO_7, 0);			// AFB_GPIO_7 -> LED3 on the Test Carrier Board
+}
+// Setup the LEDS on the Logosni8 board
+static void setup_iomux_leds(void)
+{
+	// Add a GPIO request for the two LEDS
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
+
+	// Setup the LEDS and the corresponding padding
+	SETUP_IOMUX_PADS(ni8_led_pads);
+
+	// Setup the LEDs as Output
+	gpio_direction_output(GPIO_LED_2, 0);			// LED2
+	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 };
 
 static void setup_iomux_enet(void)
@@ -367,11 +598,6 @@ free_phydev:
 free_bus:
 	free(bus);
 	return ret;
-}
-
-static void setup_buttons(void)
-{
-	SETUP_IOMUX_PADS(button_pads);
 }
 
 #if defined(CONFIG_VIDEO_IPUV3)
@@ -760,43 +986,7 @@ static void setup_display(void)
 }
 #endif
 
-static iomux_v3_cfg_t const init_pads[] = {
-	/* SGTL5000 sys_mclk */
-	IOMUX_PAD_CTRL(GPIO_0__CCM_CLKO1, OUTPUT_40OHM),
-
-	/* J5 - Camera MCLK */
-	IOMUX_PAD_CTRL(GPIO_3__CCM_CLKO2, OUTPUT_40OHM),
-
-	/* wl1271 pads on nitrogen6x */
-	/* WL12XX_WL_IRQ_GP */
-	IOMUX_PAD_CTRL(NANDF_CS1__GPIO6_IO14, WEAK_PULLDOWN),
-	/* WL12XX_WL_ENABLE_GP */
-	IOMUX_PAD_CTRL(NANDF_CS2__GPIO6_IO15, OUTPUT_40OHM),
-	/* WL12XX_BT_ENABLE_GP */
-	IOMUX_PAD_CTRL(NANDF_CS3__GPIO6_IO16, OUTPUT_40OHM),
-	/* USB otg power */
-	IOMUX_PAD_CTRL(EIM_D22__GPIO3_IO22, OUTPUT_40OHM),
-	IOMUX_PAD_CTRL(NANDF_D5__GPIO2_IO05, OUTPUT_40OHM),
-	IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM),
-	IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, OUTPUT_40OHM),
-	IOMUX_PAD_CTRL(GPIO_6__GPIO1_IO06, OUTPUT_40OHM),
-};
-
 #define WL12XX_WL_IRQ_GP	IMX_GPIO_NR(6, 14)
-
-static unsigned gpios_out_low[] = {
-	/* Disable wl1271 */
-	IMX_GPIO_NR(6, 15),	/* disable wireless */
-	IMX_GPIO_NR(6, 16),	/* disable bluetooth */
-	IMX_GPIO_NR(3, 22),	/* disable USB otg power */
-	IMX_GPIO_NR(2, 5),	/* ov5640 mipi camera reset */
-	IMX_GPIO_NR(1, 8),	/* ov5642 reset */
-};
-
-static unsigned gpios_out_high[] = {
-	IMX_GPIO_NR(1, 6),	/* ov5642 powerdown */
-	IMX_GPIO_NR(6, 9),	/* ov5640 mipi camera power down */
-};
 
 static void set_gpios(unsigned *p, int cnt, int val)
 {
@@ -806,17 +996,54 @@ static void set_gpios(unsigned *p, int cnt, int val)
 		gpio_direction_output(*p++, val);
 }
 
+
+static unsigned gpios_led_logosni8[] = {
+	GPIO_LED_2, /* LED 2 - LogosNi8 */
+	GPIO_LED_3, /* LED 3 - LogosNi8 */
+};
+
+// TODO: Remove this demo function before merging into the main branch
+static void led_logosni8_party_light(void)
+{
+	// This function will create a simple light demo - using the LED2 and LED3 - will run for 20 seconds
+	for (int i = 0; i < 60; i++) {
+		set_gpios(gpios_led_logosni8, ARRAY_SIZE(gpios_led_logosni8), 1);
+		udelay(1000*1000);    /* Wait 1 s to create a heartbeat */
+		set_gpios(gpios_led_logosni8, ARRAY_SIZE(gpios_led_logosni8), 0);
+	}
+
+	// After the initial heartbeat start the more serious stuff will initiate - Namely "Something - rename
+	// Insert some more LED config here, to make a nice demo.
+	gpio_set_value(GPIO_LED_2, 1);
+	gpio_set_value(GPIO_LED_3, 1);
+}
+
+// TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_f(void)
 {
+	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
+	setup_iomux_leds();
+
+	// This function creates a short demo of LED2 and LED3 on the Ni8 board.
+	led_logosni8_party_light();
+
+	// Setup of GPIOs
+	setup_iomux_gpio();
+
+	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
+	setup_iomux_afb_gpio();
+
+	// Early setup of UART
 	setup_iomux_uart();
 
-	set_gpios(gpios_out_high, ARRAY_SIZE(gpios_out_high), 1);
-	set_gpios(gpios_out_low, ARRAY_SIZE(gpios_out_low), 0);
-	gpio_direction_input(WL12XX_WL_IRQ_GP);
+	// Early setup of I2C
+	SETUP_IOMUX_PADS(conf_i2c_pads);
 
-	SETUP_IOMUX_PADS(wl12xx_pads);
-	SETUP_IOMUX_PADS(init_pads);
-	setup_buttons();
+	// Early setup of USB
+	SETUP_IOMUX_PADS(conf_usb_pads);
+
+	// Early setup of Watchdog - might be needed earlier
+	SETUP_IOMUX_PADS(conf_wdog_pads);
 
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
@@ -835,6 +1062,7 @@ int overwrite_console(void)
 
 int board_init(void)
 {
+	// Setting up I2C and USB
 	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	struct i2c_pads_info *p = i2c_pads;
 	int i;
@@ -858,6 +1086,7 @@ int board_init(void)
 	setup_spi();
 #endif
 	SETUP_IOMUX_PADS(usdhc2_pads);
+
 	for (i = 0; i < I2C_BUS_CNT; i++) {
 		setup_i2c(i, CONFIG_SYS_I2C_SPEED, 0x7f, p);
 		p += stride;
@@ -872,10 +1101,11 @@ int board_init(void)
 
 int checkboard(void)
 {
+/*
 	int ret = gpio_get_value(WL12XX_WL_IRQ_GP);
 
 	if (ret < 0) {
-		/* The gpios have not been probed yet. Read it myself */
+		// The gpios have not been probed yet. Read it myself
 		struct gpio_regs *regs = (struct gpio_regs *)GPIO6_BASE_ADDR;
 		int gpio = WL12XX_WL_IRQ_GP & 0x1f;
 
@@ -885,6 +1115,9 @@ int checkboard(void)
 		puts("Board: Nitrogen6X\n");
 	else
 		puts("Board: SABRE Lite\n");
+*/
+	// Print the correct board name out
+	puts("Board: NiCore8 - Logosni8\n");
 
 	return 0;
 }
