@@ -643,22 +643,6 @@ config TARGET_BRPPT2
           based on Freescale's iMX6 SoC
 
 
-config TARGET_O4_IMX6ULL_NANO
-	bool "O4-iMX6ULL-NANO"
-	depends on MX6ULL
-	select BOARD_LATE_INIT
-	select DM
-	select DM_THERMAL
-	imply CMD_DM
-	help
-	  Support for www.out4.ru O4-iMX6UL-NANO platform
-	  based on Freescale's i.MX6UL/i.MX6ULL SoC.
-
-config TARGET_LOGOSNI8
-	bool "Logos Ni8"
-	depends on MX6S
-
-
 endchoice
 
 config SYS_SOC

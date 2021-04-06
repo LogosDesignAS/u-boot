@@ -15,7 +15,7 @@
 /* TODO Is set to 1 for all other iMX6 boards.
  * Our SDRAM is listed with 8 banks in the datasheet, so should it be 3 (2**3=8)?
  */
-//#define CONFIG_NR_DRAM_BANKS            1
+#define CONFIG_NR_DRAM_BANKS            1
 #define CONFIG_SYS_MAX_FLASH_BANKS      1
 #define CONFIG_SYS_MALLOC_LEN           (10 * SZ_1M)
 #define CONFIG_SYS_FSL_ESDHC_ADDR       0
