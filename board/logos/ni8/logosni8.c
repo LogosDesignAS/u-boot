@@ -22,8 +22,7 @@
 #include <linux/errno.h>
 #include <asm/gpio.h>
 #include <asm/mach-imx/iomux-v3.h>
-#include <asm/mach-imx/mxc_i2c.h>
-//#include <asm/mach-imx/sata.h>
+#include <asm/mach-imx/sata.h>
 #include <asm/mach-imx/spi.h>
 #include <asm/mach-imx/boot_mode.h>
 //#include <asm/mach-imx/video.h>
@@ -32,11 +31,15 @@
 #include <miiphy.h>
 //#include <netdev.h>
 #include <asm/arch/crm_regs.h>
-//#include <asm/arch/mxc_hdmi.h>
-#include <i2c.h>
+#include <asm/arch/mxc_hdmi.h>
 #include <input.h>
 //#include <netdev.h>
 //#include <usb/ehci-ci.h>
+
+#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
+	#include <i2c.h>
+	#include <asm/mach-imx/mxc_i2c.h>
+#endif
 
 // Enum for LEDs on the Logosni8 board - enum idea came from board/beckhoff/mx53cx9020
 enum LED_GPIOS {
@@ -200,6 +203,7 @@ static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
 
+#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 static struct i2c_pads_info i2c_pads[] = {
 	/* I2C1, SGTL5000 */
 	I2C_PADS_INFO_ENTRY(I2C1, EIM_D21, 3, 21, EIM_D28, 3, 28, I2C_PAD_CTRL),
@@ -209,6 +213,7 @@ static struct i2c_pads_info i2c_pads[] = {
 	/* I2C3, J15 - RGB connector */
 	I2C_PADS_INFO_ENTRY(I2C3, GPIO_5, 1, 05, GPIO_16, 7, 11, I2C_PAD_CTRL),
 };
+#endif
 
 #define I2C_BUS_CNT    3
 
@@ -278,6 +283,7 @@ static iomux_v3_cfg_t const ni8_led_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), //RGB_PAD_CTRL), - Configured as output 40Ohm 	// TODO: Verify Padding
 };
 
+#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 /* I2C Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	// Pin configuration for I2C
@@ -287,6 +293,7 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(GPIO_6__I2C3_SDA, I2C_PAD_CTRL),
 };
+#endif
 
 /* WatchDog Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_wdog_pads[] = {
@@ -296,7 +303,7 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 	// TODO: Make sure the the watch dog initialisation doesnt reset the device
 	IOMUX_PAD_CTRL(GPIO_9__WDOG1_B, WDOG_PAD_CTRL),
 };
-
+#ifdef CONFIG_USB		// Added for Logosni8 Testing
 /* USB Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_usb_pads[] = {
 	// Pin configuration for USB
@@ -304,6 +311,7 @@ static iomux_v3_cfg_t const conf_usb_pads[] = {
 	/* Configuration of GPIO_0 to USB_H1_PWR - Here called USB_1_PWREN in schematic - see schematic page 10 - The Same padding is used for USB on Nitrogen */
 	IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLUP)
 };
+#endif
 
 /* GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
@@ -498,10 +506,11 @@ static void setup_iomux_enet(void)
 	SETUP_IOMUX_PADS(enet_pads2);
 	udelay(100);	/* Wait 100 us before using mii interface */
 }
-
+#ifdef CONFIG_USB		// Added for Logosni8 Testing
 static iomux_v3_cfg_t const usb_pads[] = {
 	IOMUX_PAD_CTRL(GPIO_17__GPIO7_IO12, NO_PAD_CTRL),
 };
+#endif
 
 static void setup_iomux_uart(void)
 {
@@ -571,7 +580,7 @@ int board_phy_config(struct phy_device *phydev)
 }
 
 int board_eth_init(struct bd_info *bis)
-{
+{/* - Uncommented for early testing
 	uint32_t base = IMX_FEC_BASE;
 	struct mii_dev *bus = NULL;
 	struct phy_device *phydev = NULL;
@@ -592,7 +601,7 @@ int board_eth_init(struct bd_info *bis)
 	bus = fec_get_miibus(base, -1);
 	if (!bus)
 		return -EINVAL;
-	/* scan phy 4,5,6,7 */
+	// scan phy 4,5,6,7
 	phydev = phy_find_by_mask(bus, (0xf << 4), PHY_INTERFACE_MODE_RGMII);
 	if (!phydev) {
 		ret = -EINVAL;
@@ -605,16 +614,18 @@ int board_eth_init(struct bd_info *bis)
 #endif
 
 #ifdef CONFIG_CI_UDC
-	/* For otg ethernet*/
+	// For otg ethernet //
 	usb_eth_initialize(bis);
 #endif
+ */
 	return 0;
-
+/* - Uncommened for early testing
 free_phydev:
 	free(phydev);
 free_bus:
 	free(bus);
 	return ret;
+ */
 }
 
 #if defined(CONFIG_VIDEO_IPUV3)
@@ -666,12 +677,14 @@ static void do_enable_hdmi(struct display_info_t const *dev)
 	imx_enable_hdmi_phy();
 }
 
+#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 static int detect_i2c(struct display_info_t const *dev)
 {
 	return ((0 == i2c_set_bus_num(dev->bus))
 		&&
 		(0 == i2c_probe(dev->addr)));
 }
+#endif
 
 static void enable_lvds(struct display_info_t const *dev)
 {
@@ -1055,11 +1068,15 @@ int board_early_init_f(void)
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
 
+#ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
+#endif
 
+#ifdef CONFIG_USB		// Added for Logosni8 Testing
 	// Early setup of USB
 	SETUP_IOMUX_PADS(conf_usb_pads);
+#endif
 
 	// Early setup of Watchdog - might be needed earlier
 	SETUP_IOMUX_PADS(conf_wdog_pads);
@@ -1072,6 +1089,7 @@ int board_early_init_f(void)
 
 int board_init(void)
 {
+#ifdef		CONFIG_CMD_I2C // Added for Logosni8 Testing
 	// Setting up I2C and USB
 	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	struct i2c_pads_info *p = i2c_pads;
@@ -1101,6 +1119,7 @@ int board_init(void)
 		setup_i2c(i, CONFIG_SYS_I2C_SPEED, 0x7f, p);
 		p += stride;
 	}
+#endif
 
 #ifdef CONFIG_SATA
 	setup_sata();
