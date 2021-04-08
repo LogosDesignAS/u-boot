@@ -274,13 +274,13 @@ static iomux_v3_cfg_t const misc_pads[] = {
 static iomux_v3_cfg_t const ni8_led_pads[] = {
 
 	/* Configuration of LED1 (GREEN)  - On the board this is LED2 - see schematic page 10 */
-	IOMUX_PAD_CTRL(NANDF_CLE__GPIO6_IO07, OUTPUT_40OHM), //RGB_PAD_CTRL),  - Configured as output 40Ohms 	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(NANDF_CLE__GPIO6_IO07, OUTPUT_40OHM),  // - Configured as output 40Ohms
 
 	/* Configuration of LED2 (GREEN)  - On the board this is LED3 - see schematic page 10
 	 * Here it should be noted that there might be an small error on the schematic, where this is called NANDF_WP
 	 * But should be NANDF_WP_B as on the nitrogen 6 lite schematic page 2
 	 */
-	IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), //RGB_PAD_CTRL), - Configured as output 40Ohm 	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), // - Configured as output 40Ohm
 };
 
 #ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
@@ -300,7 +300,7 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 	// Pin configuration for the Watchdog
 
 	/* Configuration of GPIO_9 to WDOG1_B - Here called WDOG1_B in schematic  - see schematic page 10 */
-	// TODO: Make sure the the watch dog initialisation doesnt reset the device
+	// TODO: Make sure the the watch dog initialisation doesnt reset the device - goes to timeout on TC
 	IOMUX_PAD_CTRL(GPIO_9__WDOG1_B, WDOG_PAD_CTRL),
 };
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -312,70 +312,77 @@ static iomux_v3_cfg_t const conf_usb_pads[] = {
 	IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLUP)
 };
 #endif
-
+/*
+ * Pin Configurations have been done such at all pins have a start configuration - such that none of them are floating
+ * This idea comes from Henning.
+ *
+ * Secondarily, All inputs that have to read a low values should be pulled up and vice versa.
+ * Third rule, All output signals need to be configured either pull up or pull down, if not done on the schematic
+ * Otherwise, simply set no pad setting or 40Ohm.
+ */
 /* GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 	// Pin configuration for GPIO[0-3]
 
 	/* Configuration of GPIO_1 to GPIO1_IO01 - Here called GPIO0 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, OUTPUT_40OHM),	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, WEAK_PULLDOWN),	// Output for S_D_INT on TC - disabled on startup
 	/* Configuration of GPIO_3 to GPIO1_IO03 - Here called GPIO1 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, OUTPUT_40OHM),	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, WEAK_PULLUP),	// Output for Audio_AMP_EN on TC disable Audio amp on startup
 	/* Configuration of GPIO_19 to GPIO4_IO05 - Here called GPIO2 on schematic- see schematic page 10 */
-	IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, OUTPUT_40OHM),	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, OUTPUT_40OHM),	// Output for SOUND2 on TC - Pulled up with hardware- therefore either as 40Ohm or no pad setting
 	/* Configuration of GPIO_4 to GPIO1_IO04 - Here called GPIO3 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, OUTPUT_40OHM), 	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, OUTPUT_40OHM), 	// Output for SOUND1 on TC- Pulled up with hardware- therefore either as 40Ohm or no pad setting
 
 	// Pin configuration for GPIO[4-11]
 
 	/* Configuration of EIM_CS0 to GPIO2_IO23 - Here called GPIO4 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, WEAK_PULLDOWN), // Used as input for Audio_IRQ  TODO: Verify Padding
+	IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, WEAK_PULLUP), // Used as input for Audio_IRQ on TC - active low - meaning 0 activates it.
 	/* Configuration of EIM_CS1 to GPIO2_IO24 - Here called GPIO5 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, WEAK_PULLDOWN), // SMART_IO on TC - Output
 	/* Configuration of EIM_D19 to GPIO3_IO19 - Here called GPIO6 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, WEAK_PULLDOWN), // SMART_INT on TC - Input - pulled high - therefore set to pull  down
 	/* Configuration of EIM_D23 to GPIO3_IO23 - Here called GPIO7 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, WEAK_PULLDOWN), // Used as GPIO - set low to have no floating pins
 	/* Configuration of EIM_D24 to GPIO3_IO24 - Here called GPIO8 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, WEAK_PULLDOWN), // Used as GPIO - set low to have no floating pins
 	/* Configuration of EIM_D25 to GPIO3_IO25 - Here called GPIO9 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, WEAK_PULLDOWN), // Used as GPIO - set low to have no floating pins
 	/* Configuration of EIM_D29 to GPIO3_IO29 - Here called GPIO10 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, WEAK_PULLDOWN), // Used as GPIO - set low to have no floating pins
 	/* Configuration of EIM_D31 to GPIO3_IO31 - Here called GPIO11 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, WEAK_PULLDOWN), // Used as GPIO - set low to have no floating pins
 
 
 	// Pin Configuration of GPIO_MCLK
 
 	/* Configuration of GPIO_2 to GPIO1_IO02 - Here called GPIO_MCLK on schematic - see schematic page 10 */
-	// TODO: Do not know how to set this to MCLK - Shouldn't this be for the GPIO_3, which has a Clk?
-	IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, OUTPUT_40OHM),	// TODO: Verify Padding
+	// Here This GPIO controls a low frequency Audio clock for the chip MAX9860ETG+T on the TC (Minimum 10MHz clock) TODO: Check if we can generate this high clk
+	IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, OUTPUT_40OHM),
 
 	// Pin Configuration of GPIO_RESET
 
 	/* Configuration of GPIO_1 to GPIO6_IO08 - Here called GPIO_RESET in schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, OUTPUT_40OHM),	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, OUTPUT_40OHM),	// Output - Pulled up by hardware, therefore no padding is needed - here just set to 40 Ohm
 
 	// Pin configuration for SMARC inputs - Charging and Charger_PRSNT
 
 	/* Configuration of GPIO_7 to GPIO1_IO07 - Here called Charger_PRSNT# in schematic (This is pull up in the schematic) - see schematic page 10 */
 
-	IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, WEAK_PULLDOWN),	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, WEAK_PULLUP),	// Set to pull up, because it has to read a low value on TC
 	/* Configuration of GPIO_8 to GPIO1_IO08 - Here called Charging# in schematic (This is pull up in the schematic) - see schematic page 10 */
 
-	IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, WEAK_PULLDOWN),	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, WEAK_PULLUP),	// Set to pull up, because it has to read a low value on TC
 
 	// Pin configuration for SMARC inputs - PMIC_INT_B
 
 	/* Configuration of GPIO_18 to GPIO7_IO13 - Here called PMIC_INIT_B in schematic  - see schematic page 10 */
-	IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, WEAK_PULLDOWN), // TODO: Verify padding
+	IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, NO_PAD_CTRL), // Input - Pulled high by the hardware - therefore no pad control
 
 	// Pin configuration for SMARC inputs - CARRIER_PWR_ON
 
 	/* Configuration of EIM_BCLK to GPIO6_IO31 - Here called CARRIER_PWR_ON in schematic  - see schematic page 10 */
-	IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, WEAK_PULLDOWN), // TODO: Verify padding
+	IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, WEAK_PULLDOWN), // Disable the 4g module carrier at startup on TC
 };
 
 /* AFB_GPIO Pin Configuration on logosni8 */
@@ -384,21 +391,21 @@ static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 	// Pin configuration for AFB_GPIO[0-7]
 
 	/* Configuration of CSI0_MCLK to GPIO5_IO19 - Here called AFB_GPIO0 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, WEAK_PULLDOWN),
 	/* Configuration of CSI0_PIXCLK to GPIO5_IO18 - Here called AFB_GPIO1 on schematic  - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18, WEAK_PULLDOWN),
 	/* Configuration of CSI0_VSYNC to GPIO5_IO21 - Here called AFB_GPIO2 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, WEAK_PULLDOWN),
 	/* Configuration of CSI0_DATA_EN to GPIO5_IO20 - Here called AFB_GPIO3 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20, WEAK_PULLDOWN), // Give initial value - no floating values
 	/* Configuration of CSI0_DAT4 to GPIO5_IO22 - Here called AFB_GPIO4 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, OUTPUT_40OHM),  // Controls LED6 on the Test Carrier 	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, WEAK_PULLDOWN),  // Controls LED6 on the Test Carrier - Connected to mosfet - pull down to set to zero(LED OFF)
 	/* Configuration of CSI0_DAT5 to GPIO5_IO23 - Here called AFB_GPIO5 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, OUTPUT_40OHM), // Controls LED5 on the Test Carrier	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, WEAK_PULLDOWN), // Controls LED5 on the Test Carrier	- Connected to mosfet - pull down to set to zero(LED OFF)
 	/* Configuration of CSI0_DAT6 to GPIO5_IO24 - Here called AFB_GPIO6 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, OUTPUT_40OHM), // Controls LED4 on the Test Carrier	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, WEAK_PULLDOWN), // Controls LED4 on the Test Carrier	- Connected to mosfet - pull down to set to zero(LED OFF)
 	/* Configuration of CSI0_DAT7 to GPIO5_IO25 - Here called AFB_GPIO07 on schematic - see schematic page 10 */
-	IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, OUTPUT_40OHM), // Controls LED3 on the Test Carrier	// TODO: Verify Padding
+	IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, WEAK_PULLDOWN), // Controls LED3 on the Test Carrier	- Connected to mosfet - pull down to set to zero(LED OFF)
 };
 
 #define WL12XX_WL_IRQ_GP	IMX_GPIO_NR(6, 14)
@@ -436,6 +443,7 @@ static void setup_iomux_gpio(void)
 	gpio_direction_input(GPIO_CHARGING);		// CHARGING#
 	gpio_direction_input(GPIO_PMIC_INT_B);		// PMIC_INT_B
 	gpio_direction_input(GPIO_4);				// GPIO_4 -> AUDIO_IRQ
+	gpio_direction_input(GPIO_7);				// GPIO_7 -> SMART_INT_1V8 -> SMART_INT
 
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
 	gpio_direction_output(GPIO_MCLK, 0);		// GPIO_MCLK
