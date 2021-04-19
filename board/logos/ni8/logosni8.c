@@ -456,7 +456,8 @@ static void setup_iomux_gpio(void)
 
 	// After setting up the GPIOs - Set one LED on and one off, to signal how fare the bootup is.
 	gpio_set_value(GPIO_LED_2, 0);
-	gpio_set_value(GPIO_LED_3, 0);
+	gpio_set_value(GPIO_LED_3, 1);
+	gpio_set_value(GPIO_CARRIER_PWR_ON, 1);
 };
 // Setup AFB_GPIOs - which goes to AFB[0-7] on the SMARC interface- Are mapped to GPIOs on the Test Carrier board
 static void setup_iomux_afb_gpio(void)
@@ -476,7 +477,7 @@ static void setup_iomux_afb_gpio(void)
 
 	// Setup the AFB GPIOs as Output if specified on the Schematic - Also configured for the Test Carrier
 	gpio_direction_output(AFB_GPIO_4, 1);			// AFB_GPIO_4 -> LED6 on the Test Carrier Board
-	gpio_direction_output(AFB_GPIO_5, 0);			// AFB_GPIO_5 -> LED5 on the Test Carrier Board
+	gpio_direction_output(AFB_GPIO_5, 1);			// AFB_GPIO_5 -> LED5 on the Test Carrier Board
 	gpio_direction_output(AFB_GPIO_6, 1);			// AFB_GPIO_6 -> LED4 on the Test Carrier Board
 	gpio_direction_output(AFB_GPIO_7, 0);			// AFB_GPIO_7 -> LED3 on the Test Carrier Board
 }
@@ -491,7 +492,7 @@ static void setup_iomux_leds(void)
 	SETUP_IOMUX_PADS(ni8_led_pads);
 
 	// Setup the LEDs as Output
-	gpio_direction_output(GPIO_LED_2, 0);			// LED2
+	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 };
 
@@ -1054,6 +1055,9 @@ static void led_logosni8_party_light(void)
 
 		gpio_set_value(GPIO_LED_2, 0);
 		gpio_set_value(GPIO_LED_3, 0);
+
+		// Wait 1s
+		mdelay(1000);
 	}
 
 	// After the initial heartbeat start the more serious stuff will initiate - Namely "Something - rename
@@ -1256,18 +1260,7 @@ static const struct boot_mode board_boot_modes[] = {
 
 int misc_init_r(void)
 {
-/*
-	gpio_request(RGB_BACKLIGHT_GP, "lvds backlight");
-	gpio_request(LVDS_BACKLIGHT_GP, "lvds backlight");
-	gpio_request(GP_USB_OTG_PWR, "usbotg power");
-	gpio_request(IMX_GPIO_NR(7, 12), "usbh1 hub reset");
-	gpio_request(IMX_GPIO_NR(2, 2), "back");
-	gpio_request(IMX_GPIO_NR(2, 4), "home");
-	gpio_request(IMX_GPIO_NR(2, 1), "menu");
-	gpio_request(IMX_GPIO_NR(2, 3), "search");
-	gpio_request(IMX_GPIO_NR(7, 13), "volup");
-	gpio_request(IMX_GPIO_NR(4, 5), "voldown");
-*/
+
 #ifdef CONFIG_PREBOOT
 	preboot_keys();
 #endif
@@ -1281,10 +1274,22 @@ int misc_init_r(void)
 
 int board_late_init(void)
 {
+	// Setup of UART2, UART4 and UART5
+	setup_iomux_uart();
+
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
 
+	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
+	setup_iomux_leds();
+
+	// Setup of GPIOs
+	setup_iomux_gpio();
+
+	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
+	setup_iomux_afb_gpio();
+
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
-	//led_logosni8_party_light();
+	led_logosni8_party_light();
 	return 0;
 }
