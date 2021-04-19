@@ -34,6 +34,8 @@
 #include <input.h>
 #include <netdev.h>
 #include <usb/ehci-ci.h>
+// Include the ASCII Logos Logo
+#include "logosLogo.h"
 
 #ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 	#include <i2c.h>
@@ -1070,6 +1072,9 @@ int board_early_init_f(void)
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
 
+	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
+	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
+
 #ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
@@ -1098,8 +1103,28 @@ int overwrite_console(void)
 	return 1;
 }
 
+int printLogosLogo(void)
+{
+	for(int h = 0; h < 26; h++)
+	{
+		for(int k = 0; k < 200; k++) {
+			printf("%c", logosLogo[h][k]);
+		}
+	printf("\n");
+	}
+}
+
 int board_init(void)
 {
+
+	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
+	setup_iomux_leds();
+
+	// Setup of GPIOs
+	setup_iomux_gpio();
+
+	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
+	setup_iomux_afb_gpio();
 
 #ifdef		CONFIG_CMD_I2C // Added for Logosni8 Testing
 	// Setting up I2C and USB
@@ -1271,19 +1296,16 @@ int misc_init_r(void)
 
 int board_late_init(void)
 {
-	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
-	setup_iomux_leds();
+// Fill in functionality needed for late initialisation
 
-	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
-	setup_iomux_leds();
-
-	// Setup of GPIOs
-	setup_iomux_gpio();
-
-	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
-	setup_iomux_afb_gpio();
+	// The test carrier board is now powered up and the UART is ready - make a startup screen
+	mdelay(1000); // wait for Carrier board to power up
+	printLogosLogo();
+	print_cpuinfo();
+	checkboard();
 
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 	led_logosni8_party_light();
+
 	return 0;
 }
