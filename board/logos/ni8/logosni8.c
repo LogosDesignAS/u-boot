@@ -1046,18 +1046,18 @@ static unsigned gpios_led_logosni8[] = {
 static void led_logosni8_party_light(void)
 {
 	// This function will create a simple light demo - using the LED2 and LED3 - will run for 20 seconds
-	for (int i = 0; i < 60; i++) {
+	for (int i = 0; i < 30; i++) {
 		gpio_set_value(GPIO_LED_2, 1);
 		gpio_set_value(GPIO_LED_3, 1);
 
-		// Wait 1s
-		mdelay(1000);
+		// Wait 0.5s
+		mdelay(500);
 
 		gpio_set_value(GPIO_LED_2, 0);
 		gpio_set_value(GPIO_LED_3, 0);
 
-		// Wait 1s
-		mdelay(1000);
+		// Wait 0.5s
+		mdelay(500);
 	}
 
 	// After the initial heartbeat start the more serious stuff will initiate - Namely "Something - rename
@@ -1071,16 +1071,6 @@ int board_early_init_f(void)
 {
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
-
-	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
-	setup_iomux_leds();
-
-	// Setup of GPIOs
-	setup_iomux_gpio();
-
-	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
-	setup_iomux_afb_gpio();
-
 
 #ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
 	// Early setup of I2C
@@ -1274,9 +1264,6 @@ int misc_init_r(void)
 
 int board_late_init(void)
 {
-	// Setup of UART2, UART4 and UART5
-	setup_iomux_uart();
-
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
 
