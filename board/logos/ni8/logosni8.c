@@ -432,29 +432,30 @@ static void setup_iomux_gpio(void)
 	gpio_request(GPIO_MCLK,				"GPIO_MCLK");
 	gpio_request(GPIO_CHARGING,			"GPIO_CHARGING");
 	gpio_request(GPIO_PMIC_INT_B, 		"GPIO_PMIC_INT_B");
-    gpio_request(GPIO_CHARGER_PRSNT,	"GPIO_CHARGER_PRSNT");
+	gpio_request(GPIO_CHARGER_PRSNT,	"GPIO_CHARGER_PRSNT");
 	gpio_request(GPIO_CARRIER_PWR_ON,	"GPIO_CARRIER_PWR_ON");
 
 	// Setup the rest of the GPIO pins and the corresponding padding for the i.MX6U -
 	SETUP_IOMUX_PADS(conf_gpio_pads);
 
 	// Setup the GPIOs as Input if specified on the Schematic and Test Carrier board
-	gpio_direction_input(GPIO_CHARGER_PRSNT);	// CHARGER_PRNST#
-	gpio_direction_input(GPIO_CHARGING);		// CHARGING#
-	gpio_direction_input(GPIO_PMIC_INT_B);		// PMIC_INT_B
-	gpio_direction_input(GPIO_4);				// GPIO_4 -> AUDIO_IRQ
-	gpio_direction_input(GPIO_7);				// GPIO_7 -> SMART_INT_1V8 -> SMART_INT
+	gpio_direction_input(GPIO_CHARGER_PRSNT);			// CHARGER_PRNST#
+	gpio_direction_input(GPIO_CHARGING);				// CHARGING#
+	gpio_direction_input(GPIO_PMIC_INT_B);				// PMIC_INT_B
+	gpio_direction_input(GPIO_4);						// GPIO_4 -> AUDIO_IRQ
+	gpio_direction_input(GPIO_7);						// GPIO_7 -> SMART_INT_1V8 -> SMART_INT
 
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
-	gpio_direction_output(GPIO_MCLK, 0);		// GPIO_MCLK
-	gpio_direction_output(GPIO_RESET, 0);		// GPIO_RESET
-	gpio_direction_output(GPIO_0, 0);			// GPIO_0 -> S_D_INT
-	gpio_direction_output(GPIO_1, 0);			// GPIO_1 -> AUDIO_AMP_EN
-	gpio_direction_output(GPIO_2, 0);			// GPIO_2 -> SOUND2
-	gpio_direction_output(GPIO_3, 0);			// GPIO_3 -> SOUND1
+	gpio_direction_output(GPIO_CARRIER_PWR_ON, 1);		// Carrier_PWR_ON
+	gpio_direction_output(GPIO_MCLK, 0);				// GPIO_MCLK
+	gpio_direction_output(GPIO_RESET, 0);				// GPIO_RESET
+	gpio_direction_output(GPIO_0, 0);					// GPIO_0 -> S_D_INT
+	gpio_direction_output(GPIO_1, 0);					// GPIO_1 -> AUDIO_AMP_EN
+	gpio_direction_output(GPIO_2, 0);					// GPIO_2 -> SOUND2
+	gpio_direction_output(GPIO_3, 0);					// GPIO_3 -> SOUND1
 
 	// After setting up the GPIOs - Set one LED on and one off, to signal how fare the bootup is.
-	gpio_set_value(GPIO_LED_2, 1);
+	gpio_set_value(GPIO_LED_2, 0);
 	gpio_set_value(GPIO_LED_3, 0);
 };
 // Setup AFB_GPIOs - which goes to AFB[0-7] on the SMARC interface- Are mapped to GPIOs on the Test Carrier board
@@ -1045,27 +1046,30 @@ static void led_logosni8_party_light(void)
 {
 	// This function will create a simple light demo - using the LED2 and LED3 - will run for 20 seconds
 	for (int i = 0; i < 60; i++) {
-		set_gpios(gpios_led_logosni8, ARRAY_SIZE(gpios_led_logosni8), 1);
-		for (int j = 0; j < 1000000; j++) {
-			cpu_relax();   /* Wait some time to create a heartbeat - udelay() is not available at board_early_init() */
-		}
-		set_gpios(gpios_led_logosni8, ARRAY_SIZE(gpios_led_logosni8), 0);
+		gpio_set_value(GPIO_LED_2, 1);
+		gpio_set_value(GPIO_LED_3, 1);
+
+		// Wait 1s
+		mdelay(1000);
+
+		gpio_set_value(GPIO_LED_2, 0);
+		gpio_set_value(GPIO_LED_3, 0);
 	}
 
 	// After the initial heartbeat start the more serious stuff will initiate - Namely "Something - rename
 	// Insert some more LED config here, to make a nice demo.
-	gpio_set_value(GPIO_LED_2, 1);
+	gpio_set_value(GPIO_LED_2, 0);
 	gpio_set_value(GPIO_LED_3, 1);
 }
 
 // TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_f(void)
 {
+	// Setup of UART2, UART4 and UART5
+	setup_iomux_uart();
+
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
-
-	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
-	led_logosni8_party_light();
 
 	// Setup of GPIOs
 	setup_iomux_gpio();
@@ -1073,8 +1077,6 @@ int board_early_init_f(void)
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
 
-	// Setup of UART2, UART4 and UART5
-	setup_iomux_uart();
 
 #ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
 	// Early setup of I2C
@@ -1087,7 +1089,7 @@ int board_early_init_f(void)
 #endif
 
 	// Early setup of Watchdog - might be needed earlier
-	SETUP_IOMUX_PADS(conf_wdog_pads);
+	//SETUP_IOMUX_PADS(conf_wdog_pads);
 
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
@@ -1097,6 +1099,7 @@ int board_early_init_f(void)
 
 int board_init(void)
 {
+
 #ifdef		CONFIG_CMD_I2C // Added for Logosni8 Testing
 	// Setting up I2C and USB
 	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1273,5 +1276,15 @@ int misc_init_r(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 	env_set_hex("reset_cause", get_imx_reset_cause());
+	return 0;
+}
+
+int board_late_init(void)
+
+	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
+	setup_iomux_leds();
+
+	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
+	//led_logosni8_party_light();
 	return 0;
 }
