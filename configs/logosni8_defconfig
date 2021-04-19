@@ -31,6 +31,8 @@ CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE=y
 
 # Enabled the Board_Early_init function to set up GPIO and UART for early testing
 CONFIG_BOARD_EARLY_INIT_F=y
+# enable board late init
+CONFIG_BOARD_LATE_INIT=y
 
 # GPIO Config
 CONFIG_CMD_GPIO=y
