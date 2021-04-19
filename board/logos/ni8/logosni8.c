@@ -1287,7 +1287,7 @@ int misc_init_r(void)
 }
 
 int board_late_init(void)
-
+{
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
 
