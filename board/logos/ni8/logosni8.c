@@ -558,7 +558,7 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
 
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	/* SS1 */
-	IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, NO_PAD_CTRL),
+    IOMUX_PAD_CTRL(EIM_EB2__GPIO2_IO30, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
 	IOMUX_PAD_CTRL(EIM_D17__ECSPI1_MISO, SPI_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_D18__ECSPI1_MOSI, SPI_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
