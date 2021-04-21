@@ -12,6 +12,12 @@
 
 #include"mx6_common.h"
 
+/* Undefine the following defines
+ * This is needed in order to not print before the UART is powered up.
+ */
+#undef CONFIG_DISPLAY_CPUINFO
+#undef CONFIG_DISPLAY_BOARDINFO
+
 /* TODO Is set to 1 for all other iMX6 boards.
  * Our SDRAM is listed with 8 banks in the datasheet, so should it be 3 (2**3=8)?
  */

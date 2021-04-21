@@ -410,10 +410,6 @@ static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, WEAK_PULLDOWN), // Controls LED3 on the Test Carrier	- Connected to mosfet - pull down to set to zero(LED OFF)
 };
 
-#define WL12XX_WL_IRQ_GP	IMX_GPIO_NR(6, 14)
-#define WL12XX_WL_ENABLE_GP	IMX_GPIO_NR(6, 15)
-#define WL12XX_BT_ENABLE_GP	IMX_GPIO_NR(6, 16)
-
 // Setup the GPIO pins on the Logosni8 board
 static void setup_iomux_gpio(void)
 {
@@ -1028,7 +1024,6 @@ static void setup_display(void)
 }
 #endif
 
-#define WL12XX_WL_IRQ_GP	IMX_GPIO_NR(6, 14)
 
 static void set_gpios(unsigned *p, int cnt, int val)
 {
@@ -1069,7 +1064,7 @@ static void led_logosni8_party_light(void)
 }
 
 // TODO: Some of the Initialisation needs to be moved to board_init()
-int board_early_init_f(void)
+int board_early_init_r(void)
 {
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
@@ -1087,8 +1082,8 @@ int board_early_init_f(void)
 	SETUP_IOMUX_PADS(conf_usb_pads);
 #endif
 
-	// Early setup of Watchdog - might be needed earlier
-	//SETUP_IOMUX_PADS(conf_wdog_pads);
+	// Early setup of Watchdog
+	SETUP_IOMUX_PADS(conf_wdog_pads);
 
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
@@ -1096,8 +1091,6 @@ int board_early_init_f(void)
 	return 0;
 }
 
-<<<<<<< HEAD
-=======
 /*
  * Do not overwrite the console
  * Use always serial for U-Boot console
@@ -1109,13 +1102,13 @@ int overwrite_console(void)
 
 int printLogosLogo(void)
 {
+	printf("\n");
 	for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
 	{
-	    printf("%s\n", logosLogo[h]);
+		printf("%s\n", logosLogo[h]);
 	}
 }
 
->>>>>>> 3aba438760... Added some early ASCII art and bootup screen
 int board_init(void)
 {
 
@@ -1166,6 +1159,7 @@ int board_init(void)
 
 	return 0;
 }
+<<<<<<< HEAD
 
 void cpuinfo()
 {
@@ -1208,91 +1202,37 @@ int checkboard(void)
 */
 	// Print the correct board name out
 	puts("Board: Logos NiCore8\n");
+=======
+/*
+ * Simple function for printing the CPU information
+ * This is hardcoded for now - Only on CPU using this bootloader.
+ */
+int print_cpuinfo(void)
+{
+	printf("CPU:   NXP MX6S Rev 5 with a ARM Cortex-A9 core running at 1 GHz - 512MB RAM\n");
+>>>>>>> f5149a4430... Customized the bootup phase
 
 	return 0;
 }
 
-struct button_key {
-	char const	*name;
-	unsigned	gpnum;
-	char		ident;
-};
 
-static struct button_key const buttons[] = {
-	{"back",	IMX_GPIO_NR(2, 2),	'B'},
-	{"home",	IMX_GPIO_NR(2, 4),	'H'},
-	{"menu",	IMX_GPIO_NR(2, 1),	'M'},
-	{"search",	IMX_GPIO_NR(2, 3),	'S'},
-	{"volup",	IMX_GPIO_NR(7, 13),	'V'},
-	{"voldown",	IMX_GPIO_NR(4, 5),	'v'},
-};
-
-/*
- * generate a null-terminated string containing the buttons pressed
- * returns number of keys pressed
- */
-static int read_keys(char *buf)
+int checkboard(void)
 {
-	int i, numpressed = 0;
-	for (i = 0; i < ARRAY_SIZE(buttons); i++) {
-		if (!gpio_get_value(buttons[i].gpnum))
-			buf[numpressed++] = buttons[i].ident;
-	}
-	buf[numpressed] = '\0';
-	return numpressed;
+	printf("Board: NiCore8  \nDeveloped and Designed by Logos Payment Solutions\n\n\n");
+
+	return 0;
 }
 
-static int do_kbd(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int initial_Printing(void)
 {
-	char envvalue[ARRAY_SIZE(buttons)+1];
-	int numpressed = read_keys(envvalue);
-	env_set("keybd", envvalue);
-	return numpressed == 0;
+	printLogosLogo();
+	print_cpuinfo();
+	checkboard();
+
+	return 0;
 }
-
-U_BOOT_CMD(
-	kbd, 1, 1, do_kbd,
-	"Tests for keypresses, sets 'keybd' environment variable",
-	"Returns 0 (true) to shell if key is pressed."
-);
-
 #ifdef CONFIG_PREBOOT
-static char const kbd_magic_prefix[] = "key_magic";
-static char const kbd_command_prefix[] = "key_cmd";
-
-static void preboot_keys(void)
-{
-	int numpressed;
-	char keypress[ARRAY_SIZE(buttons)+1];
-	numpressed = read_keys(keypress);
-	if (numpressed) {
-		char *kbd_magic_keys = env_get("magic_keys");
-		char *suffix;
-		/*
-		 * loop over all magic keys
-		 */
-		for (suffix = kbd_magic_keys; *suffix; ++suffix) {
-			char *keys;
-			char magic[sizeof(kbd_magic_prefix) + 1];
-			sprintf(magic, "%s%c", kbd_magic_prefix, *suffix);
-			keys = env_get(magic);
-			if (keys) {
-				if (!strcmp(keys, keypress))
-					break;
-			}
-		}
-		if (*suffix) {
-			char cmd_name[sizeof(kbd_command_prefix) + 1];
-			char *cmd;
-			sprintf(cmd_name, "%s%c", kbd_command_prefix, *suffix);
-			cmd = env_get(cmd_name);
-			if (cmd) {
-				env_set("preboot", cmd);
-				return;
-			}
-		}
-	}
-}
+// Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
 #endif
 
 #ifdef CONFIG_CMD_BMODE
@@ -1317,16 +1257,15 @@ int misc_init_r(void)
 	env_set_hex("reset_cause", get_imx_reset_cause());
 	return 0;
 }
-
+/*
+ * The board_late_init function is called late during the bootloader initialisation
+ * Therefore, all the functionality needed late during the bootup should be added here - this is e.g. the UART printing
+ * Which is first available late in the bootup, because the Test Carrier Board needs to be powered up.
+ */
 int board_late_init(void)
 {
-// Fill in functionality needed for late initialisation
-
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
-	mdelay(1000); // wait for Carrier board to power up
-	printLogosLogo();
-	print_cpuinfo();
-	checkboard();
+	initial_Printing();
 
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 	led_logosni8_party_light();
