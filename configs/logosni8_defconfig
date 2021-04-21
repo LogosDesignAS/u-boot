@@ -30,7 +30,7 @@ CONFIG_DM=y
 CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE=y
 
 # Enabled the Board_Early_init function to set up GPIO and UART for early testing
-CONFIG_BOARD_EARLY_INIT_F=y
+CONFIG_BOARD_EARLY_INIT_R=y
 # enable board late init
 CONFIG_BOARD_LATE_INIT=y
 
@@ -47,10 +47,13 @@ CONFIG_CMD_MII=y
 CONFIG_MII=y
 
 # Add startup scripts before boot in misc_init_r()
-#CONFIG_MISC_INIT_R=y
+CONFIG_MISC_INIT_R=y
 
 # Additional Options
 CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/ni8/logosni8.cfg,DDR_MB=512"
+
+# This define is used to suppress the output on the UART - "IN: serial, Out: serial, ERR: serial"
+CONFIG_SYS_CONSOLE_INFO_QUIET=y
 
 ##############################################################################
 # ------------------ Configs undefined for early testing ------------------- #
