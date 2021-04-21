@@ -191,7 +191,7 @@ static iomux_v3_cfg_t const uart2_pads[] = {
 static iomux_v3_cfg_t const uart4_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT12__UART4_RX_DATA, UART_PAD_CTRL),
 	IOMUX_PAD_CTRL(CSI0_DAT13__UART4_TX_DATA, UART_PAD_CTRL),
-	// Configuring CTS and RTS
+	// Configuring CTS and RTSl
 	IOMUX_PAD_CTRL(CSI0_DAT16__UART4_RTS_B, UART_PAD_CTRL),
 	IOMUX_PAD_CTRL(CSI0_DAT17__UART4_CTS_B, UART_PAD_CTRL),
 };
@@ -1167,8 +1167,30 @@ int board_init(void)
 	return 0;
 }
 
+void cpuinfo()
+{
+    if (is_cpu_type(MXC_CPU_MX6SOLO))
+    {
+        u32 rev = get_cpu_rev();
+        u32 freq = get_cpu_speed_grade_hz();
+
+        int min = 0;
+        int max = 0;
+        u32 grade = get_cpu_temp_grade(&min, &max);
+
+        printf("CPU: 1 GHz i.MX 6Solo 1x ARM Cortex-A9 (rev: %d, speed grade: %d Hz, temp grade: %d to %d degree Celsius)\n", rev, freq, min, max);
+
+        // CTP TODO: Actual speed? and uuid Nice features in cpu.h under imx seems not to work with imx6s
+    }
+    else
+    {
+        puts("CPU: Unknown\n");
+    }
+}
+
 int checkboard(void)
 {
+    //cpuinfo();
 /*
 	int ret = gpio_get_value(WL12XX_WL_IRQ_GP);
 
@@ -1185,7 +1207,7 @@ int checkboard(void)
 		puts("Board: SABRE Lite\n");
 */
 	// Print the correct board name out
-	puts("Board: NiCore8 - Logosni8\n");
+	puts("Board: Logos NiCore8\n");
 
 	return 0;
 }
