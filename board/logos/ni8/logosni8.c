@@ -1109,12 +1109,9 @@ int overwrite_console(void)
 
 int printLogosLogo(void)
 {
-	for(int h = 0; h < 26; h++)
+	for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
 	{
-		for(int k = 0; k < 200; k++) {
-			printf("%c", logosLogo[h][k]);
-		}
-	printf("\n");
+	    printf("%s\n", logosLogo[h]);
 	}
 }
 
