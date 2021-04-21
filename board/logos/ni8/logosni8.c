@@ -35,8 +35,8 @@
 #include <input.h>
 #include <netdev.h>
 #include <usb/ehci-ci.h>
-// Include the ASCII Logos Logo
 #include "logosLogo.h"
+#include "bootmelody.h"
 
 #ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 	#include <i2c.h>
@@ -1100,7 +1100,7 @@ int overwrite_console(void)
 	return 1;
 }
 
-int printLogosLogo(void)
+int print_Logos_Logo(void)
 {
 	printf("\n");
 	for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
@@ -1109,9 +1109,121 @@ int printLogosLogo(void)
 	}
 }
 
-int board_init(void)
+/*
+ * This function generate beeps using the Buzzer on the Test Carrier board and takes in two parameters
+ * note     - This is the frequency of the requested note - Hz
+ * duration - For how long should this tone be played     - ms
+ *
+ * The function generates a square wave that activates the buzzer
+ */
+int beep(int note, int duration)
+{
+	// Determine the Time Period
+	int T_sound = 1000000 / note;
+	// Determine the number of time periods to run to get the wanted duration.
+	int runTime = (duration * 1000)/T_sound;
+
+	for (int u = 0; u < runTime; u++) {
+		gpio_direction_output(GPIO_2, 1);					// GPIO_2 -> SOUND2
+		gpio_direction_output(GPIO_3, 0);					// GPIO_3 -> SOUND1
+		udelay(T_sound >> 1);								// Divide by two
+
+		gpio_direction_output(GPIO_2, 0);					// GPIO_2 -> SOUND2
+		gpio_direction_output(GPIO_3, 1);					// GPIO_3 -> SOUND1
+		udelay(T_sound >> 1);								// Divide by two
+	}
+}
+
+int firstSection(void)
+{
+	beep(a,  500);
+	beep(a,  500);
+	beep(a,  500);
+	beep(f,  350);
+	beep(cH, 150);
+	beep(a,  500);
+	beep(f,  350);
+	beep(cH, 150);
+	beep(a,  650);
+
+	mdelay(500);
+
+	beep(eH, 500);
+	beep(eH, 500);
+	beep(eH, 500);
+	beep(fH, 350);
+	beep(cH, 150);
+	beep(gS, 500);
+	beep(f,  350);
+	beep(cH, 150);
+	beep(a,  650);
+
+	mdelay(500);
+	return 0;
+}
+
+int secondSection(void)
+{
+	beep(aH, 500);
+	beep(a,  300);
+	beep(a,  150);
+	beep(aH, 500);
+	beep(gSH,325);
+	beep(gH, 175);
+	beep(fSH,125);
+	beep(fH, 125);
+	beep(fSH,250);
+
+	mdelay(325);
+
+	beep(aS, 250);
+	beep(dSH,500);
+	beep(dH, 325);
+	beep(cSH,175);
+	beep(cH, 125);
+	beep(b,  125);
+	beep(cH, 250);
+
+	mdelay(350);
+	return 0;
+}
+
+int bootup_Song_Star_Wars(void)
 {
 
+	//Play first section
+	firstSection();
+
+	//Play second section
+	secondSection();
+
+	//Variant 1
+	beep(f,  250);
+	beep(gS, 500);
+	beep(f,  350);
+	beep(a,  125);
+	beep(cH, 500);
+	beep(a,  375);
+	beep(cH, 125);
+	beep(eH, 650);
+
+    mdelay(500);
+
+	//Repeat second section
+	secondSection();
+
+	//Variant 2
+	beep(f,  250);
+	beep(gS, 500);
+	beep(f,  375);
+	beep(cH, 125);
+	beep(a,  500);
+	beep(f,  375);
+	beep(cH, 125);
+	beep(a,  650);
+}
+int board_init(void)
+{
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
 
@@ -1204,12 +1316,13 @@ int checkboard(void)
 
 int initial_Printing(void)
 {
-	printLogosLogo();
+	print_Logos_Logo();
 	print_cpuinfo();
 	checkboard();
 
 	return 0;
 }
+
 #ifdef CONFIG_PREBOOT
 // Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
 #endif
@@ -1245,6 +1358,9 @@ int board_late_init(void)
 {
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
 	initial_Printing();
+
+	// Boot up Song
+	bootup_Song_Star_Wars();
 
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 	led_logosni8_party_light();
