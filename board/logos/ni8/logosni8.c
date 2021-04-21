@@ -1159,7 +1159,8 @@ int board_init(void)
 
 	return 0;
 }
-<<<<<<< HEAD
+
+/*
 
 void cpuinfo()
 {
@@ -1181,28 +1182,8 @@ void cpuinfo()
         puts("CPU: Unknown\n");
     }
 }
-
-int checkboard(void)
-{
-    //cpuinfo();
-/*
-	int ret = gpio_get_value(WL12XX_WL_IRQ_GP);
-
-	if (ret < 0) {
-		// The gpios have not been probed yet. Read it myself
-		struct gpio_regs *regs = (struct gpio_regs *)GPIO6_BASE_ADDR;
-		int gpio = WL12XX_WL_IRQ_GP & 0x1f;
-
-		ret = (readl(&regs->gpio_psr) >> gpio) & 0x01;
-	}
-	if (ret)
-		puts("Board: Nitrogen6X\n");
-	else
-		puts("Board: SABRE Lite\n");
 */
-	// Print the correct board name out
-	puts("Board: Logos NiCore8\n");
-=======
+
 /*
  * Simple function for printing the CPU information
  * This is hardcoded for now - Only on CPU using this bootloader.
@@ -1210,8 +1191,6 @@ int checkboard(void)
 int print_cpuinfo(void)
 {
 	printf("CPU:   NXP MX6S Rev 5 with a ARM Cortex-A9 core running at 1 GHz - 512MB RAM\n");
->>>>>>> f5149a4430... Customized the bootup phase
-
 	return 0;
 }
 
