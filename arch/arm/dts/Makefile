@@ -793,6 +793,7 @@ dtb-y += \
 	imx6dl-sabreauto.dtb \
 	imx6dl-sabresd.dtb \
 	imx6dl-wandboard-revd1.dtb \
+	imx6dl-nicore8.dtb \
 	imx6s-dhcom-drc02.dtb
 
 endif
