@@ -280,6 +280,12 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	IOMUX_PAD_CTRL(GPIO_5__I2C3_SCL, I2C_PAD_CTRL),
 	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(GPIO_6__I2C3_SDA, I2C_PAD_CTRL),
+
+	//new I2C bus for the EEPROM
+	IOMUX_PAD_CTRL(KEY_ROW3__I2C2_SDA, I2C_PAD_CTRL),
+	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
+	IOMUX_PAD_CTRL(KEY_COL3__I2C2_SCL, I2C_PAD_CTRL),
+
 };
 #endif
 
@@ -1351,10 +1357,11 @@ int board_late_init(void)
 
 #ifdef DEMO_MODE
 	// Boot up Song
-	bootup_Song_Star_Wars();
+	//bootup_Song_Star_Wars();
 
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
-	led_logosni8_party_light();
+
+	//led_logosni8_party_light();
 #endif
 
 	return 0;
