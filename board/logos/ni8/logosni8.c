@@ -43,6 +43,9 @@
 	#include <asm/mach-imx/mxc_i2c.h>
 #endif
 
+//Uncomment to enable the demo
+//#define DEMO_MODE
+
 // Enum for LEDs on the Logosni8 board - enum idea came from board/beckhoff/mx53cx9020
 enum LED_GPIOS {
 	GPIO_LED_2 = IMX_GPIO_NR(6, 7),
@@ -1340,7 +1343,7 @@ int misc_init_r(void)
 {
 
 #ifdef CONFIG_PREBOOT
-	preboot_keys();
+	//preboot_keys();
 #endif
 
 #ifdef CONFIG_CMD_BMODE
@@ -1363,14 +1366,16 @@ int board_late_init(void)
 	const char* sn = env_get("serial#");
 	if (sn)
 	{
-        printf("HW ID: %s\n", sn);
-    }
+		printf("HW ID: %s\n", sn);
+	}
 
+#ifdef DEMO_MODE
 	// Boot up Song
 	bootup_Song_Star_Wars();
 
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 	led_logosni8_party_light();
+#endif
 
 	return 0;
 }
