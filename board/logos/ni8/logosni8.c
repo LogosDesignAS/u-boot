@@ -1359,6 +1359,13 @@ int board_late_init(void)
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
 	initial_Printing();
 
+	// TODO: Remove, can be read using u-boot command 'fuse read 0 1 and fuse read 0 2' or 'env print'
+	const char* sn = env_get("serial#");
+	if (sn)
+	{
+        printf("HW ID: %s\n", sn);
+    }
+
 	// Boot up Song
 	bootup_Song_Star_Wars();
 

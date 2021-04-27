@@ -3,6 +3,7 @@ CONFIG_TARGET_LOGOSNI8=y
 CONFIG_ARCH_MX6=y
 CONFIG_MX6S=y
 CONFIG_ARM=y
+CONFIG_ARCH_MISC_INIT=y
 
 # Set default Device Tree - TODO: Remember to update device tree
 #CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nitrogen6x"
@@ -134,8 +135,8 @@ CONFIG_BOOTDELAY=10
 #CONFIG_DM_MMC=y
 
 # Memory testing configs
-#CONFIG_CMD_MEMTEST=y
-#CONFIG_SYS_ALT_MEMTEST=y
+CONFIG_CMD_MEMTEST=y
+CONFIG_SYS_ALT_MEMTEST=y
 
 # Config Advanced Host Controller Interface for the SataDriver
 #CONFIG_AHCI=y
