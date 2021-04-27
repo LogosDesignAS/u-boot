@@ -286,6 +286,10 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(KEY_COL3__I2C2_SCL, I2C_PAD_CTRL),
 
+
+	IOMUX_PAD_CTRL(ENET_TX_EN__I2C4_SCL, I2C_PAD_CTRL),
+	IOMUX_PAD_CTRL(ENET_TXD1__I2C4_SDA, I2C_PAD_CTRL),
+
 };
 #endif
 
