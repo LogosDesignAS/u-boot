@@ -18,9 +18,6 @@
 #undef CONFIG_DISPLAY_CPUINFO
 #undef CONFIG_DISPLAY_BOARDINFO
 
-/* TODO Is set to 1 for all other iMX6 boards.
- * Our SDRAM is listed with 8 banks in the datasheet, so should it be 3 (2**3=8)?
- */
 #define CONFIG_NR_DRAM_BANKS            1
 #define CONFIG_SYS_MAX_FLASH_BANKS      1
 #define CONFIG_SYS_MALLOC_LEN           (10 * SZ_1M)
@@ -35,10 +32,6 @@
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /*
- * The rest of this file is from Nitrogen lite 6 - TODO: Needs to be modified for Logosni8
- */
-
-/*
  * I2C Configs
  */
 #define CONFIG_SYS_I2C
@@ -48,6 +41,13 @@
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 #define CONFIG_SYS_I2C_SPEED		100000
 #define CONFIG_I2C_EDID
+
+/*
+ * The rest of this file is from Nitrogen lite 6
+ * TODO: Needs to be modified for Logosni8, be aware and clean up.
+ * Stuff that we have tested and needs should be moved above this line.
+ * In the end everything below this line is removed!
+ */
 
 /*
  * SATA Configs
@@ -102,17 +102,6 @@
 #define CONFIG_MACH_TYPE	3769
 
 #define CONFIG_USBD_HS
-
-
-
-/* I2C Configs */
-#define CONFIG_SYS_I2C
-#define CONFIG_SYS_I2C_MXC
-#define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
-#define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
-#define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
-#define CONFIG_SYS_I2C_SPEED		100000
-#define CONFIG_I2C_EDID
 
 /* MMC Configs */
 #define CONFIG_SYS_FSL_ESDHC_ADDR      0
@@ -208,22 +197,6 @@
 	"ip_dyn=yes\0" \
 	"usb_pgood_delay=2000\0" \
 	BOOTENV
-
-/* Miscellaneous configurable options */
-
-/* Physical Memory Map */
-#define PHYS_SDRAM		       MMDC0_ARB_BASE_ADDR
-
-#define CONFIG_SYS_SDRAM_BASE	       PHYS_SDRAM
-#define CONFIG_SYS_INIT_RAM_ADDR       IRAM_BASE_ADDR
-#define CONFIG_SYS_INIT_RAM_SIZE       IRAM_SIZE
-
-#define CONFIG_SYS_INIT_SP_OFFSET \
-	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
-#define CONFIG_SYS_INIT_SP_ADDR \
-	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
-
-/* Environment organization */
 
 /*
  * PCI express
