@@ -86,6 +86,14 @@ enum AFB_GPIOS {
 	AFB_GPIO_7				= IMX_GPIO_NR(5, 25)
 };
 
+// Enum for SD_GPIOs on the Logosni8 board
+enum SD_GPIOS {
+	SDIO_CD				= IMX_GPIO_NR(6, 14),
+	SDIO_WP				= IMX_GPIO_NR(6, 15),
+	SDIO_PWR_EN			= IMX_GPIO_NR(6, 16)
+};
+
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define UART_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
@@ -205,15 +213,46 @@ static struct i2c_pads_info i2c_pads[] = {
 
 #define I2C_BUS_CNT 2
 
-static iomux_v3_cfg_t const usdhc2_pads[] = {
-	IOMUX_PAD_CTRL(SD2_CLK__SD2_CLK, USDHC_PAD_CTRL),
-	IOMUX_PAD_CTRL(SD2_CMD__SD2_CMD, USDHC_PAD_CTRL),
-	IOMUX_PAD_CTRL(SD2_DAT0__SD2_DATA0, USDHC_PAD_CTRL),
-	IOMUX_PAD_CTRL(SD2_DAT1__SD2_DATA1, USDHC_PAD_CTRL),
-	IOMUX_PAD_CTRL(SD2_DAT2__SD2_DATA2, USDHC_PAD_CTRL),
-	IOMUX_PAD_CTRL(SD2_DAT3__SD2_DATA3, USDHC_PAD_CTRL),
+// Logosni8 - Map the onboard eMMC
+static iomux_v3_cfg_t const usdhc4_pads[] = {
+	IOMUX_PAD_CTRL(SD4_CLK__SD4_CLK, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_CMD__SD4_CMD, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT0__SD4_DATA0, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT1__SD4_DATA1, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT2__SD4_DATA2, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT3__SD4_DATA3, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT4__SD4_DATA4, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT5__SD4_DATA5, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
 };
-
+//Logosni8 - Map the SD CARD on the Test Carrier Board
+static iomux_v3_cfg_t const sdmmc_pads[] = {
+	IOMUX_PAD_CTRL(SD1_CLK__SD1_CLK, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD1_CMD__SD1_CMD, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD1_DAT0__SD1_DATA0, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD1_DAT1__SD1_DATA1, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD1_DAT2__SD1_DATA2, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD1_DAT3__SD1_DATA3, USDHC_PAD_CTRL),
+	// Map GPIO to enable SD CARD
+	IOMUX_PAD_CTRL(NANDF_CS3__GPIO6_IO16, WEAK_PULLUP),
+	IOMUX_PAD_CTRL(NANDF_CS2__GPIO6_IO15, WEAK_PULLUP),
+	IOMUX_PAD_CTRL(NANDF_CS1__GPIO6_IO14, WEAK_PULLUP),
+};
+// Logosni8 - Map eMMC on Test Carrier
+static iomux_v3_cfg_t const usdhc3_pads[] = {
+	IOMUX_PAD_CTRL(SD3_CLK__SD3_CLK, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_CMD__SD3_CMD, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_RST__SD3_RESET, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT0__SD3_DATA0, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT1__SD3_DATA1, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT2__SD3_DATA2, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT3__SD3_DATA3, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT4__SD3_DATA4, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT5__SD3_DATA5, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT6__SD3_DATA6, USDHC_PAD_CTRL),
+	IOMUX_PAD_CTRL(SD3_DAT7__SD3_DATA7, USDHC_PAD_CTRL),
+};
 static iomux_v3_cfg_t const enet_pads1[] = {
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_MDC__ENET_MDC, ENET_PAD_CTRL),
@@ -1218,6 +1257,83 @@ int bootup_Song_Star_Wars(void)
 	beep(cH, 125);
 	beep(a,  650);
 }
+
+#ifdef CONFIG_CMD_BMODE
+static const struct boot_mode board_boot_modes[] = {
+	/* 8 bit bus width */
+	{"sd1", MAKE_CFGVAL(0x42, 0x28, 0x00, 0x00)},
+	/* 8 bit bus width */
+	{"emmc0", MAKE_CFGVAL(0x40, 0x30, 0x00, 0x00)},
+	/* 8 bit bus width */
+	{"emmc1", MAKE_CFGVAL(0x40, 0x38, 0x00, 0x00)},
+	{NULL, 0},
+};
+#endif /* CONFIG_CMD_BMODE */
+
+static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
+		{USDHC1_BASE_ADDR}, /* SD Card Slot */
+		{USDHC3_BASE_ADDR}, /* eMMC on Test Carrier */
+		{USDHC4_BASE_ADDR}, /* eMMC on Nicore8 */
+};
+
+// Card detected function for seeing if a card is present
+int board_mmc_getcd(struct mmc *mmc)
+{
+	struct fsl_esdhc_cfg *cfg = (struct fsl_esdhc_cfg *)mmc->priv;
+	int ret = 0;
+
+	if (cfg->esdhc_base == USDHC1_BASE_ADDR)
+		ret = !gpio_get_value(SDIO_CD);
+	else
+		ret = 1; // If it is not the SD card - it should be marked as present
+
+	return ret;
+}
+
+int board_mmc_init(struct bd_info *bis) {
+	struct src *psrc = (struct src *) SRC_BASE_ADDR;
+	 unsigned reg = readl(&psrc->sbmr1) >> 11;
+	/*
+	  * Upon reading BOOT_CFG register the following map is done:
+	 * Bit 11 and 12 of BOOT_CFG register can determine the current
+	 * mmc port
+	 * 0x1                  SD1
+	 * 0x2                  SD2
+	 * 0x3                  SD4
+	 */
+
+	// Configure Pins for eMMC
+	SETUP_IOMUX_PADS(usdhc4_pads);
+
+	// Configure Pins for eMMC on Test Carrier
+	SETUP_IOMUX_PADS(usdhc3_pads);
+
+	// Configure and Map Pins for SD Card on Test Carrier
+	SETUP_IOMUX_PADS(sdmmc_pads);
+
+	// Request GPIOs
+	gpio_request(SDIO_PWR_EN, "SDIO_PWR_EN,");
+	gpio_request(SDIO_WP, "SDIO_WP");
+	gpio_request(SDIO_CD, "SDIO_CD");
+
+	// Enable power to SDCARD
+	gpio_direction_output(SDIO_PWR_EN, 1);
+	gpio_direction_output(SDIO_WP, 1);
+	gpio_direction_output(SDIO_CD, 1);
+
+	// Initialise all mmc - Define clocks first
+	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+
+	if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
+		puts("WARNING: failed to initialize SD\n");
+	if(fsl_esdhc_initialize(bis, &usdhc_cfg[1]))
+		puts("WARNING: failed to initialize eMMC on Test Carrier\n");
+	if(fsl_esdhc_initialize(bis, &usdhc_cfg[2]))
+		puts("WARNING: failed to initialize eMMC on Nicore8\n");
+}
+
 int board_init(void)
 {
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
@@ -1241,18 +1357,15 @@ int board_init(void)
 		setup_i2c(i, CONFIG_SYS_I2C_SPEED, 0x7f, p);
 		p += stride;
 	}
-
+#endif
+/*
 	// Setting up USB
 	clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_OTG_ID_MASK, IOMUXC_GPR1_OTG_ID_GPIO1);
 
 	SETUP_IOMUX_PADS(misc_pads);
-
+*/
 	/* address of boot parameters */
-	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
-
-	// Setting up USDHC
-	SETUP_IOMUX_PADS(usdhc2_pads);
-#endif
+	//gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
 #ifdef CONFIG_MXC_SPI
     setup_spi();
@@ -1318,15 +1431,6 @@ int initial_Printing(void)
 
 #ifdef CONFIG_PREBOOT
 // Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
-#endif
-
-#ifdef CONFIG_CMD_BMODE
-static const struct boot_mode board_boot_modes[] = {
-	/* 4 bit bus width */
-	{"mmc0",	MAKE_CFGVAL(0x40, 0x30, 0x00, 0x00)},
-	{"mmc1",	MAKE_CFGVAL(0x40, 0x38, 0x00, 0x00)},
-	{NULL,		0},
-};
 #endif
 
 int misc_init_r(void)

@@ -21,7 +21,6 @@
 #define CONFIG_NR_DRAM_BANKS            1
 #define CONFIG_SYS_MAX_FLASH_BANKS      1
 #define CONFIG_SYS_MALLOC_LEN           (10 * SZ_1M)
-#define CONFIG_SYS_FSL_ESDHC_ADDR       0
 #define PHYS_SDRAM                      MMDC0_ARB_BASE_ADDR
 #define CONFIG_SYS_SDRAM_BASE           PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR        IRAM_BASE_ADDR
@@ -41,6 +40,11 @@
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 #define CONFIG_SYS_I2C_SPEED		100000
 #define CONFIG_I2C_EDID
+
+/* MMC Configs */
+#define CONFIG_SYS_FSL_ESDHC_ADDR      USDHC4_BASE_ADDR
+#define CONFIG_SYS_FSL_USDHC_NUM       3
+#define CONFIG_SYS_MMC_ENV_DEV         0
 
 /*
  * The rest of this file is from Nitrogen lite 6
@@ -102,10 +106,6 @@
 #define CONFIG_MACH_TYPE	3769
 
 #define CONFIG_USBD_HS
-
-/* MMC Configs */
-#define CONFIG_SYS_FSL_ESDHC_ADDR      0
-#define CONFIG_SYS_FSL_USDHC_NUM       2
 
 /*
  * SATA Configs
