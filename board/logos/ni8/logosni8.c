@@ -588,7 +588,7 @@ int board_ehci_power(int port, int on)
 #ifdef CONFIG_MXC_SPI
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
-	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(3, 19)) : -1;
+	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(2, 30)) : -1;
 }
 
 static iomux_v3_cfg_t const ecspi1_pads[] = {
