@@ -290,9 +290,10 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 };
 
 static iomux_v3_cfg_t const misc_pads[] = {
+	//first one migh be worng
 	IOMUX_PAD_CTRL(GPIO_1__USB_OTG_ID, WEAK_PULLUP),
+
 	IOMUX_PAD_CTRL(KEY_COL4__USB_OTG_OC, WEAK_PULLUP),
-	IOMUX_PAD_CTRL(EIM_D30__USB_H1_OC, WEAK_PULLUP),
 	/* OTG Power enable */
 	IOMUX_PAD_CTRL(EIM_D22__GPIO3_IO22, OUTPUT_40OHM),
 };
@@ -322,10 +323,10 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 
 	//new I2C bus for the EEPROM
 	IOMUX_PAD_CTRL(KEY_ROW3__I2C2_SDA, I2C_PAD_CTRL),
-	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
+	/* see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(KEY_COL3__I2C2_SCL, I2C_PAD_CTRL),
 
-
+	
 	IOMUX_PAD_CTRL(ENET_TX_EN__I2C4_SCL, I2C_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_TXD1__I2C4_SDA, I2C_PAD_CTRL),
 
@@ -345,8 +346,16 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 static iomux_v3_cfg_t const conf_usb_pads[] = {
 	// Pin configuration for USB
 
+	//USB1:
+	IOMUX_PAD_CTRL(EIM_D30__USB_H1_OC, WEAK_PULLUP),
 	/* Configuration of GPIO_0 to USB_H1_PWR - Here called USB_1_PWREN in schematic - see schematic page 10 - The Same padding is used for USB on Nitrogen */
-	IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLUP)
+	IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLDOWN),
+
+	//USB_Micro:
+	IOMUX_PAD_CTRL(ENET_RX_ER__USB_OTG_ID, WEAK_PULLUP),
+	IOMUX_PAD_CTRL(KEY_ROW4__USB_OTG_PWR, WEAK_PULLDOWN),
+	IOMUX_PAD_CTRL(KEY_COL4__USB_OTG_OC, WEAK_PULLUP),
+
 };
 #endif
 /*
@@ -1344,7 +1353,7 @@ int board_init(void)
 
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
-
+/*
 #ifdef CONFIG_CMD_I2C
 	// Setting up I2C
 	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1358,6 +1367,7 @@ int board_init(void)
 		p += stride;
 	}
 #endif
+*/
 /*
 	// Setting up USB
 	clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_OTG_ID_MASK, IOMUXC_GPR1_OTG_ID_GPIO1);
