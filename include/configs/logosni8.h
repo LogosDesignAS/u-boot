@@ -8,7 +8,7 @@
 #ifndef __LOGOS_NI8_H__
 #define __LOGOS_NI8_H__
 
-#define CONFIG_MXC_UART_BASE            UART4_BASE
+#define CONFIG_MXC_UART_BASE           UART4_BASE
 
 #include"mx6_common.h"
 
