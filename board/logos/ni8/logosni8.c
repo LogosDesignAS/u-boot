@@ -92,7 +92,8 @@ enum GPIOS {
 	GPIO_CHARGER_PRSNT	= IMX_GPIO_NR(1,  7),
 	GPIO_CHARGING		= IMX_GPIO_NR(1,  8),
 	GPIO_PMIC_INT_B		= IMX_GPIO_NR(7, 13),
-	GPIO_CARRIER_PWR_ON	= IMX_GPIO_NR(6, 31)
+	GPIO_CARRIER_PWR_ON	= IMX_GPIO_NR(6, 31),
+	GPIO_RGMII_RESET_LOGISNI8 = IMX_GPIO_NR(1, 25)
 };
 
 // Enum for AFB_GPIOs[0-7] on the Logosni8 board
@@ -284,21 +285,20 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	IOMUX_PAD_CTRL(RGMII_TD3__RGMII_TD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TX_CTL__RGMII_TX_CTL, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL),
-	/* pin 35 - 1 (PHY_AD2) on reset */
-	IOMUX_PAD_CTRL(RGMII_RXC__GPIO6_IO30, NO_PAD_CTRL),
-	/* pin 32 - 1 - (MODE0) all */
-	IOMUX_PAD_CTRL(RGMII_RD0__GPIO6_IO25, NO_PAD_CTRL),
-	/* pin 31 - 1 - (MODE1) all */
-	IOMUX_PAD_CTRL(RGMII_RD1__GPIO6_IO27, NO_PAD_CTRL),
-	/* pin 28 - 1 - (MODE2) all */
-	IOMUX_PAD_CTRL(RGMII_RD2__GPIO6_IO28, NO_PAD_CTRL),
-	/* pin 27 - 1 - (MODE3) all */
-	IOMUX_PAD_CTRL(RGMII_RD3__GPIO6_IO29, NO_PAD_CTRL),
-	/* pin 33 - 1 - (CLK125_EN) 125Mhz clockout enabled */
-	IOMUX_PAD_CTRL(RGMII_RX_CTL__GPIO6_IO24, NO_PAD_CTRL),
-	/* pin 42 PHY nRST */
-	IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, NO_PAD_CTRL),
-	IOMUX_PAD_CTRL(ENET_RXD0__GPIO1_IO27, NO_PAD_CTRL),
+	/* pin 31 - RX_CLK */
+	IOMUX_PAD_CTRL(RGMII_RXC__RGMII_RXC, ENET_PAD_CTRL),
+	/* pin 29 - 1 - PHY ADDDRES0 */
+	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL),
+	/* pin 28 - 1 - PHY ADDDRES1 */
+	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL),
+	/* pin 26 - 1 - (MODE1) all */
+	IOMUX_PAD_CTRL(RGMII_RD2__RGMII_RD2, ENET_PAD_CTRL),
+	/* pin 25 - 1 - (MODE3) all */
+	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
+	/* pin 30 - 1 - (MODE0) all */
+	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
+	/* pin 1 PHY nRST */
+	IOMUX_PAD_CTRL(ENET_CRS_DV__GPIO1_IO25, NO_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
@@ -320,7 +320,7 @@ static iomux_v3_cfg_t const ni8_boot_flags[] = {
 		IOMUX_PAD_CTRL(EIM_DA15__GPIO3_IO15, NO_PAD_CTRL),
 
 };
-
+/* Ethernet Pad Initialisation for Logosni8 */
 static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RXC__RGMII_RXC, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL),
@@ -623,23 +623,27 @@ static void setup_iomux_boot_config(void)
 
 static void setup_iomux_enet(void)
 {
-	gpio_direction_output(IMX_GPIO_NR(3, 23), 0); /* SABRE Lite PHY rst */
-	gpio_direction_output(IMX_GPIO_NR(1, 27), 0); /* Nitrogen6X PHY rst */
+	//gpio_direction_output(IMX_GPIO_NR(3, 23), 0); /* SABRE Lite PHY rst */
+	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 0); /* Logosni8 PHY rst */
+	/* These settings is needed if we need to change the mode and PHY address
 	gpio_direction_output(IMX_GPIO_NR(6, 30), 1);
 	gpio_direction_output(IMX_GPIO_NR(6, 25), 1);
 	gpio_direction_output(IMX_GPIO_NR(6, 27), 1);
 	gpio_direction_output(IMX_GPIO_NR(6, 28), 1);
 	gpio_direction_output(IMX_GPIO_NR(6, 29), 1);
-	SETUP_IOMUX_PADS(enet_pads1);
-	gpio_direction_output(IMX_GPIO_NR(6, 24), 1);
+	 */
 
-	/* Need delay 10ms according to KSZ9021 spec */
+	SETUP_IOMUX_PADS(enet_pads1);
+
+	//gpio_direction_output(IMX_GPIO_NR(6, 24), 1);
+
+	/* Need delay 10ms according to AR8023 spec - to make sre the clock is stable - logosni8 */
 	udelay(1000 * 10);
-	gpio_set_value(IMX_GPIO_NR(3, 23), 1); /* SABRE Lite PHY reset */
-	gpio_set_value(IMX_GPIO_NR(1, 27), 1); /* Nitrogen6X PHY reset */
+	gpio_set_value(GPIO_RGMII_RESET_LOGISNI8, 1); /* Logosni8 PHY reset */
 
 	SETUP_IOMUX_PADS(enet_pads2);
-	udelay(100);	/* Wait 100 us before using mii interface */
+	udelay(1000);	/* Wait 1000 us before using mii interface - and pull the reset pin low */
+
 }
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 static iomux_v3_cfg_t const usb_pads[] = {
@@ -697,30 +701,48 @@ static void setup_spi(void)
 }
 #endif
 
+static int ar8031_phy_fixup(struct phy_device *phydev)
+{
+    unsigned short val;
+
+    /* To enable AR8031 ouput a 125MHz clk from CLK_25M */
+    phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+    phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+    phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+
+    val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+    val &= 0xffe3;
+    val |= 0x18;
+    phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
+
+    /* introduce tx clock delay */
+    phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
+    val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+    val |= 0x0100;
+    phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
+
+    return 0;
+}
+
 int board_phy_config(struct phy_device *phydev)
 {
-	/* min rx data delay */
-	ksz9021_phy_extended_write(phydev,
-			MII_KSZ9021_EXT_RGMII_RX_DATA_SKEW, 0x0);
-	/* min tx data delay */
-	ksz9021_phy_extended_write(phydev,
-			MII_KSZ9021_EXT_RGMII_TX_DATA_SKEW, 0x0);
-	/* max rx/tx clock delay, min rx/tx control */
-	ksz9021_phy_extended_write(phydev,
-			MII_KSZ9021_EXT_RGMII_CLOCK_SKEW, 0xf0f0);
-	if (phydev->drv->config)
-		phydev->drv->config(phydev);
+    ar8031_phy_fixup(phydev);
 
-	return 0;
+    if (phydev->drv->config)
+        phydev->drv->config(phydev);
+
+    return 0;
 }
 
 int board_eth_init(struct bd_info *bis)
-{/* - Uncommented for early testing
+{
+
 	uint32_t base = IMX_FEC_BASE;
 	struct mii_dev *bus = NULL;
 	struct phy_device *phydev = NULL;
 	int ret;
 
+	/* Uncomment this if we need to manually change the PHY address and the mode of the ethernet
 	gpio_request(WL12XX_WL_IRQ_GP, "wifi_irq");
 	gpio_request(IMX_GPIO_NR(6, 30), "rgmii_rxc");
 	gpio_request(IMX_GPIO_NR(6, 25), "rgmii_rd0");
@@ -730,6 +752,9 @@ int board_eth_init(struct bd_info *bis)
 	gpio_request(IMX_GPIO_NR(6, 24), "rgmii_rx_ctl");
 	gpio_request(IMX_GPIO_NR(3, 23), "rgmii_reset_sabrelite");
 	gpio_request(IMX_GPIO_NR(1, 27), "rgmii_reset_nitrogen6x");
+	 */
+
+	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGISNI8");
 	setup_iomux_enet();
 
 #ifdef CONFIG_FEC_MXC
@@ -752,15 +777,13 @@ int board_eth_init(struct bd_info *bis)
 	// For otg ethernet //
 	usb_eth_initialize(bis);
 #endif
- */
 	return 0;
-/* - Uncommened for early testing
+
 free_phydev:
 	free(phydev);
 free_bus:
 	free(bus);
 	return ret;
- */
 }
 
 #if defined(CONFIG_VIDEO_IPUV3)
