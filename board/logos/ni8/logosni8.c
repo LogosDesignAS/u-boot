@@ -46,7 +46,18 @@
 //Uncomment to enable the demo
 //#define DEMO_MODE
 
-// ENUM
+// ENUM for configuring the AR8035 ethernet adapter
+enum AR8035_CONFIGS {
+	GPIO_RGMII_RX_DV =   IMX_GPIO_NR(6, 24),
+	GPIO_ENET_RXD0_INT = IMX_GPIO_NR(1, 27),
+	GPIO_RGMII_RX_D0 =   IMX_GPIO_NR(6, 25),
+	GPIO_RGMII_RX_D1 =   IMX_GPIO_NR(6, 27),
+	GPIO_RGMII_RX_D2 =   IMX_GPIO_NR(6, 28),
+	GPIO_RGMII_RX_D3 =   IMX_GPIO_NR(6, 29),
+	GPIO_RGMII_RX_CLK =  IMX_GPIO_NR(6, 30)
+};
+
+// ENUM for bootconfigs
 enum BOOT_CONFIGS {
 	GPIO_EIM_DA0 = IMX_GPIO_NR(3, 0),
 	GPIO_EIM_DA1 = IMX_GPIO_NR(3, 1),
@@ -118,6 +129,15 @@ enum SD_GPIOS {
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
+
+#define ENET_PAD_CTRL_PD  (PAD_CTL_PUS_100K_DOWN |		\
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
+
+#define ENET_PAD_CTRL_CLK  ((PAD_CTL_PUS_100K_UP & ~PAD_CTL_PKE) | \
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
+
 #define UART_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |			\
 	PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
@@ -125,9 +145,6 @@ DECLARE_GLOBAL_DATA_PTR;
 #define USDHC_PAD_CTRL (PAD_CTL_PUS_47K_UP |			\
 	PAD_CTL_SPEED_LOW | PAD_CTL_DSE_80ohm |			\
 	PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
-
-#define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
 
 #define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED |		\
 	PAD_CTL_DSE_40ohm     | PAD_CTL_SRE_FAST)
@@ -275,59 +292,73 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 	IOMUX_PAD_CTRL(SD3_DAT6__SD3_DATA6, USDHC_PAD_CTRL),
 	IOMUX_PAD_CTRL(SD3_DAT7__SD3_DATA7, USDHC_PAD_CTRL),
 };
+
 static iomux_v3_cfg_t const enet_pads1[] = {
+	/* MDIO */
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_MDC__ENET_MDC, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(RGMII_TXC__RGMII_TXC, ENET_PAD_CTRL),
+
+	/* RGMII */
+	IOMUX_PAD_CTRL(RGMII_TXC__RGMII_TXC, NO_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD0__RGMII_TD0, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD1__RGMII_TD1, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD2__RGMII_TD2, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD3__RGMII_TD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TX_CTL__RGMII_TX_CTL, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL),
+
+	/* GPIO16 -> AR8035 25MHz */
+	//IOMUX_PAD_CTRL(GPIO_16__ENET_REF_CLK , NO_PAD_CTRL),
+
+	/* Reference Clock */
+	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL_CLK),
+
+	/* First use these pins to config the AR8035 to the correct mode */
+	/* Should be in the RGMII, PLLON , INT mode - meaning Mode[3..0] = 1110
 	/* pin 31 - RX_CLK */
-	IOMUX_PAD_CTRL(RGMII_RXC__RGMII_RXC, ENET_PAD_CTRL),
-	/* pin 29 - 1 - PHY ADDDRES0 */
-	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL),
-	/* pin 28 - 1 - PHY ADDDRES1 */
-	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL),
-	/* pin 26 - 1 - (MODE1) all */
-	IOMUX_PAD_CTRL(RGMII_RD2__RGMII_RD2, ENET_PAD_CTRL),
-	/* pin 25 - 1 - (MODE3) all */
-	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
-	/* pin 30 - 1 - (MODE0) all */
-	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
+	IOMUX_PAD_CTRL(RGMII_RXC__GPIO6_IO30, WEAK_PULLUP),
+	/* pin 29 - Value: 0 - PHY ADDDRES0 */
+	IOMUX_PAD_CTRL(RGMII_RD0__GPIO6_IO25, WEAK_PULLDOWN),
+	/* pin 28 - Value: 0 - PHY ADDDRES1 */
+	IOMUX_PAD_CTRL(RGMII_RD1__GPIO6_IO27, WEAK_PULLDOWN),
+	/* pin 26 - Value: 1 - (MODE1) all */
+	IOMUX_PAD_CTRL(RGMII_RD2__GPIO6_IO28, WEAK_PULLUP),
+	/* pin 25 - Value: 1 - (MODE3) all */
+	IOMUX_PAD_CTRL(RGMII_RD3__GPIO6_IO29, WEAK_PULLUP),
+	/* pin 30 - Value: 0 - (MODE0) all */
+	IOMUX_PAD_CTRL(RGMII_RX_CTL__GPIO6_IO24, WEAK_PULLUP),
 	/* pin 1 PHY nRST */
-	IOMUX_PAD_CTRL(ENET_CRS_DV__GPIO1_IO25, NO_PAD_CTRL),
-};
-
-static iomux_v3_cfg_t const ni8_boot_flags[] = {
-		IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA1__GPIO3_IO01, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA2__GPIO3_IO02, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA3__GPIO3_IO03, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA4__GPIO3_IO04, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA5__GPIO3_IO05, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA6__GPIO3_IO06, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA7__GPIO3_IO07, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA8__GPIO3_IO08, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA9__GPIO3_IO09, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA10__GPIO3_IO10, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA11__GPIO3_IO11, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA12__GPIO3_IO12, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA13__GPIO3_IO13, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA14__GPIO3_IO14, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(EIM_DA15__GPIO3_IO15, NO_PAD_CTRL),
-
+	IOMUX_PAD_CTRL(ENET_CRS_DV__GPIO1_IO25, WEAK_PULLUP),
+	/* Interrupt pin */
+	IOMUX_PAD_CTRL(ENET_RXD0__GPIO1_IO27, ENET_PAD_CTRL),
 };
 /* Ethernet Pad Initialisation for Logosni8 */
 static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RXC__RGMII_RXC, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL),
+	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL_PD),
+	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL_PD),
 	IOMUX_PAD_CTRL(RGMII_RD2__RGMII_RD2, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
+	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL_PD),
+};
+
+static iomux_v3_cfg_t const ni8_boot_flags[] = {
+	IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA1__GPIO3_IO01, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA2__GPIO3_IO02, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA3__GPIO3_IO03, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA4__GPIO3_IO04, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA5__GPIO3_IO05, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA6__GPIO3_IO06, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA7__GPIO3_IO07, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA8__GPIO3_IO08, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA9__GPIO3_IO09, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA10__GPIO3_IO10, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA11__GPIO3_IO11, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA12__GPIO3_IO12, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA13__GPIO3_IO13, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA14__GPIO3_IO14, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_DA15__GPIO3_IO15, NO_PAD_CTRL),
+
 };
 
 static iomux_v3_cfg_t const misc_pads[] = {
@@ -382,6 +413,7 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 	// TODO: Make sure the the watch dog initialisation doesnt reset the device - goes to timeout on TC
 	IOMUX_PAD_CTRL(GPIO_9__WDOG1_B, WDOG_PAD_CTRL),
 };
+
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 /* USB Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_usb_pads[] = {
@@ -623,28 +655,47 @@ static void setup_iomux_boot_config(void)
 
 static void setup_iomux_enet(void)
 {
-	//gpio_direction_output(IMX_GPIO_NR(3, 23), 0); /* SABRE Lite PHY rst */
-	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 0); /* Logosni8 PHY rst */
-	/* These settings is needed if we need to change the mode and PHY address
-	gpio_direction_output(IMX_GPIO_NR(6, 30), 1);
-	gpio_direction_output(IMX_GPIO_NR(6, 25), 1);
-	gpio_direction_output(IMX_GPIO_NR(6, 27), 1);
-	gpio_direction_output(IMX_GPIO_NR(6, 28), 1);
-	gpio_direction_output(IMX_GPIO_NR(6, 29), 1);
-	 */
+	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGISNI8");
+	gpio_request(GPIO_RGMII_RX_DV,"GPIO_RGMII_RX_DV");
+	gpio_request(GPIO_RGMII_RX_D0,"GPIO_RGMII_RX_D0");
+	gpio_request(GPIO_RGMII_RX_D1,"GPIO_RGMII_RX_D1");
+	gpio_request(GPIO_RGMII_RX_D2,"GPIO_RGMII_RX_D2");
+	gpio_request(GPIO_RGMII_RX_D3,"GPIO_RGMII_RX_D3");
+	gpio_request(GPIO_RGMII_RX_CLK,"GPIO_RGMII_RX_CLK");
+	gpio_request(GPIO_ENET_RXD0_INT,"GPIO_ENET_RXD0_INT");
 
+	// DO all the first mapping - GPIOs for Configuring the PHY and the AR8035 Mode
 	SETUP_IOMUX_PADS(enet_pads1);
 
-	//gpio_direction_output(IMX_GPIO_NR(6, 24), 1);
+	// set Output for configuring AR8035
+	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 0); /* Logosni8 PHY rst */
 
-	/* Need delay 10ms according to AR8023 spec - to make sre the clock is stable - logosni8 */
-	udelay(1000 * 10);
+	// Setup the correct mode for Ethernet chip - AR8035 - Should be 1110 - see page 8 in the datasheet
+	gpio_direction_output(GPIO_RGMII_RX_DV, 0);
+	gpio_direction_output(GPIO_RGMII_RX_D0, 0);
+	gpio_direction_output(GPIO_RGMII_RX_D1, 0);
+	gpio_direction_output(GPIO_RGMII_RX_D2, 1);
+	gpio_direction_output(GPIO_RGMII_RX_D3, 1);
+	gpio_direction_output(GPIO_RGMII_RX_CLK, 1);  // low voltage - 1.5 0 and 1.8 is 1 - for 2.5V - PULL DOWN/PULL UP (Hardwired)
+	//gpio_direction_output(GPIO_ENET_RXD0_INT, 1); // Active low - but is a output and is the interrupt pin.
+
+	// For Debug Purpose Set the LED 2 and LED 3 LOW
+	gpio_set_value(GPIO_LED_2, 0);
+	gpio_set_value(GPIO_LED_3, 0);
+
+	/* Need delay 2ms according to AR8035 spec - to make sure the clock is stable - logosni8 */
+	mdelay(2);
 	gpio_set_value(GPIO_RGMII_RESET_LOGISNI8, 1); /* Logosni8 PHY reset */
 
-	SETUP_IOMUX_PADS(enet_pads2);
-	udelay(1000);	/* Wait 1000 us before using mii interface - and pull the reset pin low */
+	// Turn LEDs off for debug
+	gpio_set_value(GPIO_LED_2, 1);
+	gpio_set_value(GPIO_LED_3, 1);
 
+	mdelay(2); // This delay is used for testing - TODO: REMOVE This Delay when the Ethernet is working.
+	SETUP_IOMUX_PADS(enet_pads2);
+	mdelay(1);	/* Wait 1000 us before using mii interface - and pull the reset pin low */
 }
+
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 static iomux_v3_cfg_t const usb_pads[] = {
 	IOMUX_PAD_CTRL(GPIO_17__GPIO7_IO12, NO_PAD_CTRL),
@@ -662,6 +713,7 @@ static void setup_iomux_uart(void)
 int board_ehci_hcd_init(int port)
 {
 	SETUP_IOMUX_PADS(usb_pads);
+	gpio_request(IMX_GPIO_NR(7, 12), "GPIO_RESET_USB_HUB");
 
 	/* Reset USB hub */
 	gpio_direction_output(IMX_GPIO_NR(7, 12), 0);
@@ -701,90 +753,133 @@ static void setup_spi(void)
 }
 #endif
 
-static int ar8031_phy_fixup(struct phy_device *phydev)
+#define BMC_PDOWN 0x0800
+
+static int ar8035_phy_fixup(struct phy_device *phydev)
 {
-    unsigned short val;
+	unsigned short val;
 
-    /* To enable AR8031 ouput a 125MHz clk from CLK_25M */
-    phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-    phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
-    phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+	/* from linux/arch/arm/mach-imx/mach-imx6q.c :
+	 * Ar803x phy SmartEEE feature cause link status generates glitch,
+	 * which cause ethernet link down/up issue, so disable SmartEEE
+ 	*/
 
-    val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-    val &= 0xffe3;
-    val |= 0x18;
-    phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x805d);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4003);
 
-    /* introduce tx clock delay */
-    phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
-    val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
-    val |= 0x0100;
-    phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val & ~(1 << 8));
 
-    return 0;
+
+	// Device 7 of the phy
+	// Enable AR8035 to output a 125MHz clk from CLK_25M to IMX6 ENET_REF_CLK
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+	val &= 0xffe7;
+	val |= 0x18;
+	if ( phy_write(phydev, MDIO_DEVAD_NONE, 0xe,val) < 0 )
+		printf("Enabling the 125MHz Clk from CLK 25M failed.\n");
+
+
+	// Introduce tx clock delay
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+	val |= 0x0100;
+	if(phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val) < 0)
+		printf("Enabling TX Clock Delay failed\n");
+
+	// Introduce rx clock delay
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x0);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+	val |= 0x8000;
+	if (phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val) < 0)
+		printf("Enabling RX Clock delay failed\n");
+
+	// Introduce rgmii gtx clock delay - 3.4 ns - Default 2.4ns - TODO: Should be tweaked when the ethernet works - to get optimal performance
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0xB);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+	val |= 0x0060;
+	if(phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val) < 0)
+		printf("Enabling GTX delay of 3.4 ns failed\n");
+
+	// Read all the values to verify that they are correctly written
+	// Firstly reading the clock back.
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+
+	return 0;
 }
 
 int board_phy_config(struct phy_device *phydev)
 {
-    ar8031_phy_fixup(phydev);
+	ar8035_phy_fixup(phydev);
 
-    if (phydev->drv->config)
-        phydev->drv->config(phydev);
+	printf("Initalised the AR8035\n");
 
-    return 0;
+	if (phydev->drv->config)
+		phydev->drv->config(phydev);
+
+	return 0;
 }
+
 
 int board_eth_init(struct bd_info *bis)
 {
-
+	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	uint32_t base = IMX_FEC_BASE;
 	struct mii_dev *bus = NULL;
 	struct phy_device *phydev = NULL;
 	int ret;
 
-	/* Uncomment this if we need to manually change the PHY address and the mode of the ethernet
-	gpio_request(WL12XX_WL_IRQ_GP, "wifi_irq");
-	gpio_request(IMX_GPIO_NR(6, 30), "rgmii_rxc");
-	gpio_request(IMX_GPIO_NR(6, 25), "rgmii_rd0");
-	gpio_request(IMX_GPIO_NR(6, 27), "rgmii_rd1");
-	gpio_request(IMX_GPIO_NR(6, 28), "rgmii_rd2");
-	gpio_request(IMX_GPIO_NR(6, 29), "rgmii_rd3");
-	gpio_request(IMX_GPIO_NR(6, 24), "rgmii_rx_ctl");
-	gpio_request(IMX_GPIO_NR(3, 23), "rgmii_reset_sabrelite");
-	gpio_request(IMX_GPIO_NR(1, 27), "rgmii_reset_nitrogen6x");
-	 */
-
-	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGISNI8");
 	setup_iomux_enet();
 
+	// Config environment variables
+	//env_set("ethaddr", "00:19:b8:04:42:1b");
+
+
 #ifdef CONFIG_FEC_MXC
+
 	bus = fec_get_miibus(base, -1);
 	if (!bus)
-		return -EINVAL;
+		return 0;
 	// scan phy 4,5,6,7
 	phydev = phy_find_by_mask(bus, (0xf << 4), PHY_INTERFACE_MODE_RGMII);
 	if (!phydev) {
-		ret = -EINVAL;
-		goto free_bus;
+		free(bus);
+		return 0;
 	}
-	printf("using phy at %d\n", phydev->addr);
+	printf("Using phy at %d\n", phydev->addr);
+
+	printf("Resetting the AR8035\n");
+
 	ret  = fec_probe(bis, -1, base, bus, phydev);
-	if (ret)
-		goto free_phydev;
+	if (ret) {
+		printf("FEC MXC: %s:failed\n", __func__);
+		free(phydev);
+		free(bus);
+	}
+
+	// Use 125MHz anatop loopback REF_CLK1 for ENET0
+	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC_MASK, 0);
+
+	//enable_fec_anatop_clock(0, ENET_125MHZ);
+
 #endif
 
 #ifdef CONFIG_CI_UDC
 	// For otg ethernet //
 	usb_eth_initialize(bis);
 #endif
-	return 0;
 
-free_phydev:
-	free(phydev);
-free_bus:
-	free(bus);
 	return ret;
 }
+
 
 #if defined(CONFIG_VIDEO_IPUV3)
 
@@ -1213,6 +1308,23 @@ static void led_logosni8_party_light(void)
 	gpio_set_value(GPIO_LED_3, 1);
 }
 
+static int setup_fec(void)
+{
+	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
+
+	// Not removed for now - this is not needed because the clock is generated by the PHY
+
+	/* set gpr1[21] to select anatop clock */
+	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK,
+	//				IOMUXC_GPR1_ENET_CLK_SEL_MASK);
+
+	/* Clear gpr1[ENET_CLK_SEL] for external clock */
+	//clrbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
+	//return enable_fec_anatop_clock(0, ENET_125MHZ);
+
+	return 0;
+}
+
 // TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_r(void)
 {
@@ -1221,6 +1333,10 @@ int board_early_init_r(void)
 
 	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
 	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
+
+	// Config environment variables
+	env_set("ethact", "FEC");
+
 
 #ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
 	// Early setup of I2C
@@ -1449,6 +1565,7 @@ int board_mmc_init(struct bd_info *bis) {
 		puts("WARNING: failed to initialize eMMC on Nicore8\n");
 }
 
+
 int board_init(void)
 {
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
@@ -1462,6 +1579,12 @@ int board_init(void)
 
 	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
 	setup_iomux_boot_config();
+
+	// Setup Clocks for Ethernet
+#if defined(CONFIG_FEC_MXC)
+	setup_fec();
+#endif
+
 
 /*
 #ifdef CONFIG_CMD_I2C
@@ -1592,7 +1715,5 @@ int board_late_init(void)
 
 	led_logosni8_party_light();
 #endif
-
-
 	return 0;
 }
