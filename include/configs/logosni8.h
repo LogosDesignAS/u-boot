@@ -8,7 +8,19 @@
 #ifndef __LOGOS_NI8_H__
 #define __LOGOS_NI8_H__
 
-#define CONFIG_MXC_UART_BASE           UART4_BASE
+// Uncomment if you want to test the code on the nitrogen board.
+//#define NITROGEN_TEST
+
+// Disable Gigabit
+//#ifdef CONFIG_PHY_GIGE
+//#undef CONFIG_PHY_GIGE
+//#endif
+
+#ifdef NITROGEN_TEST
+    #define CONFIG_MXC_UART_BASE			UART2_BASE
+#else
+    #define CONFIG_MXC_UART_BASE			UART4_BASE
+#endif
 
 #include"mx6_common.h"
 
@@ -64,10 +76,18 @@
 #endif
 
 #define CONFIG_FEC_MXC
-#define IMX_FEC_BASE			ENET_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          4
-#define CONFIG_FEC_XCV_TYPE             RGMII
-#define CONFIG_ETHPRIME                 "FEC"
+#define CONFIG_FEC_XCV_TYPE					RGMII
+/* ENET Config */
+#define IMX_FEC_BASE						ENET_BASE_ADDR
+#define CONFIG_FEC_MXC_PHYADDR				0x04
+#define CONFIG_ETHPRIME						"FEC"
+
+/* Undefine USB to Ethernet */
+/*
+#ifdef CONFIG_USB_HOST_ETHER
+#undef CONFIG_USB_HOST_ETHER
+#endif
+ */
 
 /* Framebuffer and LCD */
 #define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE (6 * 1024 * 1024)
