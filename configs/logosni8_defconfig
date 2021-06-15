@@ -7,10 +7,10 @@ CONFIG_ARCH_MISC_INIT=y
 
 # Set default Device Tree - TODO: Remember to update device tree - might not be possible while using JTAG - try with flash
 #CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nitrogen6x"
-CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
+#CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
-CONFIG_OF_CONTROL=y
+#CONFIG_OF_CONTROL=y
 
 # Memory and address settings
 CONFIG_SYS_MEMTEST_START=0x10000000
