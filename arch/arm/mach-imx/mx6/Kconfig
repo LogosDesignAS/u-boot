@@ -466,7 +466,7 @@ config TARGET_NPI_IMX6ULL
 
 config TARGET_LOGOSNI8
 	bool "logosni8"
-	depends on MX6S
+	depends on MX6DL || MX6Q || MX6QDL || MX6S
 	imply USB_ETHER_ASIX
 	imply USB_ETHER_MCS7830
 	imply USB_ETHER_SMSC95XX
