@@ -7,10 +7,10 @@ CONFIG_ARCH_MISC_INIT=y
 
 # Set default Device Tree - TODO: Remember to update device tree - might not be possible while using JTAG - try with flash
 #CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nitrogen6x"
-#CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
+CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
-#CONFIG_OF_CONTROL=y
+CONFIG_OF_CONTROL=y
 
 # Memory and address settings
 CONFIG_SYS_MEMTEST_START=0x10000000
@@ -80,8 +80,6 @@ CONFIG_SF_DEFAULT_SPEED=52000000
 # ------------------ Configs undefined for early testing ------------------- #
 ##############################################################################
 
-CONFIG_CMD_GPIO=y
-
 # I2C Configs
 CONFIG_CMD_I2C=y
 CONFIG_I2C_EEPROM=y
@@ -116,7 +114,7 @@ CONFIG_CMD_SF_TEST=y
 CONFIG_CMD_SPI=y
 CONFIG_CMD_BMODE=y
 CONFIG_CMD_UNZIP=y
-// Extra Network Commands
+#Extra Network Commands
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_DNS=y
 CONFIG_CMD_LINK_LOCAL=y
@@ -129,7 +127,6 @@ CONFIG_SYS_USE_MMC=y
 #CONFIG_SD_BOOT=y
 CONFIG_SUPPORT_EMMC_BOOT=y
 CONFIG_GENERIC_MMC=y
-CONFIG_MMC=y
 CONFIG_EMMC_BOOT=y
 
 # Config EPPROM

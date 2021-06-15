@@ -184,7 +184,7 @@
 #define FDTFILE "fdtfile=imx6q-sabrelite.dtb\0"
 #else
 /* FIXME: nitrogen6x covers multiple configs. Define fdtfile for each supported config. */
-#define FDTFILE
+#define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
 #endif
 
 #define BOOT_TARGET_DEVICES(func) \
