@@ -307,13 +307,13 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	IOMUX_PAD_CTRL(RGMII_TX_CTL__RGMII_TX_CTL, ENET_PAD_CTRL),
 
 	/* GPIO16 -> AR8035 25MHz */
-	//IOMUX_PAD_CTRL(GPIO_16__ENET_REF_CLK , NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(GPIO_16__ENET_REF_CLK , NO_PAD_CTRL),
 
 	/* Reference Clock */
 	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL_CLK),
 
-	/* First use these pins to config the AR8035 to the correct mode */
-	/* Should be in the RGMII, PLLON , INT mode - meaning Mode[3..0] = 1110
+	/* First use these pins to config the AR8035 to the correct mode
+	* Should be in the RGMII, PLLON , INT mode - meaning Mode[3..0] = 1110  */
 	/* pin 31 - RX_CLK */
 	IOMUX_PAD_CTRL(RGMII_RXC__GPIO6_IO30, WEAK_PULLUP),
 	/* pin 29 - Value: 0 - PHY ADDDRES0 */
@@ -1318,8 +1318,8 @@ static int setup_fec(void)
 	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK,
 	//				IOMUXC_GPR1_ENET_CLK_SEL_MASK);
 
-	/* Clear gpr1[ENET_CLK_SEL] for external clock */
-	//clrbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
+	/* Clear gpr1[ENET_CLK_SEL] for external clock  - see page 2032 in reference manual */
+	clrbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
 	//return enable_fec_anatop_clock(0, ENET_125MHZ);
 
 	return 0;
