@@ -46,6 +46,10 @@
 //Uncomment to enable the demo
 //#define DEMO_MODE
 
+// ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
+enum I2C_RESET {
+	GPIO_I2C_BUS_SEL_RESET = IMX_GPIO_NR(2, 0)
+};
 // ENUM for configuring the AR8035 ethernet adapter
 enum AR8035_CONFIGS {
 	GPIO_RGMII_RX_DV =   IMX_GPIO_NR(6, 24),
@@ -251,6 +255,11 @@ static struct i2c_pads_info i2c_pads[] = {
 #endif
 
 #define I2C_BUS_CNT 2
+
+// HDMI Reset Pad Config
+static iomux_v3_cfg_t const hdmi_reset_pads[] = {
+	IOMUX_PAD_CTRL(NANDF_D0__GPIO2_IO00, WEAK_PULLUP),
+};
 
 // Logosni8 - Map the onboard eMMC
 static iomux_v3_cfg_t const usdhc4_pads[] = {
@@ -725,6 +734,7 @@ int board_ehci_hcd_init(int port)
 
 int board_ehci_power(int port, int on)
 {
+	gpio_request(GP_USB_OTG_PWR, "GP_USB_OTG_PWR");
 	if (port)
 		return 0;
 	gpio_set_value(GP_USB_OTG_PWR, on);
@@ -967,8 +977,8 @@ static void enable_rgb(struct display_info_t const *dev)
 }
 
 struct display_info_t const displays[] = {{
-	.bus	= 1,
-	.addr	= 0x50,
+	.bus	= 2,
+	.addr	= 0x70,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= detect_i2c,
 	.enable	= do_enable_hdmi,
@@ -1343,6 +1353,7 @@ int board_early_init_r(void)
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif
 
+
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 	// Early setup of USB
 	SETUP_IOMUX_PADS(conf_usb_pads);
@@ -1580,6 +1591,15 @@ int board_init(void)
 	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
 	setup_iomux_boot_config();
 
+
+	// Map HDMI Reset - I2c bus select
+	SETUP_IOMUX_PADS(hdmi_reset_pads);
+	// Set reset high for IC2 Bus select - Chpi is PCA954 - IC2 address 0x70 - (Reset is active low)
+	gpio_request(GPIO_I2C_BUS_SEL_RESET, "GPIO_I2C_BUS_SEL_RESET ");
+	// Set output high - reset disabled
+	gpio_direction_output(GPIO_I2C_BUS_SEL_RESET, 1);
+
+
 	// Setup Clocks for Ethernet
 #if defined(CONFIG_FEC_MXC)
 	setup_fec();
@@ -1705,6 +1725,9 @@ int board_late_init(void)
 	{
 		printf("HW ID: %s\n", sn);
 	}
+
+	// Write commands to the PCA9546ABS to control the correct I2c bus
+	//i2c_reg_write( 2, 0x002aab190, 0x01);
 
 #ifdef DEMO_MODE
 	// Boot up Song
