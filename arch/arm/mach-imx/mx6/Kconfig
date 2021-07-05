@@ -41,6 +41,7 @@ config MX6QDL
 config MX6S
 	bool "i.MX 6Solo SoC support"
 	select HAS_CAAM
+	select SUPPORT_SPL
 
 config MX6SL
 	bool "i.MX 6SoloLite SoC support"

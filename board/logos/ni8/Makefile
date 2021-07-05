@@ -6,3 +6,8 @@
 # Copyright (C) 2007 Sergey Kubushyn <ksi@koi8.net>
 
 obj-y	+= logosni8.o
+
+
+#ifdef CONFIG_SPL_BUILD
+#obj-y += spl.o
+#endif

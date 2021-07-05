@@ -975,7 +975,7 @@ static void enable_rgb(struct display_info_t const *dev)
 
 struct display_info_t const displays[] = {{
 	.bus	= 2,
-	.addr	= 0x70,
+	.addr	= 0x50,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= detect_i2c,
 	.enable	= do_enable_hdmi,
@@ -1328,6 +1328,12 @@ static int setup_fec(void)
 	/* Clear gpr1[ENET_CLK_SEL] for external clock  - see page 2032 in reference manual */
 	clrbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
 	//return enable_fec_anatop_clock(0, ENET_125MHZ);
+
+	return 0;
+}
+int board_early_init_f(void)
+{
+	setup_iomux_uart();
 
 	return 0;
 }
@@ -1735,3 +1741,21 @@ int board_late_init(void)
 #endif
 	return 0;
 }
+
+#ifdef CONFIG_SPL_BUILD
+#include <asm/arch/mx6-ddr.h>
+#include <spl.h>
+#include <linux/libfdt.h>
+
+#ifdef CONFIG_SPL_OS_BOOT
+int spl_start_uboot(void)
+{
+	gpio_request(KEY_VOL_UP, "KEY Volume UP");
+	gpio_direction_input(KEY_VOL_UP);
+
+	/* Only enter in Falcon mode if KEY_VOL_UP is pressed */
+	return gpio_get_value(KEY_VOL_UP);
+}
+#endif
+
+#endif
