@@ -1334,6 +1334,8 @@ static int setup_fec(void)
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
+	//initilise our I2C
+	//FRAM
 
 	return 0;
 }
@@ -1341,10 +1343,9 @@ int board_early_init_f(void)
 // TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_r(void)
 {
-	setup_iomux_uart();
 
 	// Setup of UART2, UART4 and UART5
-	setup_iomux_uart();
+	setup_iomux_uart();//this is also int boar_early_init_f()
 
 	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
 	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
@@ -1874,30 +1875,34 @@ static void spl_dram_init(void)
 		ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
 }
 
-void board_init_f(ulong dummy)
-{
-	/* DDR initialization */
-	spl_dram_init();
+// void board_init_f(ulong dummy)
+// {
+// 	/* DDR initialization */
+// 	spl_dram_init();
 
-	/* setup AIPS and disable watchdog */
-	arch_cpu_init();
+// 	/* setup AIPS and disable watchdog */
+// 	arch_cpu_init(); //might not be needed
 
-	ccgr_init();
-	gpr_init();
+// 	ccgr_init();//clocks
 
-	/* iomux and setup of i2c */
-	board_early_init_f();
+// 	gpr_init();//general purpose register that keep state after warm reset
 
-	/* setup GP timer */
-	timer_init();
+// 	/* iomux and setup of i2c */
+// 	board_early_init_f();//write now it is only uart. might put more
 
-	/* UART clocks enabled and gd valid - init serial console */
-	preloader_console_init();
+// 	/* setup GP timer */
+// 	timer_init(); //nothing is set
 
-	/* Clear the BSS. */
-	memset(__bss_start, 0, __bss_end - __bss_start);
 
-	/* load/boot image from boot device */
-	board_init_r(NULL, 0);
-}
+
+// 	/* UART clocks enabled and gd valid - init serial console */
+// 	//preloader_console_init(); // depends if this is necesary
+
+// 	/* Clear the BSS. */ 
+// 	//memset(__bss_start, 0, __bss_end - __bss_start); 
+// 	//comment out clearing of BSS should be done bi crt0
+
+// 	/* load/boot image from boot device */
+// 	//board_init_r(NULL, 0);
+// }
 #endif
