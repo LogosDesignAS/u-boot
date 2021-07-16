@@ -1,0 +1,120 @@
+# Nit6xLite with 512MB of RAM
+
+# Initializing target
+target remote localhost:2331
+monitor reset
+monitor halt
+monitor sleep 200
+
+# Disable Watchdog
+monitor memU32 0x020bc000=0x30
+
+# From U-Boot ddr-setup.cfg
+monitor memU32 0x020e04bc=0x00000030
+monitor memU32 0x020e04c0=0x00000030
+monitor memU32 0x020e04c4=0x00000030
+monitor memU32 0x020e04c8=0x00000030
+monitor memU32 0x020e04cc=0x00000030
+monitor memU32 0x020e04d0=0x00000030
+monitor memU32 0x020e04d4=0x00000030
+monitor memU32 0x020e04d8=0x00000030
+monitor memU32 0x020e0764=0x00000030
+monitor memU32 0x020e0770=0x00000030
+monitor memU32 0x020e0778=0x00000030
+monitor memU32 0x020e077c=0x00000030
+monitor memU32 0x020e0780=0x00000030
+monitor memU32 0x020e0784=0x00000030
+monitor memU32 0x020e078c=0x00000030
+monitor memU32 0x020e0748=0x00000030
+monitor memU32 0x020e074c=0x00000030
+monitor memU32 0x020e076c=0x00000030
+monitor memU32 0x020e0470=0x00020030
+monitor memU32 0x020e0474=0x00020030
+monitor memU32 0x020e0478=0x00020030
+monitor memU32 0x020e047c=0x00020030
+monitor memU32 0x020e0480=0x00020030
+monitor memU32 0x020e0484=0x00020030
+monitor memU32 0x020e0488=0x00020030
+monitor memU32 0x020e048c=0x00020030
+monitor memU32 0x020e0464=0x00020030
+monitor memU32 0x020e0490=0x00020030
+monitor memU32 0x020e04ac=0x00020030
+monitor memU32 0x020e04b0=0x00020030
+monitor memU32 0x020e0494=0x00020030
+monitor memU32 0x020e04a4=0x00003000
+monitor memU32 0x020e04a8=0x00003000
+monitor memU32 0x020e04b4=0x00020030
+monitor memU32 0x020e04b8=0x00020030
+monitor memU32 0x020e0750=0x00020000
+monitor memU32 0x020e0760=0x00020000
+monitor memU32 0x020e0754=0x00000000
+monitor memU32 0x020e04a0=0x00000000
+monitor memU32 0x020e0774=0x000C0000
+monitor memU32 0x021b081c=0x33333333
+monitor memU32 0x021b0820=0x33333333
+monitor memU32 0x021b0824=0x33333333
+monitor memU32 0x021b0828=0x33333333
+monitor memU32 0x021b481c=0x33333333
+monitor memU32 0x021b4820=0x33333333
+monitor memU32 0x021b4824=0x33333333
+monitor memU32 0x021b4828=0x33333333
+monitor memU32 0x021b0018=0x00001740
+monitor memU32 0x021b001c=0x00008000
+
+# From U-Boot 800mhz_2x128mx16.cfg
+monitor memU32 0x021b0004=0x0002002D
+#Not define in Nitrogen lite board 800mhz
+monitor memU32 0x021b001c=0x00008000
+monitor memU32 0x021b000c=0x3F435333
+monitor memU32 0x021b0010=0xB50D0AA4
+monitor memU32 0x021b0014=0x01FF00DB
+monitor memU32 0x021b002c=0x000026D2#
+monitor memU32 0x021b0030=0x00431023
+monitor memU32 0x021b0008=0x1B444040
+monitor memU32 0x021b0004=0x0002556D
+monitor memU32 0x021b0040=0x00000017
+monitor memU32 0x021b0000=0x83190000
+monitor memU32 0x021b001c=0x04088032
+monitor memU32 0x021b001c=0x00008033
+monitor memU32 0x021b001c=0x00048031
+monitor memU32 0x021b001c=0x15208030
+monitor memU32 0x021b001c=0x04008040
+monitor memU32 0x021b0800=0xA1390003
+monitor memU32 0x021b4800=0xA1390003
+monitor memU32 0x021b0020=0x00005800
+monitor memU32 0x021b0818=0x00011117
+monitor memU32 0x021b4818=0x00011117
+monitor memU32 0x021b083c=0x4220021F
+#Something interesting here
+monitor memU32 0x021b483c=0x4201020C
+monitor memU32 0x021b0840=0x0207017E
+monitor memU32 0x021b4840=0x01660172
+monitor memU32 0x021b0848=0x4A4D4E4D
+monitor memU32 0x021b4848=0x4A4F5049
+monitor memU32 0x021b0850=0x3F3C3D31
+monitor memU32 0x021b4850=0x3238372B
+monitor memU32 0x021b080c=0x001F001F
+monitor memU32 0x021b0810=0x001F001F
+monitor memU32 0x021b480c=0x001F001F
+monitor memU32 0x021b4810=0x001F001F
+monitor memU32 0x021b08b8=0x00000800
+monitor memU32 0x021b48b8=0x00000800
+monitor memU32 0x021b001c=0x00000000
+monitor memU32 0x021b0404=0x00011006
+
+# Enable all clocks just to be sure
+monitor memU32 0x020c4068=0xFFFFFFFF
+monitor memU32 0x020c406c=0xFFFFFFFF
+monitor memU32 0x020c4070=0xFFFFFFFF
+monitor memU32 0x020c4074=0xFFFFFFFF
+monitor memU32 0x020c4078=0xFFFFFFFF
+monitor memU32 0x020c407c=0xFFFFFFFF
+monitor memU32 0x020c4080=0xFFFFFFFF
+monitor memU32 0x020e0010=0xF00000CF
+monitor memU32 0x020e0018=0x007F007F
+monitor memU32 0x020e001c=0x007F007F
+monitor memU32 0x020c4060=0x000000fb
+
+#monitor reg cpsr = 0xD3
+#monitor reg sp = 0x0093FF20
+monitor reg pc = 0x00908000
