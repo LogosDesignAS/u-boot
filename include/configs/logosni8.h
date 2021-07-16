@@ -21,7 +21,7 @@
 #else
     #define CONFIG_MXC_UART_BASE			UART4_BASE
 #endif
-
+#define CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 1
 
 
 

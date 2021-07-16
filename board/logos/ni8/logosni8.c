@@ -4,6 +4,10 @@
  * Copyright (C) 2013, Boundary Devices <info@boundarydevices.com>
  */
 
+ #define DEBUG
+ #undef CONFIG_LOGLEVEL
+ #define CONFIG_LOGLEVEL 8
+ 
 #include <common.h>
 #include <command.h>
 #include <env.h>
@@ -1333,7 +1337,17 @@ static int setup_fec(void)
 }
 int board_early_init_f(void)
 {
-	setup_iomux_uart();
+	
+	// Setup of UART2, UART4 and UART5
+	setup_iomux_uart();//this is also int boar_early_init_f()
+
+	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
+	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
+
+	// Config environment variables
+	//env_set("ethact", "FEC");
+
+
 	//initilise our I2C
 	//FRAM
 
@@ -1352,6 +1366,19 @@ int board_early_init_r(void)
 
 	// Config environment variables
 	env_set("ethact", "FEC");
+
+		/////
+	// Add a GPIO request for the two LEDS
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
+
+	// Setup the LEDS and the corresponding padding
+	SETUP_IOMUX_PADS(ni8_led_pads);
+
+	// Setup the LEDs as Output
+	gpio_direction_output(GPIO_LED_2, 0);			// LED2
+	gpio_direction_output(GPIO_LED_3, 1);			// LED3
+	///
 
 
 #ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
@@ -1605,6 +1632,19 @@ int board_init(void)
 	// Set output high - reset disabled
 	gpio_direction_output(GPIO_I2C_BUS_SEL_RESET, 1);
 
+			/////
+	// Add a GPIO request for the two LEDS
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
+
+	// Setup the LEDS and the corresponding padding
+	SETUP_IOMUX_PADS(ni8_led_pads);
+
+	// Setup the LEDs as Output
+	gpio_direction_output(GPIO_LED_2, 0);			// LED2
+	gpio_direction_output(GPIO_LED_3, 1);			// LED3
+	///
+
 
 	// Setup Clocks for Ethernet
 #if defined(CONFIG_FEC_MXC)
@@ -1759,7 +1799,54 @@ int spl_start_uboot(void)
 	/* Only enter in Falcon mode if KEY_VOL_UP is pressed */
 	return gpio_get_value(KEY_VOL_UP);
 }
+#else
+
 #endif
+
+/* called from board_init_r after gd setup if CONFIG_SPL_BOARD_INIT defined */
+/* its our chance to print info about boot device */
+void spl_board_init(void)
+{
+	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
+	u32 boot_device = BOOT_DEVICE_MMC2;
+
+	switch (boot_device) {
+	case BOOT_DEVICE_MMC2:
+		puts("Booting from MMC\n");
+		break;
+	case BOOT_DEVICE_NAND:
+		puts("Booting from NAND\n");
+		break;
+	case BOOT_DEVICE_SATA:
+		puts("Booting from SATA\n");
+		break;
+	default:
+		puts("Unknown boot device\n");
+	}
+
+	/* PMIC init */
+	//setup_pmic();
+}
+
+void board_boot_order(u32 *spl_boot_list)
+{
+	//spl_boot_list[0] = spl_boot_device();
+	spl_boot_list[0] = 3;
+	spl_boot_list[1] = 2;
+	spl_boot_list[2] = 1;
+	spl_boot_list[3] = 4;
+	spl_boot_list[4] = 0;
+	switch (spl_boot_list[0]) {
+	case BOOT_DEVICE_NAND:
+		spl_boot_list[1] = BOOT_DEVICE_MMC1;
+		spl_boot_list[2] = BOOT_DEVICE_UART;
+		break;
+	case BOOT_DEVICE_MMC1:
+		spl_boot_list[1] = BOOT_DEVICE_UART;
+		break;
+	}
+}
+
 
 static void ccgr_init(void)
 {
@@ -1875,34 +1962,62 @@ static void spl_dram_init(void)
 		ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
 }
 
-// void board_init_f(ulong dummy)
-// {
-// 	/* DDR initialization */
-// 	spl_dram_init();
+void board_init_f(ulong dummy)
+{
+	/* DDR initialization */
+	//spl_dram_init();
 
-// 	/* setup AIPS and disable watchdog */
-// 	arch_cpu_init(); //might not be needed
+	/* setup AIPS and disable watchdog */
+	arch_cpu_init(); //might not be needed
 
-// 	ccgr_init();//clocks
+	ccgr_init();//clocks
 
-// 	gpr_init();//general purpose register that keep state after warm reset
+	gpr_init();//general purpose register that keep state after warm reset
 
-// 	/* iomux and setup of i2c */
-// 	board_early_init_f();//write now it is only uart. might put more
+	/* iomux and setup of i2c */
+	board_early_init_f();//write now it is only uart. might put more
+	/* setup GP timer */
+	timer_init(); //nothing is set
 
-// 	/* setup GP timer */
-// 	timer_init(); //nothing is set
+		// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
+	//setup_iomux_leds();
+
+	/////
+	// Add a GPIO request for the two LEDS
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
+
+	// Setup the LEDS and the corresponding padding
+	SETUP_IOMUX_PADS(ni8_led_pads);
+
+	// Setup the LEDs as Output
+	gpio_direction_output(GPIO_LED_2, 1);			// LED2
+	gpio_direction_output(GPIO_LED_3, 0);			// LED3
+	///
+
+	// Setup of GPIOs
+	setup_iomux_gpio();
+
+	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
+	setup_iomux_afb_gpio();
+
+	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
+	setup_iomux_boot_config();
+
+	printf("Board init_f was called\n");
 
 
 
-// 	/* UART clocks enabled and gd valid - init serial console */
-// 	//preloader_console_init(); // depends if this is necesary
+	/* UART clocks enabled and gd valid - init serial console */
+	//preloader_console_init(); // depends if this is necesary
+	//print_Logos_Logo();
+	//printf("some1");
 
-// 	/* Clear the BSS. */ 
-// 	//memset(__bss_start, 0, __bss_end - __bss_start); 
-// 	//comment out clearing of BSS should be done bi crt0
+	/* Clear the BSS. */ 
+	//memset(__bss_start, 0, __bss_end - __bss_start); 
+	//comment out clearing of BSS should be done bi crt0
 
-// 	/* load/boot image from boot device */
-// 	//board_init_r(NULL, 0);
-// }
+	/* load/boot image from boot device */
+	//board_init_r(NULL, 0);
+}
 #endif
