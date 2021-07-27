@@ -38,6 +38,20 @@
 #include "logosLogo.h"
 #include "bootmelody.h"
 
+// extra includes
+#include <linux/fb.h>
+#include <ipu_pixfmt.h>
+#include <asm/arch/crm_regs.h>
+#include <asm/arch/mxc_hdmi.h>
+#include <asm/mach-imx/video.h>
+#include <splash.h>
+
+/* Special MXCFB sync flags are here. */
+#include "../drivers/video/imx/mxcfb.h"
+
+// Includes for controlling HDMI
+#include <video.h>
+
 #ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 	#include <i2c.h>
 	#include <asm/mach-imx/mxc_i2c.h>
@@ -133,6 +147,10 @@ enum SD_GPIOS {
 
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define GP_USB_OTG_PWR	IMX_GPIO_NR(3, 22)
+#define GP_USB1_PWR	IMX_GPIO_NR(1, 0)
+#define GP_USB0_PWR	IMX_GPIO_NR(4, 15)
 
 #define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
@@ -260,6 +278,7 @@ static struct i2c_pads_info i2c_pads[] = {
 // HDMI Reset Pad Config
 static iomux_v3_cfg_t const hdmi_reset_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_D0__GPIO2_IO00, WEAK_PULLUP),
+	IOMUX_PAD_CTRL(NANDF_D1__GPIO2_IO01, WEAK_PULLUP),
 };
 
 // Logosni8 - Map the onboard eMMC
@@ -422,13 +441,23 @@ static iomux_v3_cfg_t const conf_usb_pads[] = {
 
 	//USB1:
 	IOMUX_PAD_CTRL(EIM_D30__USB_H1_OC, WEAK_PULLUP),
-	/* Configuration of GPIO_0 to USB_H1_PWR - Here called USB_1_PWREN in schematic - see schematic page 10 - The Same padding is used for USB on Nitrogen */
-	IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLDOWN),
 
-	//USB_Micro:
+	/* Configuration of GPIO_0 to USB_H1_PWR - Here called USB_1_PWREN in schematic - see schematic page 10 - The Same padding is used for USB on Nitrogen */
+	// Mapped to a GPIO as done for the nitrogen board  inorder to enable the usb port.
+	//IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLDOWN),
+	IOMUX_PAD_CTRL(GPIO_0__GPIO1_IO00, WEAK_PULLUP),
+
+	// The datalines UBS+/- can not be multiplexed - therefore not mapped
+
+	//USB_Micro - OTG:
 	IOMUX_PAD_CTRL(ENET_RX_ER__USB_OTG_ID, WEAK_PULLUP),
-	IOMUX_PAD_CTRL(KEY_ROW4__USB_OTG_PWR, WEAK_PULLDOWN),
+	//IOMUX_PAD_CTRL(KEY_ROW4__USB_OTG_PWR, WEAK_PULLDOWN),  // This have been changed to a gpio
+	// USB 0 PWR Enable
+	IOMUX_PAD_CTRL(KEY_ROW4__GPIO4_IO15, WEAK_PULLUP),
+	// USB 0 Over Current
 	IOMUX_PAD_CTRL(KEY_COL4__USB_OTG_OC, WEAK_PULLUP),
+	// USB 0 VBus Detect
+	IOMUX_PAD_CTRL(NANDF_CS0__NAND_CE0_B, WEAK_PULLUP),
 
 };
 #endif
@@ -699,9 +728,13 @@ static void setup_iomux_enet(void)
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 static iomux_v3_cfg_t const usb_pads[] = {
-	IOMUX_PAD_CTRL(GPIO_17__GPIO7_IO12, NO_PAD_CTRL),
+	// USB 1 PWR Enable
+	IOMUX_PAD_CTRL(GPIO_0__GPIO1_IO00, WEAK_PULLUP),
+	// USB 0 PWR Enable
+	IOMUX_PAD_CTRL(KEY_ROW4__GPIO4_IO15, WEAK_PULLUP),
 };
 #endif
+
 
 static void setup_iomux_uart(void)
 {
@@ -714,23 +747,38 @@ static void setup_iomux_uart(void)
 int board_ehci_hcd_init(int port)
 {
 	SETUP_IOMUX_PADS(usb_pads);
-	gpio_request(IMX_GPIO_NR(7, 12), "GPIO_RESET_USB_HUB");
+	if (port == 1)
+	{
+		//printf("Reseting the USB HUB 1");
+		gpio_request(GP_USB1_PWR, "GP_USB1_PWR");
 
-	/* Reset USB hub */
-	gpio_direction_output(IMX_GPIO_NR(7, 12), 0);
-	mdelay(2);
-	gpio_set_value(IMX_GPIO_NR(7, 12), 1);
+		// Reset USB hub
+		gpio_direction_output(GP_USB1_PWR, 0);
+		mdelay(2);
+		gpio_set_value(GP_USB1_PWR, 1);
+	}
+	else // do noting
+	{
+		// Otherwise it is port 0
+		//printf("Reseting the USB HUB 0");
+		gpio_request(GP_USB0_PWR, "GP_USB0_PWR");
+
+		// Reset USB hub
+		gpio_direction_output(GP_USB0_PWR, 0);
+		mdelay(2);
+		gpio_set_value(GP_USB0_PWR, 1);
+	}
 
 	return 0;
 }
 
 int board_ehci_power(int port, int on)
 {
-	gpio_request(GP_USB_OTG_PWR, "GP_USB_OTG_PWR");
 	if (port)
 		return 0;
-	gpio_set_value(GP_USB_OTG_PWR, on);
-	return 0;
+	gpio_request(GP_USB0_PWR, "GP_USB0_PWR");
+
+	return gpio_direction_output(GP_USB0_PWR, on);
 }
 
 #endif
@@ -738,12 +786,20 @@ int board_ehci_power(int port, int on)
 #ifdef CONFIG_MXC_SPI
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
+#ifdef NITROGEN_TEST
+	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(3, 19)) : -1;
+#else
 	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(2, 30)) : -1;
+#endif // NITROGEN_TEST
 }
 
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	/* SS1 */
+#ifdef NITROGEN_TEST
+	IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
+#else
 	IOMUX_PAD_CTRL(EIM_EB2__GPIO2_IO30, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
+#endif //NITROGEN_TEST
 	IOMUX_PAD_CTRL(EIM_D17__ECSPI1_MISO, SPI_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_D18__ECSPI1_MOSI, SPI_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
@@ -876,14 +932,36 @@ int board_eth_init(struct bd_info *bis)
 
 #ifdef CONFIG_CI_UDC
 	// For otg ethernet //
-	usb_eth_initialize(bis);
+	//usb_eth_initialize(bis);
 #endif
 
 	return ret;
 }
 
+#if defined(CONFIG_SPLASH_SCREEN)
+int splash_screen_prepare(void)
+{
+	char *env_loadsplash;
 
-#if defined(CONFIG_VIDEO_IPUV3)
+	if (!env_get("splashimage") || !env_get("splashsize")) {
+		return -1;
+	}
+
+	env_loadsplash = env_get("loadsplash");
+	if (env_loadsplash == NULL) {
+		printf("Environment variable loadsplash not found!\n");
+		return -1;
+	}
+
+	if (run_command_list(env_loadsplash, -1, 0)) {
+		printf("failed to run loadsplash %s\n\n", env_loadsplash);
+		return -1;
+	}
+
+	return 0;
+}
+#endif
+
 
 static iomux_v3_cfg_t const backlight_pads[] = {
 	/* Backlight on RGB connector: J15 */
@@ -930,14 +1008,15 @@ static iomux_v3_cfg_t const rgb_pads[] = {
 static void do_enable_hdmi(struct display_info_t const *dev)
 {
 	imx_enable_hdmi_phy();
+	printf("Enable HDMI \n");
+
 }
 
 #ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
 static int detect_i2c(struct display_info_t const *dev)
 {
-	return ((0 == i2c_set_bus_num(dev->bus))
-		&&
-		(0 == i2c_probe(dev->addr)));
+	printf("Detecting if I2c is available \n");
+	return ((0 == i2c_set_bus_num(dev->bus)) && (0 == i2c_probe(dev->addr)));
 }
 #endif
 
@@ -972,8 +1051,8 @@ static void enable_rgb(struct display_info_t const *dev)
 }
 
 struct display_info_t const displays[] = {{
-	.bus	= 2,
-	.addr	= 0x70,
+	.bus	= 1,// logos is bus 2
+	.addr	= 0x50,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= detect_i2c,
 	.enable	= do_enable_hdmi,
@@ -1214,6 +1293,7 @@ struct display_info_t const displays[] = {{
 } } };
 size_t display_count = ARRAY_SIZE(displays);
 
+
 int board_cfb_skip(void)
 {
 	return NULL != env_get("novideo");
@@ -1224,6 +1304,8 @@ static void setup_display(void)
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	int reg;
+
+	printf("Initialising the display \n");
 
 	enable_ipu_clock();
 	imx_setup_hdmi();
@@ -1274,9 +1356,9 @@ static void setup_display(void)
 	gpio_direction_input(LVDS_BACKLIGHT_GP);
 	gpio_direction_input(RGB_BACKLIGHT_GP);
 }
-#endif
 
 #ifdef DEMO_MODE
+
 static unsigned gpios_led_logosni8[] = {
 	GPIO_LED_2, /* LED 2 - LogosNi8 */
 	GPIO_LED_3, /* LED 3 - LogosNi8 */
@@ -1336,7 +1418,6 @@ int board_early_init_r(void)
 	// Config environment variables
 	env_set("ethact", "FEC");
 
-
 #ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
@@ -1354,6 +1435,7 @@ int board_early_init_r(void)
 //#if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 //#endif
+
 	return 0;
 }
 
@@ -1570,6 +1652,29 @@ int board_mmc_init(struct bd_info *bis) {
 
 	return 0;
 }
+/*
+ * i2c_multiplexer
+ * This function can control the multiplexer PCA9546ABS, which control I2c3 .
+ * I2c3 can be connected to four different i2c busses using this multiplexer.
+ * @param - select
+ * 0x01 - selects I2C4_SDA_LCD
+ * 0x02 - selects I2C4_SDA_HDMI
+ * 0x04 - selects I2C4_SDA_GP
+ * 0x08 - selects I2C4_SDA_CAM
+ */
+void i2c_multiplexer(int select)
+{
+	// Write commands to the PCA9546ABS to control the correct I2c bus
+	i2c_set_bus_num(2);
+
+	// Write to the I2c Device
+	int ret = i2c_write(0x70, 0x00, 1, &select, 1);
+
+	if (ret)
+		printf("i2c_write: error sending\n");
+	printf("Setting the I2c Mulitplexer to select the correct signal.\n");
+};
+
 
 int board_mmc_init_dts() {
 	/*
@@ -1608,8 +1713,12 @@ int board_mmc_init_dts() {
 	return 0;
 }
 
+
 int board_init(void)
 {
+	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
+	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
+
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
 
@@ -1622,17 +1731,24 @@ int board_init(void)
 	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
 	setup_iomux_boot_config();
 
+	// Set reset high for IC2 Bus select - Chip is PCA954 - IC2 address 0x70 - (Reset is active low)
+	gpio_request(GPIO_I2C_BUS_SEL_RESET, "GPIO_I2C_BUS_SEL_RESET ");
 
 	// Map HDMI Reset - I2c bus select
 	SETUP_IOMUX_PADS(hdmi_reset_pads);
-	// Set reset high for IC2 Bus select - Chpi is PCA954 - IC2 address 0x70 - (Reset is active low)
-	gpio_request(GPIO_I2C_BUS_SEL_RESET, "GPIO_I2C_BUS_SEL_RESET ");
+
 	// Set output high - reset disabled
 	gpio_direction_output(GPIO_I2C_BUS_SEL_RESET, 1);
 
+	// Config the I2c Multiplexer
+	i2c_multiplexer( 0x02 );
+
+//#ifdef CONFIG_VIDEO_IPUV3
+	setup_display();
+//#endif
 
 	// Setup Clocks for Ethernet
-#if defined(CONFIG_FEC_MXC)
+#ifdef CONFIG_FEC_MXC
 	setup_fec();
 #endif
 
@@ -1656,17 +1772,17 @@ int board_init(void)
 	}
 #endif
 */
+	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID
+	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_OTG_ID_MASK, IOMUXC_GPR1_OTG_ID_ENET_RX_ERR);
+	clrbits_le32(&iomux->gpr[1], IOMUXC_GPR1_OTG_ID_MASK);
 /*
-	// Setting up USB
-	clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_OTG_ID_MASK, IOMUXC_GPR1_OTG_ID_GPIO1);
-
 	SETUP_IOMUX_PADS(misc_pads);
 */
 	/* address of boot parameters */
 	//gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
 #ifdef CONFIG_MXC_SPI
-    setup_spi();
+	setup_spi();
 #endif
 
 #ifdef CONFIG_SATA
@@ -1761,15 +1877,11 @@ int board_late_init(void)
 		printf("HW ID: %s\n", sn);
 	}
 
-	// Write commands to the PCA9546ABS to control the correct I2c bus
-	//i2c_reg_write( 2, 0x002aab190, 0x01);
-
 #ifdef DEMO_MODE
 	// Boot up Song
 	bootup_Song_Star_Wars();
 
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
-
 
 	led_logosni8_party_light();
 #endif
