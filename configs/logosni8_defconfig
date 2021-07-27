@@ -87,17 +87,53 @@ CONFIG_SF_DEFAULT_CS=0
 CONFIG_SF_DEFAULT_SPEED=52000000
 CONFIG_SF_DEFAULT_MODE=QSPI_MODE_24BIT
 #CONFIG_ENV_IS_IN_SPI_FLASH=y
+# Support Nitrogen SPI
+CONFIG_SPI_FLASH_SST=y
 
 # Enable Flattened Image Tree support
 CONFIG_FIT
+
+# Config eMMC
+CONFIG_MMC=y
+CONFIG_GENERIC_MMC=y
+CONFIG_SYS_USE_MMC=y
+CONFIG_SUPPORT_EMMC_BOOT=y
+CONFIG_GENERIC_MMC=y
+CONFIG_EMMC_BOOT=y
+
+# Config EPPROM
+CONFIG_CMD_EEPROM
+
+# I2C Configs
+CONFIG_CMD_I2C=y
+CONFIG_I2C_EEPROM=y
+CONFIG_SYS_I2C_IMX_LPI2C=y
+
+# HDMI Configs
+CONFIG_CMD_HDMIDETECT=y
+
+# Boot Configs
+CONFIG_SUPPORT_RAW_INITRD=y
+CONFIG_USE_PREBOOT=y
+CONFIG_BOOTDELAY=10
+
+# Enable the hush shell, if, then, else logic in scripts
+CONFIG_HUSH_PARSER=y
+
+# Read and display information about the partition table on various media.
+CONFIG_CMD_PART=y
+
+#CONFIG_NETCONSOLE=y - REMOVE we dont need to change stdin/out from serial to network
+
+# Freescale/NXP i.MX uSDHC/eSDHC controller support
+CONFIG_FSL_USDHC=y
+CONFIG_FSL_ESDHC_IMX=y
 
 ##############################################################################
 # ------------------ Configs undefined for early testing ------------------- #
 ##############################################################################
 
 # I2C Configs
-CONFIG_CMD_I2C=y
-CONFIG_I2C_EEPROM=y
 #CONFIG_I2C0_ENABLE=y
 #CONFIG_I2C1_ENABLE=y
 #CONFIG_I2C2_ENABLE=y
@@ -105,11 +141,7 @@ CONFIG_I2C_EEPROM=y
 #CONFIG_DM=y
 #CONFIG_DM_I2C=y
 #CONFIG_DM_I2C_COMPAT=y
-CONFIG_SYS_I2C_IMX_LPI2C=y
 #CONFIG_SYS_I2C_MXC=y
-
-# HDMI Configs
-#CONFIG_CMD_HDMIDETECT=y
 
 # Commands
 #CONFIG_CMD_CACHE=y
@@ -123,49 +155,38 @@ CONFIG_CMD_BOOTZ=y
 CONFIG_CMD_DHCP=y
 CONFIG_CMD_TIME=y
 CONFIG_CMD_PING=y
-#CONFIG_CMD_BMP=y
+CONFIG_CMD_BMP=y
 CONFIG_CMD_MMC=y
 CONFIG_CMD_SF=y
 CONFIG_CMD_SF_TEST=y
 CONFIG_CMD_SPI=y
 CONFIG_CMD_BMODE=y
 CONFIG_CMD_UNZIP=y
-#Extra Network Commands
+# Extra Network Commands
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_DNS=y
 CONFIG_CMD_LINK_LOCAL=y
 CONFIG_CMD_PCAP=y
 
-# Config eMMC
-CONFIG_MMC=y
-CONFIG_GENERIC_MMC=y
-CONFIG_SYS_USE_MMC=y
-#CONFIG_SD_BOOT=y
-CONFIG_SUPPORT_EMMC_BOOT=y
-CONFIG_GENERIC_MMC=y
-CONFIG_EMMC_BOOT=y
-
-# Config EPPROM
-CONFIG_CMD_EEPROM
-
 # Video and Screen Configs
 CONFIG_SPLASH_SCREEN_ALIGN=y
-#CONFIG_SYS_WHITE_ON_BLACK=y
-#CONFIG_VIDEO_BMP_GZIP=y
-#CONFIG_VIDEO_BMP_RLE8=y
+CONFIG_SYS_WHITE_ON_BLACK=y
+CONFIG_VIDEO_BMP_GZIP=y
+CONFIG_VIDEO_BMP_RLE8=y
 CONFIG_SPLASH_SCREEN=y
+CONFIG_BMP_16BPP=y
 CONFIG_VIDEO_IPUV3=y
-#CONFIG_BMP_16BPP=y
+#CONFIG_VIDEO=y
 
-# Boot Configs
-CONFIG_SUPPORT_RAW_INITRD=y
-CONFIG_USE_PREBOOT=y
-CONFIG_BOOTDELAY=10
+# TODO: This needs to be enabled for the HDMI to work - depends on the device tree
+#CONFIG_DM_VIDEO=y
+CONFIG_SPLASH_SCREEN=y
+CONFIG_SPLASH_SCREEN_ALIGN=y
 
 # USB Configs
-#CONFIG_SYS_USB_EVENT_POLL_VIA_CONTROL_EP=y
+CONFIG_SYS_USB_EVENT_POLL_VIA_CONTROL_EP=y
 #CONFIG_USB_FUNCTION_FASTBOOT=y
-#CONFIG_USB_KEYBOARD=y
+CONFIG_USB_KEYBOARD=y
 #CONFIG_USB_ETH_CDC=y
 #CONFIG_USB_ETHER=y
 
@@ -186,7 +207,7 @@ CONFIG_USB_GADGET_VENDOR_NUM=0x0525
 CONFIG_USB_GADGET=y
 
 # The Device Firmware Upgrade (DFU) allows to download and upload firmware to/from U-Boot connected over USB.
-#CONFIG_CI_UDC=y
+CONFIG_CI_UDC=y
 
 # PHY Configs
 CONFIG_PHYLIB=y
@@ -216,15 +237,3 @@ CONFIG_FASTBOOT_BUF_ADDR=0x12000000
 #CONFIG_CMD_FLASH is not set
 #CONFIG_ENV_OVERWRITE=y
 #CONFIG_BOUNCE_BUFFER=y
-
-# Enable the hush shell, if, then, else logic in scripts
-CONFIG_HUSH_PARSER=y
-
-# Read and display information about the partition table on various media.
-CONFIG_CMD_PART=y
-
-#CONFIG_NETCONSOLE=y - REMOVE we dont need to change stdin/out from serial to network
-
-# Freescale/NXP i.MX uSDHC/eSDHC controller support
-CONFIG_FSL_USDHC=y
-CONFIG_FSL_ESDHC_IMX=y

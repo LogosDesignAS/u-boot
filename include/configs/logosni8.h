@@ -54,6 +54,12 @@
 #define CONFIG_SYS_FSL_USDHC_NUM       3
 #define CONFIG_SYS_MMC_ENV_DEV         0
 
+#ifdef CONFIG_CMD_MMC
+#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 2) func(MMC, mmc, 3)
+#else
+#define DISTRO_BOOT_DEV_MMC(func)
+#endif
+
 /*
  * The rest of this file is from Nitrogen lite 6
  * TODO: Needs to be modified for Logosni8, be aware and clean up.
@@ -85,16 +91,16 @@
 #endif
  */
 
+#define CONFIG_VIDEO_LOGO
+#define CONFIG_VIDEO_BMP_LOGO
+//#define CONFIG_CI_UDC
+//#define CONFIG_CMD_SF
+
 /* Framebuffer and LCD */
 #define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE (6 * 1024 * 1024)
 #define CONFIG_IMX_HDMI
 #define CONFIG_IMX_VIDEO_SKIP
 
-#ifdef CONFIG_CMD_MMC
-#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 2) func(MMC, mmc, 3)
-#else
-#define DISTRO_BOOT_DEV_MMC(func)
-#endif
 
 #ifdef CONFIG_CMD_SATA
 #define DISTRO_BOOT_DEV_SATA(func) func(SATA, sata, 0)
