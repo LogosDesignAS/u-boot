@@ -11,11 +11,6 @@
 // Uncomment if you want to test the code on the nitrogen board.
 //#define NITROGEN_TEST
 
-// Disable Gigabit
-//#ifdef CONFIG_PHY_GIGE
-//#undef CONFIG_PHY_GIGE
-//#endif
-
 #ifdef NITROGEN_TEST
     #define CONFIG_MXC_UART_BASE			UART2_BASE
 #else
@@ -96,7 +91,7 @@
 #define CONFIG_IMX_VIDEO_SKIP
 
 #ifdef CONFIG_CMD_MMC
-#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 1)
+#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 2) func(MMC, mmc, 3)
 #else
 #define DISTRO_BOOT_DEV_MMC(func)
 #endif
@@ -150,11 +145,6 @@
 #define CONFIG_IMX_HDMI
 #define CONFIG_IMX_VIDEO_SKIP
 
-#ifdef CONFIG_CMD_MMC
-#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 1)
-#else
-#define DISTRO_BOOT_DEV_MMC(func)
-#endif
 
 #ifdef CONFIG_CMD_SATA
 #define DISTRO_BOOT_DEV_SATA(func) func(SATA, sata, 0)
