@@ -19,13 +19,6 @@
 	compatible = "logos,imx6dl-nicore8", "fsl,imx6dl";
 };
 
-/* *************************************************************************************************************************** */
-/* This line defines how much have been gone through - So when something have been test and verified - move it above this line */
-/* *************************************************************************************************************************** */
-
-
-// The following code build upon the following device tree for Nitrogen 6 lite - https://github.com/boundarydevices/linux-imx6/blob/boundary-imx_3.10.17_1.0.2_ga/arch/arm/boot/dts/imx6qdl-nit6xlite.dtsi
-
 &pxp {
 	status = "okay";
 };
@@ -47,3 +40,11 @@
 	uart-has-rtscts;
 	status = "okay";
 };
+
+/* *************************************************************************************************************************** */
+/* This line defines how much have been gone through - So when something have been test and verified - move it above this line */
+/* *************************************************************************************************************************** */
+
+
+// The following code build upon the following device tree for Nitrogen 6 lite - https://github.com/boundarydevices/linux-imx6/blob/boundary-imx_3.10.17_1.0.2_ga/arch/arm/boot/dts/imx6qdl-nit6xlite.dtsi
+

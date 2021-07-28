@@ -42,6 +42,7 @@
 	#include <asm/mach-imx/mxc_i2c.h>
 #endif
 
+
 //Uncomment to enable the demo
 //#define DEMO_MODE
 
@@ -365,15 +366,6 @@ static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA14__GPIO3_IO14, NO_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_DA15__GPIO3_IO15, NO_PAD_CTRL),
 
-};
-
-static iomux_v3_cfg_t const misc_pads[] = {
-	//first one migh be worng
-	IOMUX_PAD_CTRL(GPIO_1__USB_OTG_ID, WEAK_PULLUP),
-
-	IOMUX_PAD_CTRL(KEY_COL4__USB_OTG_OC, WEAK_PULLUP),
-	/* OTG Power enable */
-	IOMUX_PAD_CTRL(EIM_D22__GPIO3_IO22, OUTPUT_40OHM),
 };
 
 /* LED2 and LED3 pads on logosni8 */
@@ -838,7 +830,7 @@ int board_phy_config(struct phy_device *phydev)
 
 int board_eth_init(struct bd_info *bis)
 {
-	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
+	// struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	uint32_t base = IMX_FEC_BASE;
 	struct mii_dev *bus = NULL;
 	struct phy_device *phydev = NULL;
@@ -953,6 +945,7 @@ static void enable_lvds(struct display_info_t const *dev)
 	u32 reg = readl(&iomux->gpr[2]);
 	reg |= IOMUXC_GPR2_DATA_WIDTH_CH0_24BIT;
 	writel(reg, &iomux->gpr[2]);
+	gpio_request(LVDS_BACKLIGHT_GP, "LVDS_BACKLIGHT_GP");
 	gpio_direction_output(LVDS_BACKLIGHT_GP, 1);
 }
 
@@ -964,12 +957,14 @@ static void enable_lvds_jeida(struct display_info_t const *dev)
 	reg |= IOMUXC_GPR2_DATA_WIDTH_CH0_24BIT
 	     |IOMUXC_GPR2_BIT_MAPPING_CH0_JEIDA;
 	writel(reg, &iomux->gpr[2]);
+	gpio_request(LVDS_BACKLIGHT_GP, "LVDS_BACKLIGHT_GP");
 	gpio_direction_output(LVDS_BACKLIGHT_GP, 1);
 }
 
 static void enable_rgb(struct display_info_t const *dev)
 {
 	SETUP_IOMUX_PADS(rgb_pads);
+	gpio_request(RGB_BACKLIGHT_GP, "RGB_BACKLIGHT_GP");
 	gpio_direction_output(RGB_BACKLIGHT_GP, 1);
 }
 
@@ -1271,21 +1266,14 @@ static void setup_display(void)
 
 	/* backlights off until needed */
 	SETUP_IOMUX_PADS(backlight_pads);
+	gpio_request(RGB_BACKLIGHT_GP, "RGB_BACKLIGHT_GP");
+	gpio_request(LVDS_BACKLIGHT_GP, "LVDS_BACKLIGHT_GP");
 	gpio_direction_input(LVDS_BACKLIGHT_GP);
 	gpio_direction_input(RGB_BACKLIGHT_GP);
 }
 #endif
 
-
-static void set_gpios(unsigned *p, int cnt, int val)
-{
-	int i;
-
-	for (i = 0; i < cnt; i++)
-		gpio_direction_output(*p++, val);
-}
-
-
+#ifdef DEMO_MODE
 static unsigned gpios_led_logosni8[] = {
 	GPIO_LED_2, /* LED 2 - LogosNi8 */
 	GPIO_LED_3, /* LED 3 - LogosNi8 */
@@ -1314,6 +1302,7 @@ static void led_logosni8_party_light(void)
 	gpio_set_value(GPIO_LED_2, 0);
 	gpio_set_value(GPIO_LED_3, 1);
 }
+#endif
 
 static int setup_fec(void)
 {
@@ -1359,9 +1348,9 @@ int board_early_init_r(void)
 	// Early setup of Watchdog
 	SETUP_IOMUX_PADS(conf_wdog_pads);
 
-#if defined(CONFIG_VIDEO_IPUV3)
+//#if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
-#endif
+//#endif
 	return 0;
 }
 
@@ -1381,6 +1370,7 @@ int print_Logos_Logo(void)
 	{
 		printf("%s\n", logosLogo[h]);
 	}
+	return 0;
 }
 
 /*
@@ -1406,6 +1396,7 @@ int beep(int note, int duration)
 		gpio_direction_output(GPIO_3, 1);					// GPIO_3 -> SOUND1
 		udelay(T_sound >> 1);								// Divide by two
 	}
+	return 0;
 }
 
 int firstSection(void)
@@ -1433,6 +1424,7 @@ int firstSection(void)
 	beep(a,  650);
 
 	mdelay(500);
+
 	return 0;
 }
 
@@ -1459,6 +1451,7 @@ int secondSection(void)
 	beep(cH, 250);
 
 	mdelay(350);
+
 	return 0;
 }
 
@@ -1495,6 +1488,8 @@ int bootup_Song_Star_Wars(void)
 	beep(f,  375);
 	beep(cH, 125);
 	beep(a,  650);
+
+	return 0;
 }
 
 #ifdef CONFIG_CMD_BMODE
@@ -1530,8 +1525,50 @@ int board_mmc_getcd(struct mmc *mmc)
 }
 
 int board_mmc_init(struct bd_info *bis) {
-	struct src *psrc = (struct src *) SRC_BASE_ADDR;
-	 unsigned reg = readl(&psrc->sbmr1) >> 11;
+	/*
+	  * Upon reading BOOT_CFG register the following map is done:
+	 * Bit 11 and 12 of BOOT_CFG register can determine the current
+	 * mmc port
+	 * 0x1                  SD1
+	 * 0x2                  SD3
+	 * 0x3                  SD4
+	 */
+
+	// Configure Pins for eMMC
+	SETUP_IOMUX_PADS(usdhc4_pads);
+
+	// Configure Pins for eMMC on Test Carrier
+	SETUP_IOMUX_PADS(usdhc3_pads);
+
+	// Configure and Map Pins for SD Card on Test Carrier
+	SETUP_IOMUX_PADS(sdmmc_pads);
+
+	// Request GPIOs
+	gpio_request(SDIO_PWR_EN, "SDIO_PWR_EN,");
+	gpio_request(SDIO_WP, "SDIO_WP");
+	gpio_request(SDIO_CD, "SDIO_CD");
+
+	// Enable power to SDCARD
+	gpio_direction_output(SDIO_PWR_EN, 1);
+	gpio_direction_output(SDIO_WP, 1);
+	gpio_direction_output(SDIO_CD, 1);
+
+	// Initialise all mmc - Define clocks first
+	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+
+	if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
+		puts("WARNING: failed to initialize SD\n");
+	if(fsl_esdhc_initialize(bis, &usdhc_cfg[1]))
+		puts("WARNING: failed to initialize eMMC on Test Carrier\n");
+	if(fsl_esdhc_initialize(bis, &usdhc_cfg[2]))
+		puts("WARNING: failed to initialize eMMC on Nicore8\n");
+
+	return 0;
+}
+
+int board_mmc_init_dts() {
 	/*
 	  * Upon reading BOOT_CFG register the following map is done:
 	 * Bit 11 and 12 of BOOT_CFG register can determine the current
@@ -1565,14 +1602,8 @@ int board_mmc_init(struct bd_info *bis) {
 	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
 	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
 
-	if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
-		puts("WARNING: failed to initialize SD\n");
-	if(fsl_esdhc_initialize(bis, &usdhc_cfg[1]))
-		puts("WARNING: failed to initialize eMMC on Test Carrier\n");
-	if(fsl_esdhc_initialize(bis, &usdhc_cfg[2]))
-		puts("WARNING: failed to initialize eMMC on Nicore8\n");
+	return 0;
 }
-
 
 int board_init(void)
 {
@@ -1602,6 +1633,10 @@ int board_init(void)
 	setup_fec();
 #endif
 
+#if defined(CONFIG_OF_CONTROL)
+	// Init mmc - Ontop of Device tree
+	board_mmc_init_dts();
+#endif
 
 /*
 #ifdef CONFIG_CMD_I2C
