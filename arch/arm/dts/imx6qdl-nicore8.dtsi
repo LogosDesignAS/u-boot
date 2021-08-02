@@ -89,6 +89,7 @@
 			regulator-max-microvolt = <5000000>;
 			pinctrl-0 = <&pinctrl_usbotgvbus>;
 			gpio = <&gpio4 15 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
 			regulator-always-on;
 		};
 
@@ -537,7 +538,7 @@ pinctrl_uart2: uart2grp {
 
 /* Disabled USB1 for now - Crashed */
 &usbh1 {
-	vbus-supply = <&reg_usb_otg_vbus>;
+	vbus-supply = <&reg_usb_h1_vbus>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usbh1>;
 	reset-gpios = GP_USBH1_HUB_RESET;
