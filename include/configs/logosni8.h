@@ -55,7 +55,7 @@
 #define CONFIG_SYS_MMC_ENV_DEV         0
 
 #ifdef CONFIG_CMD_MMC
-#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 2) func(MMC, mmc, 3)
+#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 1) func(MMC, mmc, 2)
 #else
 #define DISTRO_BOOT_DEV_MMC(func)
 #endif
@@ -109,7 +109,7 @@
 #endif
 
 #ifdef CONFIG_USB_STORAGE
-#define DISTRO_BOOT_DEV_USB(func) func(USB, usb, 0)
+#define DISTRO_BOOT_DEV_USB(func) func(USB, usb, 0) func(USB, usb, 1)
 #else
 #define DISTRO_BOOT_DEV_USB(func)
 #endif
@@ -156,12 +156,6 @@
 #define DISTRO_BOOT_DEV_SATA(func) func(SATA, sata, 0)
 #else
 #define DISTRO_BOOT_DEV_SATA(func)
-#endif
-
-#ifdef CONFIG_USB_STORAGE
-#define DISTRO_BOOT_DEV_USB(func) func(USB, usb, 0)
-#else
-#define DISTRO_BOOT_DEV_USB(func)
 #endif
 
 #ifdef CONFIG_CMD_PXE

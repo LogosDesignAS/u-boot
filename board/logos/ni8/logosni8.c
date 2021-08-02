@@ -757,7 +757,7 @@ int board_ehci_hcd_init(int port)
 		mdelay(2);
 		gpio_set_value(GP_USB1_PWR, 1);
 	}
-	else // do noting
+	else
 	{
 		// Otherwise it is port 0
 		//printf("Reseting the USB HUB 0");
@@ -922,11 +922,6 @@ int board_eth_init(struct bd_info *bis)
 		free(phydev);
 		free(bus);
 	}
-
-	// Use 125MHz anatop loopback REF_CLK1 for ENET0
-	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC_MASK, 0);
-
-	//enable_fec_anatop_clock(0, ENET_125MHZ);
 
 #endif
 
@@ -1432,10 +1427,6 @@ int board_early_init_r(void)
 	// Early setup of Watchdog
 	SETUP_IOMUX_PADS(conf_wdog_pads);
 
-//#if defined(CONFIG_VIDEO_IPUV3)
-	setup_display();
-//#endif
-
 	return 0;
 }
 
@@ -1662,7 +1653,7 @@ int board_mmc_init(struct bd_info *bis) {
  * 0x04 - selects I2C4_SDA_GP
  * 0x08 - selects I2C4_SDA_CAM
  */
-void i2c_multiplexer(int select)
+void i2c_multiplexer(uint8_t select)
 {
 	// Write commands to the PCA9546ABS to control the correct I2c bus
 	i2c_set_bus_num(2);
@@ -1676,7 +1667,7 @@ void i2c_multiplexer(int select)
 };
 
 
-int board_mmc_init_dts() {
+int board_mmc_init_dts(void) {
 	/*
 	  * Upon reading BOOT_CFG register the following map is done:
 	 * Bit 11 and 12 of BOOT_CFG register can determine the current
@@ -1716,7 +1707,7 @@ int board_mmc_init_dts() {
 
 int board_init(void)
 {
-	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
+	// struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
@@ -1743,9 +1734,7 @@ int board_init(void)
 	// Config the I2c Multiplexer
 	i2c_multiplexer( 0x02 );
 
-//#ifdef CONFIG_VIDEO_IPUV3
 	setup_display();
-//#endif
 
 	// Setup Clocks for Ethernet
 #ifdef CONFIG_FEC_MXC
@@ -1755,6 +1744,14 @@ int board_init(void)
 #if defined(CONFIG_OF_CONTROL)
 	// Init mmc - Ontop of Device tree
 	board_mmc_init_dts();
+
+	// Init USB
+	board_ehci_hcd_init(0);
+	board_ehci_hcd_init(1);
+	board_ehci_power(0, 1);
+
+	// ETH init
+	setup_iomux_enet();
 #endif
 
 /*
@@ -1773,7 +1770,6 @@ int board_init(void)
 #endif
 */
 	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID
-	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_OTG_ID_MASK, IOMUXC_GPR1_OTG_ID_ENET_RX_ERR);
 	clrbits_le32(&iomux->gpr[1], IOMUXC_GPR1_OTG_ID_MASK);
 /*
 	SETUP_IOMUX_PADS(misc_pads);
