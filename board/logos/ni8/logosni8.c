@@ -1753,15 +1753,15 @@ int board_init(void)
 #endif
 
 #if defined(CONFIG_OF_CONTROL)
-	// Init mmc - Ontop of Device tree
+	// Init mmc - Ontop of Device tree - Enable power for SD Card
 	board_mmc_init_dts();
 
 	// Init USB
-	/*
+#ifdef CONFIG_USB_EHCI_MX6
 	board_ehci_hcd_init(0);
 	board_ehci_hcd_init(1);
 	board_ehci_power(0, 1);
-	*/
+#endif
 
 	// ETH init
 	setup_iomux_enet();
