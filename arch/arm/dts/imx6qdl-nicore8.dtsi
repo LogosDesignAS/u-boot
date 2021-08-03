@@ -89,6 +89,17 @@
 			regulator-max-microvolt = <5000000>;
 			pinctrl-0 = <&pinctrl_usbotgvbus>;
 			gpio = <&gpio4 15 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		reg_sd_vbus: regulator-sd-vbus {
+			compatible = "regulator-fixed";
+			regulator-name = "sd_vbus";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			pinctrl-0 = <&pinctrl_usdhc1_pwr_en_vbus>;
+			gpio = <&gpio6 16 GPIO_ACTIVE_HIGH>;
 			regulator-always-on;
 		};
 
@@ -190,8 +201,8 @@
 			MX6QDL_PAD_EIM_D17__ECSPI1_MISO		0x100b1
 			MX6QDL_PAD_EIM_D18__ECSPI1_MOSI		0x100b1
 			MX6QDL_PAD_EIM_D16__ECSPI1_SCLK		0x100b1
-			#define GP_ECSPI1_NOR_CS		<&gpio3 19 GPIO_ACTIVE_LOW>
-			MX6QDL_PAD_EIM_D19__GPIO3_IO19		0x000b1
+			#define GP_ECSPI1_NOR_CS		<&gpio2 30 GPIO_ACTIVE_LOW>
+			MX6QDL_PAD_EIM_EB2__GPIO2_IO30		0x000b1
 		>;
 	};
 
@@ -337,6 +348,14 @@ pinctrl_uart2: uart2grp {
 	};
 
 	/* USDHC1 - micro sd */
+	pinctrl_usdhc1_pwr_en_vbus: usdhc1-pwr-en-vbusgrp {
+		fsl,pins = <
+				#define GP_USDHC1_PWR_EN	<&gpio6 16 GPIO_ACTIVE_HIGH>
+				MX6QDL_PAD_NANDF_CS3__GPIO6_IO16	0x1b0b0
+			>;
+	};
+
+	/* USDHC1 - micro sd */
 	pinctrl_usdhc1_50mhz: usdhc1_50mhzgrp {
 		fsl,pins = <
 			MX6QDL_PAD_SD1_CMD__SD1_CMD			0x17059
@@ -347,8 +366,10 @@ pinctrl_uart2: uart2grp {
 			MX6QDL_PAD_SD1_DAT3__SD1_DATA3		0x17059
 			MX6QDL_PAD_NANDF_CS1__GPIO6_IO14	0x1b0b0
 			MX6QDL_PAD_NANDF_CS2__GPIO6_IO15	0x1b0b0
-			#define GP_SD_CD		<&gpio6 14 GPIO_ACTIVE_HIGH>
-			#define GP_USDHC1_WP	<&gpio6 15 GPIO_ACTIVE_HIGH>
+			MX6QDL_PAD_NANDF_CS3__GPIO6_IO16	0x1b0b0
+			#define GP_SD_CD			<&gpio6 14 GPIO_ACTIVE_LOW>
+			#define GP_USDHC1_WP		<&gpio6 15 GPIO_ACTIVE_HIGH>
+			#define GP_USDHC1_PWR_EN	<&gpio6 16 GPIO_ACTIVE_HIGH>
 		>;
 	};
 
@@ -393,24 +414,34 @@ pinctrl_uart2: uart2grp {
 	status = "okay";
 };
 
-/*
-	&hdmi_audio {
-		status = "okay";
-	};
+/* 		 SPI Flash - Winbond - Core board 	*/
+&ecspi1 {
+	cs-gpios = GP_ECSPI1_NOR_CS;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi1>;
+	status = "okay";
 
-	&hdmi_core {
-		ipu_id = <0>;
-		disp_id = <1>;
-		status = "okay";
-	};
+	flash: m25p80@0 {
+		compatible = "Winbond, w25q32dw";
+		spi-max-frequency = <5000000>;
+		reg = <0>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		mtd@00000000 {
+			label = "U-Boot";
+			reg = <0x0 0xC0000>;
+		};
 
-	&hdmi_video {
-		fsl,phy_reg_vlev = <0x0294>;
-		fsl,phy_reg_cksymtx = <0x800d>;
-		status = "okay";
+		mtd@000C0000 {
+			label = "env";
+			reg = <0xC0000 0x2000>;
+		};
+		mtd@000C2000 {
+			label = "splash";
+			reg = <0xC2000 0x13e000>;
+		};
 	};
-*/
-
+};
 &fec {
     pinctrl-names = "default";
     pinctrl-0 = <&pinctrl_enet>;
@@ -516,7 +547,7 @@ pinctrl_uart2: uart2grp {
 
 /* Disabled USB1 for now - Crashed */
 &usbh1 {
-	vbus-supply = <&reg_usb_otg_vbus>;
+	vbus-supply = <&reg_usb_h1_vbus>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usbh1>;
 	reset-gpios = GP_USBH1_HUB_RESET;
@@ -538,13 +569,9 @@ pinctrl_uart2: uart2grp {
 &usdhc1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc1_50mhz>;
-	vmmc-supply = <&reg_3p3v>;
-	bus-width = <4>;
-	max-frequency = <50000000>;
-	power-off-card;
-	keep-power-in-suspend;
 	cd-gpios = GP_SD_CD;
 	wp-gpios = GP_USDHC1_WP;
+	vmmc-supply = <&reg_sd_vbus>;
 	status = "okay";
 };
 
@@ -552,7 +579,6 @@ pinctrl_uart2: uart2grp {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc3_50mhz>;
 	vmmc-supply = <&reg_3p3v>;
-	//vqmmc-supply = <&reg_3p3v>;
 	bus-width = <8>;
 	non-removable;
 	status = "okay";
