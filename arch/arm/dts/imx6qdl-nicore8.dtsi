@@ -196,7 +196,7 @@
 		>;
 	};
 
-pinctrl_ecspi1: ecspi1grp {
+    pinctrl_ecspi1: ecspi1grp {
 		fsl,pins = <
 			MX6QDL_PAD_EIM_D17__ECSPI1_MISO		0x100b1
 			MX6QDL_PAD_EIM_D18__ECSPI1_MOSI		0x100b1
@@ -355,7 +355,6 @@ pinctrl_uart2: uart2grp {
 			>;
 	};
 
-
 	/* USDHC1 - micro sd */
 	pinctrl_usdhc1_50mhz: usdhc1_50mhzgrp {
 		fsl,pins = <
@@ -443,8 +442,6 @@ pinctrl_uart2: uart2grp {
 		};
 	};
 };
-
-
 &fec {
     pinctrl-names = "default";
     pinctrl-0 = <&pinctrl_enet>;
