@@ -302,14 +302,6 @@ static iomux_v3_cfg_t const ecspi1_pads[] = {
 };
 #endif // CONFIG_MXC_SPI
 
-#ifdef CONFIG_CMD_I2C
-static struct i2c_pads_info i2c_pads[] = {
-    I2C_PADS_INFO_ENTRY(I2C2, KEY_COL3, 4, 12, KEY_ROW3, 4, 13, I2C_PAD_CTRL),
-	// Not used I2C_PADS_INFO_ENTRY(I2C3, GPIO_5, 1, 05, GPIO_16, 7, 11, I2C_PAD_CTRL),
-	I2C_PADS_INFO_ENTRY(I2C4, ENET_TX_EN, 1, 28, ENET_TXD1, 1, 29, I2C_PAD_CTRL),
-};
-#endif
-
 // HDMI Reset Pad Config
 static iomux_v3_cfg_t const hdmi_reset_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_D0__GPIO2_IO00, WEAK_PULLUP),
@@ -1343,14 +1335,14 @@ static void setup_display(void)
 	gpio_direction_input(LVDS_BACKLIGHT_GP);
 	gpio_direction_input(RGB_BACKLIGHT_GP);
 }
-#endif // CONFIG_VIDEO_IPUV3
 
 #ifdef CONFIG_CMD_I2C
 static int detect_i2c(struct display_info_t const *dev)
-        {
+{
     return ((0 == i2c_set_bus_num(dev->bus)) && (0 == i2c_probe(dev->addr)));
-        }
+}
 #endif // CONFIG_CMD_I2C
+#endif // CONFIG_VIDEO_IPUV3
 
 #ifdef DEMO_MODE
 static unsigned gpios_led_logosni8[] = {
