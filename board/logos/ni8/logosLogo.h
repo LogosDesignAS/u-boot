@@ -6,21 +6,26 @@
 #ifndef LOGOSLOGO_H
 #define LOGOSLOGO_H
 
-#define LOGOS_LOGO_ROWS 26
-#define LOGOS_LOGO_COLS 201
-//const char logosLogo[8][80] =
+//#define LOGOS_LOGO_ROWS 26
+//#define LOGOS_LOGO_COLS 201
+#define LOGOS_LOGO_ROWS 11
+#define LOGOS_LOGO_COLS 80
 const char logosLogo[LOGOS_LOGO_ROWS][LOGOS_LOGO_COLS] =
-{
+		{
+
+		{"     ##Designed##                                                              \0"},
+		{"  LLLLL        LLLBy     LLLL       OOOOO       GGGGGGGG     OOOOOO    SSSSSSSS\0"},
+		{" OOOO   OOOOOO   OHKH    LLLL     OOO   OOO   GGGGGGGGGG   OOOO OOOO SSSS  SSS \0"},
+		{"GGG    GG    GG   GLMB   LLLL    OOO     OOO  GGG         OOO     OOO SSSS     \0"},
+		{"OOO   OO  OO  OO   OCTP  LLLL    OOO     OOO  GGG         OOO     OOO    SSSS  \0"},
+		{"SS   SS  S  S  SS   SSS  LLLL    OOO     OOO  GGG   GGGGG OOO     OOO     SSSSS\0"},
+		{"PPP  PP p    p PP   PPP  LLLL    OOO     OOO  GGG   GGGGG OOO     OOO       SSS\0"},
+		{" AAA  AA      AA   AAA   LLLLLLLL OOO   OOO   GGGG    GGG  OOOOOOOOO  SSS  SSSS\0"},
+		{"  YYY  YYYYYYYY   YYY    LLLLLLLL   OOOOO       GGGGGGGG    OOOOOOO   SSSSSSSS \0"},
+		{"    MMM         MMM                                                            \0"},
+		{"     EEEEEEEEEEEE                                                              \0"}
+		};
 /*
-	{"....q#P....Pqu.................................................................."},
-	{"..#C.pP.((.su.)b......)QQC.......qQQQQQQu......qQQQQQQu.....pQQQQQpc....qQQQQQpc"},
-	{".P.)C.dC.()u.)c.#.....)QQC.....#QQPC())#QQu..#QQPC(()#C...QQQP.(.SQQQ..QQQC.()P."},
-	{"#.)C.#..P#.)b.)..C....)QQC....(QQC......#QQ.)QQC...ppppp.#QQ.......QQQ.#QQQQpu.."},
-	{"#.(.)u.C..).).)C.C....)QQC....)QQC......#QQ.)QQC...PPPS#.#QQ.......QQ#...)PPQQQb"},
-	{".b.#..PeeeePC.P.#.....)QQpqqqe.#QQbu..qQQQC..)QQQu..qpQ#..QQQpu.uqQQ#..dpu..sQQ#"},
-	{"..#c.Peuqqo#P.sP......)######b...P#QQQ#PC......P#QQQ#PP....)P#QQQ#PC...P#QQQ##P."},
-	{".....#qq.uqoP..................................................................."}
-*/
 {"               qDesign_byQQQpu                                                                                                                                                                          \0"},
 {"          qQQ#PPC          ()HKHQp                                                                                                                                                                      \0"},
 {"       qQQP       qqpppppq      )LMBp                                                                                                                                                                   \0"},
@@ -48,5 +53,5 @@ const char logosLogo[LOGOS_LOGO_ROWS][LOGOS_LOGO_COLS] =
 {"                                                        ###### ##  ##   #  ######  #####   ##   ##   #####  ##   #####  ######     #   #####  ###### ##  #####                                          \0"},
 {"                                                                           #                                                                  ##  ##                                                    \0"}
  };
-
+*/
 #endif //LOGOSLOGO_H
