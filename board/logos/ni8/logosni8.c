@@ -49,7 +49,7 @@
  * a working device tree and ethernet PHY is tested.
  */
 #ifndef CONFIG_DM_ETH
-#define MAKE_AR8035_WORK_WITHOUT_DM
+//#define MAKE_AR8035_WORK_WITHOUT_DM
 #endif // CONFIG_DM_ETH
 
 #ifdef MAKE_AR8035_WORK_WITHOUT_DM
