@@ -5,57 +5,21 @@ CONFIG_MX6S=y
 CONFIG_ARM=y
 CONFIG_ARCH_MISC_INIT=y
 
-# Set default Device Tree - TODO: Remember to update device tree - might not be possible while using JTAG - try with flash
-#CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nitrogen6x"
-CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
-
-# Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
-CONFIG_OF_CONTROL=y
-CONFIG_OF_EMBED=y
-
 # Memory and address settings
-# CONFIG_SYS_MEMTEST_START=0x10000000 - we have disabled memtest
-# CONFIG_SYS_MEMTEST_END=0x10010000 - we have disabled memtest
 CONFIG_SYS_TEXT_BASE=0x17800000
 CONFIG_SYS_MALLOC_F_LEN=0x4000
-
-# Aligned with the maximum supported erase block for SPI flash = 4 KiB
-# Was 0x2000 for NOR
-#CONFIG_ENV_SECT_SIZE=0x10000
-# Offset of ENV partition in SPI flash
-# Was 0xC0000 for NOR
-#CONFIG_ENV_OFFSET=
-# Was 0x2000 for NOR
-#CONFIG_ENV_SIZE=
-
 CONFIG_NR_DRAM_BANKS=1
 
-# Driver models - enabled
-CONFIG_DM=y
-
-# Console Settings
-CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE=y
-
-# Enabled the Board_Early_init function to set up GPIO and UART for early testing
+# Enabled the board_Early_init function to set up GPIO and UART for early testing
 CONFIG_BOARD_EARLY_INIT_R=y
 # enable board late init
 CONFIG_BOARD_LATE_INIT=y
 
 # GPIO Config
 CONFIG_CMD_GPIO=y
-CONFIG_DM_GPIO=y
 
 # UART Config
 CONFIG_MXC_UART=y
-#CONFIG_DEBUG_UART
-
-# Network Drivers (Can't be removed for now)
-# Allows 802.3(clause 22) MII Management functions interface access
-CONFIG_CMD_MII=y
-# Enable support of the Media-Independent Interface (MII)
-# Enable the support of the Reduced Gigabit Media-Independent
-CONFIG_RGMII=y
-CONFIG_MII=y
 
 # Add startup scripts before boot in misc_init_r()
 CONFIG_MISC_INIT_R=y
@@ -69,47 +33,22 @@ CONFIG_SYS_CONSOLE_INFO_QUIET=y
 # Configure Memory Technology Devices
 CONFIG_MTD=y
 
-# Enable support for parallel NOR flash
-#CONFIG_MTD_NOR_FLASH=y
-
 # SPI Configs
 CONFIG_SPI=y
 CONFIG_MXC_SPI=y
 # Winbond W25Q32JW Serial NOR SPI flash (SPI1/CS0)
 CONFIG_SPI_FLASH_WINBOND=y
-# CONFIG_SYS_USE_SPIFLASH=y - Remove
-#CONFIG_SPI_BOOT=y
-#CONFIG_QSPI_BOOT=y
 CONFIG_SF_DEFAULT_BUS=0
 CONFIG_SF_DEFAULT_CS=0
 # IMX6 max 52 MHz / QSPI flash max 133 MHz
 CONFIG_SF_DEFAULT_SPEED=52000000
-#CONFIG_SF_DEFAULT_MODE=QSPI_MODE_24BIT
-#CONFIG_ENV_IS_IN_SPI_FLASH=y
-# Support Nitrogen SPI
-CONFIG_SPI_FLASH_SST=y
-
-# Enable Flattened Image Tree support
-CONFIG_FIT
 
 # Config eMMC
 CONFIG_MMC=y
-#CONFIG_GENERIC_MMC=y
-#CONFIG_SYS_USE_MMC=y
-#CONFIG_SUPPORT_EMMC_BOOT=y
-#CONFIG_GENERIC_MMC=y
-#CONFIG_EMMC_BOOT=y
-
-# Config EPPROM
-CONFIG_CMD_EEPROM
 
 # I2C Configs
-CONFIG_CMD_I2C=y
 CONFIG_I2C_EEPROM=y
 CONFIG_SYS_I2C_IMX_LPI2C=y
-
-# HDMI Configs
-CONFIG_CMD_HDMIDETECT=y
 
 # Boot Configs
 CONFIG_SUPPORT_RAW_INITRD=y
@@ -119,88 +58,11 @@ CONFIG_BOOTDELAY=10
 # Enable the hush shell, if, then, else logic in scripts
 CONFIG_HUSH_PARSER=y
 
-# Read and display information about the partition table on various media.
-CONFIG_CMD_PART=y
-
-#CONFIG_NETCONSOLE=y - REMOVE we dont need to change stdin/out from serial to network
-
 # Freescale/NXP i.MX uSDHC/eSDHC controller support
 CONFIG_FSL_USDHC=y
 CONFIG_FSL_ESDHC_IMX=y
 
-# SPL Configs
-#CONFIG_SPL_TEXT_BASE=0x00908000
-#CONFIG_SPL_MMC_SUPPORT=y
-#CONFIG_SPL_SERIAL_SUPPORT=y
-#CONFIG_CMD_SPL=Y
-#CONFIG_SPL_SIZE_LIMIT=0x20000
-#CONFIG_SPL=y
-#CONFIG_SPL_BUILD=y
-#CONFIG_SPL_GPIO_SUPPORT=y
-#CONFIG_SPL_LIBCOMMON_SUPPORT=y
-#CONFIG_SPL_LIBGENERIC_SUPPORT=y
-#CONFIG_SPL_DMA=y
-#CONFIG_SPL_I2C_SUPPORT=y
-#CONFIG_SPL_USB_HOST_SUPPORT=y
-#CONFIG_SPL_USB_GADGET=y
-#CONFIG_SPL_USB_SDP_SUPPORT=y
-
-# Needed when booting the OS
-#CONFIG_SPL_OS_BOOT=Y
-
-
-##############################################################################
-# ------------------ Configs undefined for early testing ------------------- #
-##############################################################################
-
-# I2C Configs
-#CONFIG_I2C0_ENABLE=y
-#CONFIG_I2C1_ENABLE=y
-#CONFIG_I2C2_ENABLE=y
-#CONFIG_SUNXI=y
-#CONFIG_DM_I2C=y
-#CONFIG_DM_I2C_COMPAT=y
-#CONFIG_SYS_I2C_MXC=y
-
-# Commands
-# Enable Caches for optimised bootup speed
-CONFIG_CMD_CACHE=y
-CONFIG_CMD_FS_GENERIC=y
-#CONFIG_CMD_EXT2=y
-CONFIG_CMD_EXT4=y
-CONFIG_CMD_EXT4_WRITE=y
-CONFIG_CMD_FAT=y
-CONFIG_CMD_FAT_WRITE=y
-CONFIG_CMD_BOOTZ=y
-CONFIG_CMD_DHCP=y
-CONFIG_CMD_TIME=y
-CONFIG_CMD_PING=y
-CONFIG_CMD_BMP=y
-CONFIG_CMD_MMC=y
-CONFIG_CMD_SF=y
-CONFIG_CMD_SF_TEST=y
-CONFIG_CMD_SPI=y
-CONFIG_CMD_BMODE=y
-CONFIG_CMD_UNZIP=y
-# Extra Network Commands
-CONFIG_CMD_ECHO=y
-CONFIG_CMD_DNS=y
-CONFIG_CMD_LINK_LOCAL=y
-CONFIG_CMD_PCAP=y
-
-# Video and Screen Configs
-CONFIG_SYS_WHITE_ON_BLACK=y
-CONFIG_VIDEO_BMP_GZIP=y
-CONFIG_VIDEO_BMP_RLE8=y
-CONFIG_BMP_16BPP=y
-CONFIG_VIDEO_IPUV3=y
-CONFIG_VIDEO=y
-
-# TODO: This needs to be enabled for the HDMI to work - depends on the device tree
-CONFIG_SPLASH_SCREEN=y
-CONFIG_SPLASH_SCREEN_ALIGN=y
-
-# USB Configs
+# USB Configs TODO Propably remove after verification os USB
 #CONFIG_SYS_USB_EVENT_POLL_VIA_CONTROL_EP=y
 #CONFIG_USB_FUNCTION_FASTBOOT=y
 #CONFIG_USB_KEYBOARD=y
@@ -220,25 +82,45 @@ CONFIG_SPLASH_SCREEN_ALIGN=y
 #CONFIG_USB_MASS_STORAGE=y
 
 # Usb gadgets
-#CONFIG_USB_GADGET_MANUFACTURER="Boundary"
-#CONFIG_USB_GADGET_PRODUCT_NUM=0xa4a5
-#CONFIG_USB_GADGET_VENDOR_NUM=0x0525
+#CONFIG_USB_GADGET_MANUFACTURER="Logos"
+#CONFIG_USB_GADGET_PRODUCT_NUM=<some id>
+#CONFIG_USB_GADGET_VENDOR_NUM=<some id>
 #CONFIG_USB_GADGET=y
 #CONFIG_USB_GADGET_DOWNLOAD=n
-
 
 # The Device Firmware Upgrade (DFU) allows to download and upload firmware to/from U-Boot connected over USB.
 CONFIG_CI_UDC=y
 
-# PHY Configs
+# Ethernet PHY
 CONFIG_PHYLIB=y
 CONFIG_PHY_ATHEROS=y
+# Allows 802.3(clause 22) MII Management functions interface access
+CONFIG_CMD_MII=y
+# Enable support of the Media-Independent Interface (MII)
+# Enable the support of the Reduced Gigabit Media-Independent
+CONFIG_RGMII=y
+CONFIG_MII=y
 # Random MAC ADDR - to be removed
 CONFIG_NET_RANDOM_ETHADDR=y
-# Number of Arp Retries
-CONFIG_NET_RETRY_COUNT=0x05
+
+# Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
+CONFIG_OF_CONTROL=y
+
+# Only during development, to be removed
+CONFIG_OF_EMBED=y
+
+# Enable Flattened Image Tree support
+CONFIG_FIT
+
+# Set default Device Tree
+CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
+
+# Lib for passing the device tree to the Kernel
+CONFIG_OF_LIBFDT_OVERLAY=y
 
 # Driver models - (DM)'s
+CONFIG_DM=y
+CONFIG_DM_GPIO=y
 CONFIG_DM_VIDEO=y
 CONFIG_DM_USB=y
 CONFIG_DM_MMC=y
@@ -246,15 +128,41 @@ CONFIG_DM_ETH=y
 CONFIG_DM_SPI=y
 CONFIG_DM_SPI_FLASH=y
 
-# Config Advanced Host Controller Interface for the SataDriver
-# CONFIG_AHCI=y - REMOVE no sata
+# Commands
+# Enable Caches for optimised bootup speed
+CONFIG_CMD_CACHE=y
 
-# Other Configs
-CONFIG_FASTBOOT_BUF_ADDR=0x12000000
-#CONFIG_SYS_RELOC_GD_ENV_ADDR=y
-#CONFIG_CMD_FLASH is not set
-#CONFIG_ENV_OVERWRITE=y
-#CONFIG_BOUNCE_BUFFER=y
+CONFIG_CMD_EEPROM
+CONFIG_CMD_I2C=y
+CONFIG_CMD_MMC=y
+CONFIG_CMD_SPI=y
 
-# Lib for passing the device tree to the Kernel
-CONFIG_OF_LIBFDT_OVERLAY=y
+CONFIG_CMD_SF=y
+CONFIG_CMD_SF_TEST=y
+
+CONFIG_CMD_HDMIDETECT=y
+
+CONFIG_CMD_BMP=y
+
+CONFIG_CMD_BMODE=y
+
+# Read and display information about the partition table on various media.
+CONFIG_CMD_PART=y
+CONFIG_CMD_FS_GENERIC=y
+CONFIG_CMD_EXT2=y
+CONFIG_CMD_EXT4=y
+CONFIG_CMD_EXT4_WRITE=y
+CONFIG_CMD_FAT=y
+CONFIG_CMD_FAT_WRITE=y
+
+CONFIG_CMD_UNZIP=y
+
+# Network Commands
+CONFIG_CMD_BOOTZ=y
+CONFIG_CMD_DHCP=y
+CONFIG_CMD_TIME=y
+CONFIG_CMD_PING=y
+CONFIG_CMD_ECHO=y
+CONFIG_CMD_DNS=y
+CONFIG_CMD_LINK_LOCAL=y
+CONFIG_CMD_PCAP=y
