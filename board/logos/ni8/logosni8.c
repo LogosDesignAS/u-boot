@@ -37,12 +37,12 @@
 #include <netdev.h>
 #include <usb/ehci-ci.h>
 
+#ifdef DEMO_MODE
 #include "logosLogo.h"
 #include "bootmelody.h"
+#endif // DEMO_MODE
 
-#define I2C_BUS_CNT 2
-
-/* CTP 20210709
+/*
  * 'MAKE_AR8035_WORK_WITHOUT_DM' and all code it sorrounds should be removed when we have
  * a working device tree and ethernet PHY is tested.
  */
@@ -73,10 +73,6 @@ struct ar803x_priv {
     u16 clk_25m_mask;
 };
 #endif // MAKE_AR8035_WORK_WITHOUT_DM
-
-
-//Uncomment to enable the demo
-//#define DEMO_MODE
 
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
@@ -111,7 +107,6 @@ enum BOOT_CONFIGS {
 	GPIO_EIM_DA13 = IMX_GPIO_NR(3, 13),
 	GPIO_EIM_DA14 = IMX_GPIO_NR(3, 14),
 	GPIO_EIM_DA15 = IMX_GPIO_NR(3, 15)
-
 };
 
 // Enum for LEDs on the Logosni8 board - enum idea came from board/beckhoff/mx53cx9020
@@ -243,19 +238,35 @@ DECLARE_GLOBAL_DATA_PTR;
 		sda_pad, sda_bank, sda_gp, pad_ctrl)			\
 	I2C_PADS_INFO_CPU(MX6, i2cnum, scl_pad, scl_bank, scl_gp,	\
 		sda_pad, sda_bank, sda_gp, pad_ctrl)
+
 #define I2C_PADS_INFO_ENTRY_SPACING 1
 
 
 #define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name, pad_ctrl)
 
-int dram_init(void)
-{
-    /* Line below requires CONFIG_DDR_MB=4096 to be set in logosni8_defconfig
-	 * gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
-     */
-    gd->ram_size = imx_ddr_size();
-	return 0;
-}
+
+// Change driving strength
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII		0x20e0768	//0x02e0790
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM			0x20e0788 //0x02e07ac //
+#define IOMUXC_ENET_REF_CLK_SELECT_INPUT			0x20e080C
+
+//Enable Reference CLock
+#define IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK			0x00000001
+
+/* disable on die termination for RGMII */
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_DISABLE	0x00000000
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_30OHMS	0x00000400
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_40OHMS	0x00000300
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_60OHMS	0x00000200
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_120OHMS	0x00000100
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS	0x00000000
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_17OHMS  0x00000700
+/* optimised drive strength for 1.0 .. 1.3 V signal on RGMII */
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P2V	0x00080000
+/* optimised drive strength for 1.3 .. 2.5 V signal on RGMII */
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V	0x000C0000
+
+/* Defines above, declarations below */
 
 /* Configuration of UART2 for Logosni8 */
 static iomux_v3_cfg_t const uart2_pads[] = {
@@ -281,7 +292,16 @@ static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
 
-/* 20210803 CTP Should everything be removed?
+#ifdef CONFIG_MXC_SPI
+static iomux_v3_cfg_t const ecspi1_pads[] = {
+        /* SS1 */
+        IOMUX_PAD_CTRL(EIM_EB2__GPIO2_IO30, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
+        IOMUX_PAD_CTRL(EIM_D17__ECSPI1_MISO, SPI_PAD_CTRL),
+        IOMUX_PAD_CTRL(EIM_D18__ECSPI1_MOSI, SPI_PAD_CTRL),
+        IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
+};
+#endif // CONFIG_MXC_SPI
+
 #ifdef CONFIG_CMD_I2C
 static struct i2c_pads_info i2c_pads[] = {
     I2C_PADS_INFO_ENTRY(I2C2, KEY_COL3, 4, 12, KEY_ROW3, 4, 13, I2C_PAD_CTRL),
@@ -289,7 +309,6 @@ static struct i2c_pads_info i2c_pads[] = {
 	I2C_PADS_INFO_ENTRY(I2C4, ENET_TX_EN, 1, 28, ENET_TXD1, 1, 29, I2C_PAD_CTRL),
 };
 #endif
-*/
 
 // HDMI Reset Pad Config
 static iomux_v3_cfg_t const hdmi_reset_pads[] = {
@@ -309,6 +328,12 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 	IOMUX_PAD_CTRL(SD4_DAT5__SD4_DATA5, USDHC_PAD_CTRL),
 	IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
 	IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
+};
+
+static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
+        {USDHC1_BASE_ADDR}, /* SD Card Slot */
+        {USDHC3_BASE_ADDR}, /* eMMC on Test Carrier */
+        {USDHC4_BASE_ADDR}, /* eMMC on Nicore8 */
 };
 
 //Logosni8 - Map the SD CARD on the Test Carrier Board
@@ -411,7 +436,6 @@ static iomux_v3_cfg_t const ni8_boot_flags[] = {
 
 /* LED2 and LED3 pads on logosni8 */
 static iomux_v3_cfg_t const ni8_led_pads[] = {
-
 	/* Configuration of LED1 (GREEN)  - On the board this is LED2 - see schematic page 10 */
 	IOMUX_PAD_CTRL(NANDF_CLE__GPIO6_IO07, OUTPUT_40OHM),  // - Configured as output 40Ohms
 
@@ -555,7 +579,6 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 /* AFB_GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
-
 	// Pin configuration for AFB_GPIO[0-7]
 
 	/* Configuration of CSI0_MCLK to GPIO5_IO19 - Here called AFB_GPIO0 on schematic - see schematic page 10 */
@@ -575,6 +598,58 @@ static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 	/* Configuration of CSI0_DAT7 to GPIO5_IO25 - Here called AFB_GPIO07 on schematic - see schematic page 10 */
 	IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, WEAK_PULLDOWN), // Controls LED3 on the Test Carrier	- Connected to mosfet - pull down to set to zero(LED OFF)
 };
+
+#ifdef CONFIG_VIDEO_IPUV3
+static iomux_v3_cfg_t const backlight_pads[] = {
+        /* Backlight on RGB connector: J15 */
+        IOMUX_PAD_CTRL(SD1_DAT3__GPIO1_IO21, NO_PAD_CTRL),
+#define RGB_BACKLIGHT_GP IMX_GPIO_NR(1, 21)
+
+/* Backlight on LVDS connector: J6 */
+IOMUX_PAD_CTRL(SD1_CMD__GPIO1_IO18, NO_PAD_CTRL),
+#define LVDS_BACKLIGHT_GP IMX_GPIO_NR(1, 18)
+};
+
+static iomux_v3_cfg_t const rgb_pads[] = {
+        IOMUX_PAD_CTRL(DI0_DISP_CLK__IPU1_DI0_DISP_CLK, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DI0_PIN15__IPU1_DI0_PIN15, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DI0_PIN2__IPU1_DI0_PIN02, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DI0_PIN3__IPU1_DI0_PIN03, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DI0_PIN4__GPIO4_IO20, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT0__IPU1_DISP0_DATA00, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT1__IPU1_DISP0_DATA01, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT2__IPU1_DISP0_DATA02, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT3__IPU1_DISP0_DATA03, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT4__IPU1_DISP0_DATA04, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT5__IPU1_DISP0_DATA05, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT6__IPU1_DISP0_DATA06, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT7__IPU1_DISP0_DATA07, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT8__IPU1_DISP0_DATA08, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT9__IPU1_DISP0_DATA09, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT10__IPU1_DISP0_DATA10, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT11__IPU1_DISP0_DATA11, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT12__IPU1_DISP0_DATA12, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT13__IPU1_DISP0_DATA13, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT14__IPU1_DISP0_DATA14, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT15__IPU1_DISP0_DATA15, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT16__IPU1_DISP0_DATA16, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT17__IPU1_DISP0_DATA17, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT18__IPU1_DISP0_DATA18, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT19__IPU1_DISP0_DATA19, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT20__IPU1_DISP0_DATA20, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT21__IPU1_DISP0_DATA21, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT22__IPU1_DISP0_DATA22, RGB_PAD_CTRL),
+        IOMUX_PAD_CTRL(DISP0_DAT23__IPU1_DISP0_DATA23, RGB_PAD_CTRL),
+};
+#endif // CONFIG_VIDEO_IPUV3
+
+/* Functions below */
+int dram_init(void)
+{
+    gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
+
+    return 0;
+}
 
 // Setup the GPIO pins on the Logosni8 board
 static void setup_iomux_gpio(void)
@@ -645,7 +720,8 @@ static void setup_iomux_afb_gpio(void)
 	gpio_direction_output(AFB_GPIO_6, 1);			// AFB_GPIO_6 -> LED4 on the Test Carrier Board
 	gpio_direction_output(AFB_GPIO_7, 0);			// AFB_GPIO_7 -> LED3 on the Test Carrier Board
 }
-// Setup the LEDS on the Logosni8 board
+
+/* Setup the LEDS on the Logosni8 board */
 static void setup_iomux_leds(void)
 {
 	// Add a GPIO request for the two LEDS
@@ -659,6 +735,7 @@ static void setup_iomux_leds(void)
 	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 };
+
 static void setup_iomux_boot_config(void)
 {
 	// Add a GPIO request for the Bootconfigs
@@ -744,7 +821,6 @@ static iomux_v3_cfg_t const usb_pads[] = {
 };
 #endif
 
-
 static void setup_iomux_uart(void)
 {
 	SETUP_IOMUX_PADS(uart2_pads);
@@ -795,30 +871,14 @@ int board_ehci_power(int port, int on)
 #ifdef CONFIG_MXC_SPI
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
-#ifdef NITROGEN_TEST
-	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(3, 19)) : -1;
-#else
 	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(2, 30)) : -1;
-#endif // NITROGEN_TEST
 }
-
-static iomux_v3_cfg_t const ecspi1_pads[] = {
-	/* SS1 */
-#ifdef NITROGEN_TEST
-	IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
-#else
-	IOMUX_PAD_CTRL(EIM_EB2__GPIO2_IO30, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
-#endif //NITROGEN_TEST
-	IOMUX_PAD_CTRL(EIM_D17__ECSPI1_MISO, SPI_PAD_CTRL),
-	IOMUX_PAD_CTRL(EIM_D18__ECSPI1_MOSI, SPI_PAD_CTRL),
-	IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
-};
 
 static void setup_spi(void)
 {
 	SETUP_IOMUX_PADS(ecspi1_pads);
 }
-#endif
+#endif // CONFIG_MXC_SPI
 
 #ifdef MAKE_AR8035_WORK_WITHOUT_DM
 static int ar803x_debug_reg_read(struct phy_device *phydev, u16 reg)
@@ -864,7 +924,7 @@ static int set_gtx_clk_dly(struct phy_device *phydev)
     return phy_write(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_DATA_REG, val);
 }
 
-/* CTP 20210709
+/*
  * This work is done in Atheros driver function ar803x_of_init() that requires CONFIG_DM_ETH (device tree).
  * Adapted a specific version here to get AR8035 PHY to work until we have device tree in place.
  */
@@ -943,62 +1003,11 @@ int board_eth_init(struct bd_info *bis)
     return cpu_eth_init(bis);
 }
 
-static iomux_v3_cfg_t const backlight_pads[] = {
-	/* Backlight on RGB connector: J15 */
-	IOMUX_PAD_CTRL(SD1_DAT3__GPIO1_IO21, NO_PAD_CTRL),
-#define RGB_BACKLIGHT_GP IMX_GPIO_NR(1, 21)
-
-	/* Backlight on LVDS connector: J6 */
-	IOMUX_PAD_CTRL(SD1_CMD__GPIO1_IO18, NO_PAD_CTRL),
-#define LVDS_BACKLIGHT_GP IMX_GPIO_NR(1, 18)
-};
-
-static iomux_v3_cfg_t const rgb_pads[] = {
-	IOMUX_PAD_CTRL(DI0_DISP_CLK__IPU1_DI0_DISP_CLK, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DI0_PIN15__IPU1_DI0_PIN15, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DI0_PIN2__IPU1_DI0_PIN02, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DI0_PIN3__IPU1_DI0_PIN03, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DI0_PIN4__GPIO4_IO20, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT0__IPU1_DISP0_DATA00, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT1__IPU1_DISP0_DATA01, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT2__IPU1_DISP0_DATA02, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT3__IPU1_DISP0_DATA03, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT4__IPU1_DISP0_DATA04, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT5__IPU1_DISP0_DATA05, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT6__IPU1_DISP0_DATA06, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT7__IPU1_DISP0_DATA07, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT8__IPU1_DISP0_DATA08, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT9__IPU1_DISP0_DATA09, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT10__IPU1_DISP0_DATA10, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT11__IPU1_DISP0_DATA11, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT12__IPU1_DISP0_DATA12, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT13__IPU1_DISP0_DATA13, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT14__IPU1_DISP0_DATA14, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT15__IPU1_DISP0_DATA15, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT16__IPU1_DISP0_DATA16, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT17__IPU1_DISP0_DATA17, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT18__IPU1_DISP0_DATA18, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT19__IPU1_DISP0_DATA19, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT20__IPU1_DISP0_DATA20, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT21__IPU1_DISP0_DATA21, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT22__IPU1_DISP0_DATA22, RGB_PAD_CTRL),
-	IOMUX_PAD_CTRL(DISP0_DAT23__IPU1_DISP0_DATA23, RGB_PAD_CTRL),
-};
-
+#ifdef CONFIG_VIDEO_IPUV3
 static void do_enable_hdmi(struct display_info_t const *dev)
 {
-	//imx_enable_hdmi_phy(); 20210803 CTP Should the whole function be removed?
-	printf("Enable HDMI \n");
-
+	imx_enable_hdmi_phy();
 }
-
-#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
-static int detect_i2c(struct display_info_t const *dev)
-{
-	printf("Detecting if I2c is available \n");
-	return ((0 == i2c_set_bus_num(dev->bus)) && (0 == i2c_probe(dev->addr)));
-}
-#endif
 
 static void enable_lvds(struct display_info_t const *dev)
 {
@@ -1273,7 +1282,6 @@ struct display_info_t const displays[] = {{
 } } };
 size_t display_count = ARRAY_SIZE(displays);
 
-
 int board_cfb_skip(void)
 {
 	return NULL != env_get("novideo");
@@ -1285,10 +1293,9 @@ static void setup_display(void)
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	int reg;
 
-	printf("Initialising the display \n");
-
 	enable_ipu_clock();
-	// imx_setup_hdmi(); 20210803 CTP Should the whole function be removed?
+	imx_setup_hdmi();
+
 	/* Turn on LDB0,IPU,IPU DI0 clocks */
 	reg = __raw_readl(&mxc_ccm->CCGR3);
 	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK;
@@ -1336,15 +1343,21 @@ static void setup_display(void)
 	gpio_direction_input(LVDS_BACKLIGHT_GP);
 	gpio_direction_input(RGB_BACKLIGHT_GP);
 }
+#endif // CONFIG_VIDEO_IPUV3
+
+#ifdef CONFIG_CMD_I2C
+static int detect_i2c(struct display_info_t const *dev)
+        {
+    return ((0 == i2c_set_bus_num(dev->bus)) && (0 == i2c_probe(dev->addr)));
+        }
+#endif // CONFIG_CMD_I2C
 
 #ifdef DEMO_MODE
-
 static unsigned gpios_led_logosni8[] = {
 	GPIO_LED_2, /* LED 2 - LogosNi8 */
 	GPIO_LED_3, /* LED 3 - LogosNi8 */
 };
 
-// TODO: Remove this demo function before merging into the main branch
 static void led_logosni8_party_light(void)
 {
 	// This function will create a simple light demo - using the LED2 and LED3 - will run for 20 seconds
@@ -1368,27 +1381,6 @@ static void led_logosni8_party_light(void)
 	gpio_set_value(GPIO_LED_3, 1);
 }
 #endif
-
-// Change driving strength
-#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII		0x20e0768	//0x02e0790
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM			0x20e0788 //0x02e07ac //
-#define IOMUXC_ENET_REF_CLK_SELECT_INPUT			0x20e080C
-
-//Enable Reference CLock
-#define IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK			0x00000001
-
-/* disable on die termination for RGMII */
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_DISABLE	0x00000000
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_30OHMS	0x00000400
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_40OHMS	0x00000300
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_60OHMS	0x00000200
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_120OHMS	0x00000100
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS	0x00000000
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_17OHMS  0x00000700
-/* optimised drive strength for 1.0 .. 1.3 V signal on RGMII */
-#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P2V	0x00080000
-/* optimised drive strength for 1.3 .. 2.5 V signal on RGMII */
-#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V	0x000C0000
 
 static int setup_fec(void)
 {
@@ -1418,19 +1410,15 @@ int board_early_init_r(void)
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
 
-	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
-	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
-
-	// Config environment variables
+	// Config environment variables TODO Test if this is needed
 	env_set("ethact", "FEC");
 
-#ifdef CONFIG_CMD_I2C		// Added for Logosni8 Testing
+#ifdef CONFIG_CMD_I2C
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif
 
-
-#ifdef CONFIG_USB		// Added for Logosni8 Testing
+#ifdef CONFIG_USB
 	// Early setup of USB
 	SETUP_IOMUX_PADS(conf_usb_pads);
 #endif
@@ -1450,6 +1438,7 @@ int overwrite_console(void)
 	return 1;
 }
 
+#ifdef DEMO_MODE
 int print_Logos_Logo(void)
 {
 	printf("\n");
@@ -1544,7 +1533,6 @@ int secondSection(void)
 
 int bootup_Song_Star_Wars(void)
 {
-
 	//Play first section
 	firstSection();
 
@@ -1578,8 +1566,9 @@ int bootup_Song_Star_Wars(void)
 
 	return 0;
 }
+#endif // DEMO_MODE
 
-#ifdef CONFIG_CMD_BMODE
+#ifdef CONFIG_CMD_BMODE // TODO Adapt to our board or remove
 static const struct boot_mode board_boot_modes[] = {
 	/* 8 bit bus width */
 	{"sd1", MAKE_CFGVAL(0x42, 0x28, 0x00, 0x00)},
@@ -1589,13 +1578,7 @@ static const struct boot_mode board_boot_modes[] = {
 	{"emmc1", MAKE_CFGVAL(0x40, 0x38, 0x00, 0x00)},
 	{NULL, 0},
 };
-#endif /* CONFIG_CMD_BMODE */
-
-static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
-		{USDHC1_BASE_ADDR}, /* SD Card Slot */
-		{USDHC3_BASE_ADDR}, /* eMMC on Test Carrier */
-		{USDHC4_BASE_ADDR}, /* eMMC on Nicore8 */
-};
+#endif // CONFIG_CMD_BMODE
 
 // Card detected function for seeing if a card is present
 int board_mmc_getcd(struct mmc *mmc)
@@ -1670,13 +1653,10 @@ void i2c_multiplexer(uint8_t select)
 	i2c_set_bus_num(2);
 
 	// Write to the I2c Device
-	int ret = i2c_write(0x70, 0x00, 1, &select, 1);
-
-	if (ret)
-		printf("i2c_write: error sending\n");
-	printf("Setting the I2c Mulitplexer to select the correct signal.\n");
+	if (i2c_write(0x70, 0x00, 1, &select, 1)) {
+	    printf("i2c_write: error sending\n");
+	}
 };
-
 
 int board_mmc_init_dts(void) {
 	/*
@@ -1715,10 +1695,8 @@ int board_mmc_init_dts(void) {
 	return 0;
 }
 
-
 int board_init(void)
 {
-	// struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
@@ -1745,7 +1723,9 @@ int board_init(void)
 	// Config the I2c Multiplexer
 	i2c_multiplexer( 0x02 );
 
+#ifdef CONFIG_VIDEO_IPUV3
 	setup_display();
+#endif // CONFIG_VIDEO_IPUV3
 
 	// Setup Clocks for Ethernet
 #ifdef CONFIG_FEC_MXC
@@ -1767,44 +1747,17 @@ int board_init(void)
 	setup_iomux_enet();
 #endif
 
-/*
-#ifdef CONFIG_CMD_I2C
-	// Setting up I2C
-	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
-	struct i2c_pads_info *p = i2c_pads;
-	int i;
-	int stride = 1;
-
-	for (i = 0; i < I2C_BUS_CNT; i++)
-	{
-		setup_i2c(i, CONFIG_SYS_I2C_SPEED, 0x7f, p);
-		p += stride;
-	}
-#endif
-*/
-	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID
+	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID TODO Verify if this is needed
 	clrbits_le32(&iomux->gpr[1], IOMUXC_GPR1_OTG_ID_MASK);
-/*
-	SETUP_IOMUX_PADS(misc_pads);
-*/
-	/* address of boot parameters */
-	//gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
 #ifdef CONFIG_MXC_SPI
 	setup_spi();
 #endif
 
-#ifdef CONFIG_SATA
-	setup_sata();
-#endif
-
 	return 0;
 }
 
-/*
- * Simple function for printing the CPU information
- * This is hardcoded for now - Only on CPU using this bootloader.
- */
+#ifdef DEMO_MODE
 int print_cpuinfo(void)
 {
 	printf("CPU:   NXP MX6S Rev 5 with a ARM Cortex-A9 core running at 1 GHz - 512MB RAM\n");
@@ -1814,11 +1767,10 @@ int print_cpuinfo(void)
 int checkboard(void)
 {
 	printf("Board: NiCore8  \nDeveloped and Designed by Logos Payment Solutions\n\n\n");
-
 	return 0;
 }
 
-int initial_Printing(void)
+int initial_printing(void)
 {
 	print_Logos_Logo();
 	print_cpuinfo();
@@ -1826,6 +1778,7 @@ int initial_Printing(void)
 
 	return 0;
 }
+#endif // DEMO_MODE
 
 #ifdef CONFIG_PREBOOT
 // Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
@@ -1851,24 +1804,17 @@ int misc_init_r(void)
  */
 int board_late_init(void)
 {
+#ifdef DEMO_MODE
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
-	initial_Printing();
+	initial_printing();
 
-	/*
-	printf("Read value of register- IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII: %d \n", __raw_readl(IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII));
-	printf("Read value of register - IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM: %d \n", __raw_readl(IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM));
-	printf("Read value of register - IOMUXC_ENET_REF_CLK_SELECT_INPUT: %d \n", __raw_readl(IOMUXC_ENET_REF_CLK_SELECT_INPUT));
-	printf("Verify that it reads correctly: %d\n", __raw_readl(0x20e073C));
-    */
-
-	// TODO: Remove, can be read using u-boot command 'fuse read 0 1 and fuse read 0 2' or 'env print'
+	// Can be read using u-boot command 'fuse read 0 1 and fuse read 0 2' or 'env print'
 	const char* sn = env_get("serial#");
 	if (sn)
 	{
 		printf("HW ID: %s\n", sn);
 	}
 
-#ifdef DEMO_MODE
 	// Boot up Song
 	bootup_Song_Star_Wars();
 
@@ -1876,6 +1822,7 @@ int board_late_init(void)
 
 	led_logosni8_party_light();
 #endif
+
 	return 0;
 }
 
