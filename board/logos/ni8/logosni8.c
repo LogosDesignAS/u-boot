@@ -36,9 +36,11 @@
 #include <net.h>
 #include <netdev.h>
 #include <usb/ehci-ci.h>
+#include <version.h>
+
+#include "logosLogo.h"
 
 #ifdef DEMO_MODE
-#include "logosLogo.h"
 #include "bootmelody.h"
 #endif // DEMO_MODE
 
@@ -1391,8 +1393,6 @@ static int setup_fec(void)
 	__raw_writel(IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK,
 				 (void *)IOMUXC_ENET_REF_CLK_SELECT_INPUT);
 
-	//printf("Read value of register: %d \n", __raw_readl(0x20e080C));
-	//printf("IOMUX Base Address %d\n",IOMUXC_BASE_ADDR);
 	return 0;
 }
 
@@ -1430,17 +1430,17 @@ int overwrite_console(void)
 	return 1;
 }
 
-#ifdef DEMO_MODE
 int print_Logos_Logo(void)
 {
-	printf("\n");
-	for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
-	{
-		printf("%s\n", logosLogo[h]);
-	}
-	return 0;
+    printf("\n");
+    for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
+    {
+        printf("%s\n", logosLogo[h]);
+    }
+    return 0;
 }
 
+#ifdef DEMO_MODE
 /*
  * This function generate beeps using the Buzzer on the Test Carrier board and takes in two parameters
  * note     - This is the frequency of the requested note - Hz
@@ -1749,29 +1749,6 @@ int board_init(void)
 	return 0;
 }
 
-#ifdef DEMO_MODE
-int print_cpuinfo(void)
-{
-	printf("CPU:   NXP MX6S Rev 5 with a ARM Cortex-A9 core running at 1 GHz - 512MB RAM\n");
-	return 0;
-}
-
-int checkboard(void)
-{
-	printf("Board: NiCore8  \nDeveloped and Designed by Logos Payment Solutions\n\n\n");
-	return 0;
-}
-
-int initial_printing(void)
-{
-	print_Logos_Logo();
-	print_cpuinfo();
-	checkboard();
-
-	return 0;
-}
-#endif // DEMO_MODE
-
 #ifdef CONFIG_PREBOOT
 // Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
 #endif
@@ -1796,17 +1773,11 @@ int misc_init_r(void)
  */
 int board_late_init(void)
 {
+    // The test carrier board is now powered up and the UART is ready - make a startup screen
+    print_Logos_Logo();
+    printf("%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
+
 #ifdef DEMO_MODE
-	// The test carrier board is now powered up and the UART is ready - make a startup screen
-	initial_printing();
-
-	// Can be read using u-boot command 'fuse read 0 1 and fuse read 0 2' or 'env print'
-	const char* sn = env_get("serial#");
-	if (sn)
-	{
-		printf("HW ID: %s\n", sn);
-	}
-
 	// Boot up Song
 	bootup_Song_Star_Wars();
 
