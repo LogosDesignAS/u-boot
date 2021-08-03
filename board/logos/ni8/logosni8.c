@@ -44,38 +44,6 @@
 #include "bootmelody.h"
 #endif // DEMO_MODE
 
-/*
- * 'MAKE_AR8035_WORK_WITHOUT_DM' and all code it sorrounds should be removed when we have
- * a working device tree and ethernet PHY is tested.
- */
-#ifndef CONFIG_DM_ETH
-//#define MAKE_AR8035_WORK_WITHOUT_DM
-#endif // CONFIG_DM_ETH
-
-#ifdef MAKE_AR8035_WORK_WITHOUT_DM
-// From atheros.c
-#define AR803x_CLK_25M_MASK	GENMASK(4, 2)
-#define AR803x_CLK_25M_125MHZ_PLL 6 // Phase-Locked Loop
-#define AR8035_PHY_ID 0x004dd072
-#define AR8035_PHY_DEBUG_ADDR_REG 0x1d
-#define AR8035_PHY_DEBUG_DATA_REG 0x1e
-#define AR8035_HIB_CTRL_REG 0xb
-#define AR8035_CLK_25M_MASK	GENMASK(4, 3)
-#define AR803x_PHY_DEBUG_ADDR_REG 0x1d
-#define AR803x_PHY_DEBUG_DATA_REG 0x1e
-#define AR803x_DEBUG_REG_B 0xB
-#define AR803x_RGMII_GTX_CLK_DLY_MSB BIT(6)
-#define AR803x_RGMII_GTX_CLK_DLY_LSB BIT(5)
-
-struct ar803x_priv {
-    int flags;
-#define AR803x_FLAG_KEEP_PLL_ENABLED	BIT(0) /* don't turn off internal PLL */
-#define AR803x_FLAG_RGMII_1V8		BIT(1) /* use 1.8V RGMII I/O voltage */
-    u16 clk_25m_reg;
-    u16 clk_25m_mask;
-};
-#endif // MAKE_AR8035_WORK_WITHOUT_DM
-
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
 	GPIO_I2C_BUS_SEL_RESET = IMX_GPIO_NR(2, 0)
@@ -248,11 +216,11 @@ DECLARE_GLOBAL_DATA_PTR;
 
 
 // Change driving strength
-#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII		0x20e0768	//0x02e0790
-#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM			0x20e0788 //0x02e07ac //
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII		0x20e0768
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM			0x20e0788
 #define IOMUXC_ENET_REF_CLK_SELECT_INPUT			0x20e080C
 
-//Enable Reference CLock
+// Enable Reference CLock
 #define IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK			0x00000001
 
 /* disable on die termination for RGMII */
@@ -372,9 +340,6 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	IOMUX_PAD_CTRL(RGMII_TD3__RGMII_TD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TX_CTL__RGMII_TX_CTL, ENET_PAD_CTRL),
 
-	/* GPIO16 -> AR8035 25MHz */
-	//IOMUX_PAD_CTRL(GPIO_16__ENET_REF_CLK , NO_PAD_CTRL),
-
 	/* Reference Clock */
 	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL),
 
@@ -425,7 +390,6 @@ static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA13__GPIO3_IO13, NO_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_DA14__GPIO3_IO14, NO_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_DA15__GPIO3_IO15, NO_PAD_CTRL),
-
 };
 
 /* LED2 and LED3 pads on logosni8 */
@@ -796,7 +760,6 @@ static void setup_iomux_enet(void)
 	gpio_direction_output(GPIO_RGMII_RX_D2, 1);
 	gpio_direction_output(GPIO_RGMII_RX_D3, 1);
 	gpio_direction_output(GPIO_RGMII_RX_CLK, 1); // low voltage - 1.5 0 and 1.8 is 1 - for 2.5V - PULL DOWN/PULL UP (Hardwired)
-	//gpio_direction_output(GPIO_ENET_RXD0_INT, 1); // Active low - but is a output and is the interrupt pin.
 
 	// Need delay 2ms according to AR8035 spec - to make sure the clock is stable - logosni8
 	mdelay(2);
@@ -874,125 +837,20 @@ static void setup_spi(void)
 }
 #endif // CONFIG_MXC_SPI
 
-#ifdef MAKE_AR8035_WORK_WITHOUT_DM
-static int ar803x_debug_reg_read(struct phy_device *phydev, u16 reg)
-{
-    int ret;
-
-    ret = phy_write(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_ADDR_REG,
-                    reg);
-    if (ret < 0)
-        return ret;
-
-    return phy_read(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_DATA_REG);
-}
-
-static int set_gtx_clk_dly(struct phy_device *phydev)
-{
-    int val;
-    u16 clear, set;
-
-    val = ar803x_debug_reg_read(phydev, AR803x_DEBUG_REG_B);
-    if (val < 0)
-        return val;
-
-    val &= 0xffff;
-
-    // 0b00 = 0,25ns, works.
-    // 0b01 = 1,3ns, works.
-    // 0b10 = 2,4ns - default, works.
-    // 0b11 = 3,4ns, breaks everything.
-
-    set = AR803x_RGMII_GTX_CLK_DLY_MSB;
-    clear = 0;
-    val &= ~clear;
-    val |= set;
-
-    set = 0;
-    clear = AR803x_RGMII_GTX_CLK_DLY_LSB;
-    val &= ~clear;
-    val |= set;
-
-    printf("set_gtx_clk_dly(): About to set GTX clock delay to 0b10 = 2,4ns\n");
-
-    return phy_write(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_DATA_REG, val);
-}
-
-/*
- * This work is done in Atheros driver function ar803x_of_init() that requires CONFIG_DM_ETH (device tree).
- * Adapted a specific version here to get AR8035 PHY to work until we have device tree in place.
- */
-static int ar8035_init(struct phy_device *phydev)
-{
-    struct ar803x_priv *priv;
-    int sel;
-
-    if (phydev->drv->uid != AR8035_PHY_ID)
-        return 0;
-
-    priv = malloc(sizeof(*priv));
-    if (!priv)
-        return -ENOMEM;
-    memset(priv, 0, sizeof(*priv));
-
-    phydev->priv = priv;
-
-    // "In PLLON mode, CLK_25M outputs continuously." Datasheet p. 10.
-    priv->flags |= AR803x_FLAG_KEEP_PLL_ENABLED;
-
-    sel = AR803x_CLK_25M_125MHZ_PLL;
-    priv->clk_25m_mask |= AR803x_CLK_25M_MASK;
-    priv->clk_25m_reg |= FIELD_PREP(AR803x_CLK_25M_MASK, sel);
-
-    /*
-     * Fixup for the AR8035 which only has two bits. The two
-     * remaining bits map to the same frequencies.
-     */
-    priv->clk_25m_reg &= AR8035_CLK_25M_MASK;
-    priv->clk_25m_mask &= AR8035_CLK_25M_MASK;
-
-    //printf("ar8035_init(): flags=%x clk_25m_reg=%04x clk_25m_mask=%04x\n", priv->flags, priv->clk_25m_reg, priv->clk_25m_mask);
-
-    // No need to change default GTX clock delay (internal),
-    // default is 2,4ns and works great. All values tested, all works except 3,4ns.
-    set_gtx_clk_dly(phydev);
-
-    return 0;
-}
-#endif // MAKE_AR8035_WORK_WITHOUT_DM
-
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
     phydev->interface = PHY_INTERFACE_MODE_RGMII_ID;
 
     phy_init();
-#ifdef MAKE_AR8035_WORK_WITHOUT_DM
-    ar8035_init(phydev);
-#endif // MAKE_AR8035_WORK_WITHOUT_DM
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
-
-#ifdef MAKE_AR8035_WORK_WITHOUT_DM
-    if (phydev->drv->uid == AR8035_PHY_ID)
-    {
-        printf("Registers set for AR8035 PHY at address %d, interface type %s\n",
-               phydev->addr, phy_interface_strings[phydev->interface]);
-    }
-    else
-    {
-        printf("Unknown PHY: %08x\n", phydev->drv->uid);
-    }
-#endif // MAKE_AR8035_WORK_WITHOUT_DM
 
     return 0;
 }
 
 int board_eth_init(struct bd_info *bis)
 {
-#ifdef MAKE_AR8035_WORK_WITHOUT_DM
-    printf("\n"); // Newline after 'Net:'
-#endif // MAKE_AR8035_WORK_WITHOUT_DM
     setup_iomux_enet();
     return cpu_eth_init(bis);
 }
