@@ -442,6 +442,7 @@ pinctrl_uart2: uart2grp {
 		};
 	};
 };
+
 &fec {
     pinctrl-names = "default";
     pinctrl-0 = <&pinctrl_enet>;
