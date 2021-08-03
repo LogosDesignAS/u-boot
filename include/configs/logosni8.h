@@ -12,13 +12,17 @@
 //#define NITROGEN_TEST
 
 #ifdef NITROGEN_TEST
-    #define CONFIG_MXC_UART_BASE			UART2_BASE
+	#define CONFIG_MXC_UART_BASE			UART2_BASE
 #else
-    #define CONFIG_MXC_UART_BASE			UART4_BASE
+	#define CONFIG_MXC_UART_BASE			UART4_BASE
+#endif
+
+// If SPL is enabled include the SPL header file for imx6
+#ifdef CONFIG_SPL
+#include "imx6_spl.h"
 #endif
 
 #include"mx6_common.h"
-
 /* Undefine the following defines
  * This is needed in order to not print before the UART is powered up.
  */

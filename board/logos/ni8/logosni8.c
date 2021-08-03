@@ -5,57 +5,74 @@
  * Copyright (C) 2021 Logos Payment Solutions A/S.
  */
 
-#include <common.h>
-#include <command.h>
-#include <env.h>
-#include <init.h>
-//#include <net.h>
-#include <asm/global_data.h>
-#include <asm/io.h>
 #include <asm/arch/clock.h>
+#include <asm/arch/crm_regs.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux.h>
-#include <asm/arch/sys_proto.h>
-#include <malloc.h>
 #include <asm/arch/mx6-pins.h>
+#include <asm/arch/mxc_hdmi.h>
+#include <asm/arch/sys_proto.h>
+#include <asm/global_data.h>
+#include <asm/gpio.h>
+#include <asm/io.h>
+#include <asm/mach-imx/boot_mode.h>
+#include <asm/mach-imx/iomux-v3.h>
+#include <asm/mach-imx/mxc_i2c.h>
+#include <asm/mach-imx/spi.h>
+#include <asm/mach-imx/video.h>
+#include <command.h>
+#include <common.h>
+#include <env.h>
+#include <fsl_esdhc_imx.h>
+#include <i2c.h>
+#include <init.h>
+#include <input.h>
+#include <linux/bitfield.h>
+#include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
-#include <asm/gpio.h>
-#include <asm/mach-imx/iomux-v3.h>
-#include <asm/mach-imx/sata.h>
-#include <asm/mach-imx/spi.h>
-#include <asm/mach-imx/boot_mode.h>
-//#include <asm/mach-imx/video.h>
-#include <fsl_esdhc_imx.h>
-//#include <micrel.h> // KSZ9031 Gigabit ethernet transceiver driver
+#include <malloc.h>
 #include <miiphy.h>
-//#include <netdev.h>
-#include <asm/arch/crm_regs.h>
-#include <asm/arch/mxc_hdmi.h>
-#include <input.h>
+#include <net.h>
 #include <netdev.h>
 #include <usb/ehci-ci.h>
+
 #include "logosLogo.h"
 #include "bootmelody.h"
 
-// extra includes
-#include <linux/fb.h>
-#include <ipu_pixfmt.h>
-#include <asm/arch/crm_regs.h>
-#include <asm/arch/mxc_hdmi.h>
-#include <asm/mach-imx/video.h>
-#include <splash.h>
+#define I2C_BUS_CNT 2
 
-/* Special MXCFB sync flags are here. */
-#include "../drivers/video/imx/mxcfb.h"
+/* CTP 20210709
+ * 'MAKE_AR8035_WORK_WITHOUT_DM' and all code it sorrounds should be removed when we have
+ * a working device tree and ethernet PHY is tested.
+ */
+#ifndef CONFIG_DM_ETH
+#define MAKE_AR8035_WORK_WITHOUT_DM
+#endif // CONFIG_DM_ETH
 
-// Includes for controlling HDMI
-#include <video.h>
+#ifdef MAKE_AR8035_WORK_WITHOUT_DM
+// From atheros.c
+#define AR803x_CLK_25M_MASK	GENMASK(4, 2)
+#define AR803x_CLK_25M_125MHZ_PLL 6 // Phase-Locked Loop
+#define AR8035_PHY_ID 0x004dd072
+#define AR8035_PHY_DEBUG_ADDR_REG 0x1d
+#define AR8035_PHY_DEBUG_DATA_REG 0x1e
+#define AR8035_HIB_CTRL_REG 0xb
+#define AR8035_CLK_25M_MASK	GENMASK(4, 3)
+#define AR803x_PHY_DEBUG_ADDR_REG 0x1d
+#define AR803x_PHY_DEBUG_DATA_REG 0x1e
+#define AR803x_DEBUG_REG_B 0xB
+#define AR803x_RGMII_GTX_CLK_DLY_MSB BIT(6)
+#define AR803x_RGMII_GTX_CLK_DLY_LSB BIT(5)
 
-#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
-	#include <i2c.h>
-	#include <asm/mach-imx/mxc_i2c.h>
-#endif
+struct ar803x_priv {
+    int flags;
+#define AR803x_FLAG_KEEP_PLL_ENABLED	BIT(0) /* don't turn off internal PLL */
+#define AR803x_FLAG_RGMII_1V8		BIT(1) /* use 1.8V RGMII I/O voltage */
+    u16 clk_25m_reg;
+    u16 clk_25m_mask;
+};
+#endif // MAKE_AR8035_WORK_WITHOUT_DM
 
 
 //Uncomment to enable the demo
@@ -103,7 +120,7 @@ enum LED_GPIOS {
 	GPIO_LED_3 = IMX_GPIO_NR(6, 9)
 };
 
-// Enum for GPIOs[0-11] on the Logosni8 board
+// Enum for GPIOs[0-11] on the LogosNi8 board
 enum GPIOS {
 	GPIO_0				= IMX_GPIO_NR(1,  1),
 	GPIO_1				= IMX_GPIO_NR(4,  5),
@@ -144,7 +161,6 @@ enum SD_GPIOS {
 	SDIO_WP				= IMX_GPIO_NR(6, 15),
 	SDIO_PWR_EN			= IMX_GPIO_NR(6, 16)
 };
-
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -265,6 +281,7 @@ static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
 
+/* 20210803 CTP Should everything be removed?
 #ifdef CONFIG_CMD_I2C
 static struct i2c_pads_info i2c_pads[] = {
     I2C_PADS_INFO_ENTRY(I2C2, KEY_COL3, 4, 12, KEY_ROW3, 4, 13, I2C_PAD_CTRL),
@@ -272,8 +289,7 @@ static struct i2c_pads_info i2c_pads[] = {
 	I2C_PADS_INFO_ENTRY(I2C4, ENET_TX_EN, 1, 28, ENET_TXD1, 1, 29, I2C_PAD_CTRL),
 };
 #endif
-
-#define I2C_BUS_CNT 2
+*/
 
 // HDMI Reset Pad Config
 static iomux_v3_cfg_t const hdmi_reset_pads[] = {
@@ -294,6 +310,7 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 	IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
 	IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
 };
+
 //Logosni8 - Map the SD CARD on the Test Carrier Board
 static iomux_v3_cfg_t const sdmmc_pads[] = {
 	IOMUX_PAD_CTRL(SD1_CLK__SD1_CLK, USDHC_PAD_CTRL),
@@ -307,6 +324,7 @@ static iomux_v3_cfg_t const sdmmc_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_CS2__GPIO6_IO15, WEAK_PULLUP),
 	IOMUX_PAD_CTRL(NANDF_CS1__GPIO6_IO14, WEAK_PULLUP),
 };
+
 // Logosni8 - Map eMMC on Test Carrier
 static iomux_v3_cfg_t const usdhc3_pads[] = {
 	IOMUX_PAD_CTRL(SD3_CLK__SD3_CLK, USDHC_PAD_CTRL),
@@ -328,7 +346,7 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	IOMUX_PAD_CTRL(ENET_MDC__ENET_MDC, ENET_PAD_CTRL),
 
 	/* RGMII */
-	IOMUX_PAD_CTRL(RGMII_TXC__RGMII_TXC, NO_PAD_CTRL),
+	IOMUX_PAD_CTRL(RGMII_TXC__RGMII_TXC, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD0__RGMII_TD0, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD1__RGMII_TD1, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_TD2__RGMII_TD2, ENET_PAD_CTRL),
@@ -336,10 +354,10 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	IOMUX_PAD_CTRL(RGMII_TX_CTL__RGMII_TX_CTL, ENET_PAD_CTRL),
 
 	/* GPIO16 -> AR8035 25MHz */
-	IOMUX_PAD_CTRL(GPIO_16__ENET_REF_CLK , NO_PAD_CTRL),
+	//IOMUX_PAD_CTRL(GPIO_16__ENET_REF_CLK , NO_PAD_CTRL),
 
 	/* Reference Clock */
-	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL_CLK),
+	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL),
 
 	/* First use these pins to config the AR8035 to the correct mode
 	* Should be in the RGMII, PLLON , INT mode - meaning Mode[3..0] = 1110  */
@@ -360,14 +378,15 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	/* Interrupt pin */
 	IOMUX_PAD_CTRL(ENET_RXD0__GPIO1_IO27, ENET_PAD_CTRL),
 };
+
 /* Ethernet Pad Initialisation for Logosni8 */
 static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RXC__RGMII_RXC, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL_PD),
-	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL_PD),
+	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL),
+	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RD2__RGMII_RD2, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
-	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL_PD),
+	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
@@ -680,12 +699,11 @@ static void setup_iomux_boot_config(void)
 	gpio_direction_input(GPIO_EIM_DA13);
 	gpio_direction_input(GPIO_EIM_DA14);
 	gpio_direction_input(GPIO_EIM_DA15);
-
 };
 
 static void setup_iomux_enet(void)
 {
-	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGISNI8");
+	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
 	gpio_request(GPIO_RGMII_RX_DV,"GPIO_RGMII_RX_DV");
 	gpio_request(GPIO_RGMII_RX_D0,"GPIO_RGMII_RX_D0");
 	gpio_request(GPIO_RGMII_RX_D1,"GPIO_RGMII_RX_D1");
@@ -694,11 +712,11 @@ static void setup_iomux_enet(void)
 	gpio_request(GPIO_RGMII_RX_CLK,"GPIO_RGMII_RX_CLK");
 	gpio_request(GPIO_ENET_RXD0_INT,"GPIO_ENET_RXD0_INT");
 
-	// DO all the first mapping - GPIOs for Configuring the PHY and the AR8035 Mode
+	// Do all the first mapping - GPIOs for Configuring the PHY and the AR8035 Mode
 	SETUP_IOMUX_PADS(enet_pads1);
 
-	// set Output for configuring AR8035
-	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 0); /* Logosni8 PHY rst */
+	// Set output for configuring AR8035
+	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 0); // Logosni8 PHY rst
 
 	// Setup the correct mode for Ethernet chip - AR8035 - Should be 1110 - see page 8 in the datasheet
 	gpio_direction_output(GPIO_RGMII_RX_DV, 0);
@@ -706,24 +724,15 @@ static void setup_iomux_enet(void)
 	gpio_direction_output(GPIO_RGMII_RX_D1, 0);
 	gpio_direction_output(GPIO_RGMII_RX_D2, 1);
 	gpio_direction_output(GPIO_RGMII_RX_D3, 1);
-	gpio_direction_output(GPIO_RGMII_RX_CLK, 1);  // low voltage - 1.5 0 and 1.8 is 1 - for 2.5V - PULL DOWN/PULL UP (Hardwired)
+	gpio_direction_output(GPIO_RGMII_RX_CLK, 1); // low voltage - 1.5 0 and 1.8 is 1 - for 2.5V - PULL DOWN/PULL UP (Hardwired)
 	//gpio_direction_output(GPIO_ENET_RXD0_INT, 1); // Active low - but is a output and is the interrupt pin.
 
-	// For Debug Purpose Set the LED 2 and LED 3 LOW
-	gpio_set_value(GPIO_LED_2, 0);
-	gpio_set_value(GPIO_LED_3, 0);
-
-	/* Need delay 2ms according to AR8035 spec - to make sure the clock is stable - logosni8 */
+	// Need delay 2ms according to AR8035 spec - to make sure the clock is stable - logosni8
 	mdelay(2);
-	gpio_set_value(GPIO_RGMII_RESET_LOGISNI8, 1); /* Logosni8 PHY reset */
+	gpio_set_value(GPIO_RGMII_RESET_LOGISNI8, 1); // Logosni8 PHY reset
 
-	// Turn LEDs off for debug
-	gpio_set_value(GPIO_LED_2, 1);
-	gpio_set_value(GPIO_LED_3, 1);
-
-	mdelay(2); // This delay is used for testing - TODO: REMOVE This Delay when the Ethernet is working.
 	SETUP_IOMUX_PADS(enet_pads2);
-	mdelay(1);	/* Wait 1000 us before using mii interface - and pull the reset pin low */
+	mdelay(2);	// Wait 2000 us before using mii interface - and pull the reset pin low
 }
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -811,152 +820,128 @@ static void setup_spi(void)
 }
 #endif
 
-#define BMC_PDOWN 0x0800
-
-static int ar8035_phy_fixup(struct phy_device *phydev)
+#ifdef MAKE_AR8035_WORK_WITHOUT_DM
+static int ar803x_debug_reg_read(struct phy_device *phydev, u16 reg)
 {
-	unsigned short val;
+    int ret;
 
-	/* from linux/arch/arm/mach-imx/mach-imx6q.c :
-	 * Ar803x phy SmartEEE feature cause link status generates glitch,
-	 * which cause ethernet link down/up issue, so disable SmartEEE
- 	*/
+    ret = phy_write(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_ADDR_REG,
+                    reg);
+    if (ret < 0)
+        return ret;
 
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x805d);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4003);
-
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val & ~(1 << 8));
-
-
-	// Device 7 of the phy
-	// Enable AR8035 to output a 125MHz clk from CLK_25M to IMX6 ENET_REF_CLK
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
-
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	val &= 0xffe7;
-	val |= 0x18;
-	if ( phy_write(phydev, MDIO_DEVAD_NONE, 0xe,val) < 0 )
-		printf("Enabling the 125MHz Clk from CLK 25M failed.\n");
-
-
-	// Introduce tx clock delay
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
-	val |= 0x0100;
-	if(phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val) < 0)
-		printf("Enabling TX Clock Delay failed\n");
-
-	// Introduce rx clock delay
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x0);
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
-	val |= 0x8000;
-	if (phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val) < 0)
-		printf("Enabling RX Clock delay failed\n");
-
-	// Introduce rgmii gtx clock delay - 3.4 ns - Default 2.4ns - TODO: Should be tweaked when the ethernet works - to get optimal performance
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0xB);
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
-	val |= 0x0060;
-	if(phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val) < 0)
-		printf("Enabling GTX delay of 3.4 ns failed\n");
-
-	// Read all the values to verify that they are correctly written
-	// Firstly reading the clock back.
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-
-	return 0;
+    return phy_read(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_DATA_REG);
 }
+
+static int set_gtx_clk_dly(struct phy_device *phydev)
+{
+    int val;
+    u16 clear, set;
+
+    val = ar803x_debug_reg_read(phydev, AR803x_DEBUG_REG_B);
+    if (val < 0)
+        return val;
+
+    val &= 0xffff;
+
+    // 0b00 = 0,25ns, works.
+    // 0b01 = 1,3ns, works.
+    // 0b10 = 2,4ns - default, works.
+    // 0b11 = 3,4ns, breaks everything.
+
+    set = AR803x_RGMII_GTX_CLK_DLY_MSB;
+    clear = 0;
+    val &= ~clear;
+    val |= set;
+
+    set = 0;
+    clear = AR803x_RGMII_GTX_CLK_DLY_LSB;
+    val &= ~clear;
+    val |= set;
+
+    printf("set_gtx_clk_dly(): About to set GTX clock delay to 0b10 = 2,4ns\n");
+
+    return phy_write(phydev, MDIO_DEVAD_NONE, AR803x_PHY_DEBUG_DATA_REG, val);
+}
+
+/* CTP 20210709
+ * This work is done in Atheros driver function ar803x_of_init() that requires CONFIG_DM_ETH (device tree).
+ * Adapted a specific version here to get AR8035 PHY to work until we have device tree in place.
+ */
+static int ar8035_init(struct phy_device *phydev)
+{
+    struct ar803x_priv *priv;
+    int sel;
+
+    if (phydev->drv->uid != AR8035_PHY_ID)
+        return 0;
+
+    priv = malloc(sizeof(*priv));
+    if (!priv)
+        return -ENOMEM;
+    memset(priv, 0, sizeof(*priv));
+
+    phydev->priv = priv;
+
+    // "In PLLON mode, CLK_25M outputs continuously." Datasheet p. 10.
+    priv->flags |= AR803x_FLAG_KEEP_PLL_ENABLED;
+
+    sel = AR803x_CLK_25M_125MHZ_PLL;
+    priv->clk_25m_mask |= AR803x_CLK_25M_MASK;
+    priv->clk_25m_reg |= FIELD_PREP(AR803x_CLK_25M_MASK, sel);
+
+    /*
+     * Fixup for the AR8035 which only has two bits. The two
+     * remaining bits map to the same frequencies.
+     */
+    priv->clk_25m_reg &= AR8035_CLK_25M_MASK;
+    priv->clk_25m_mask &= AR8035_CLK_25M_MASK;
+
+    //printf("ar8035_init(): flags=%x clk_25m_reg=%04x clk_25m_mask=%04x\n", priv->flags, priv->clk_25m_reg, priv->clk_25m_mask);
+
+    // No need to change default GTX clock delay (internal),
+    // default is 2,4ns and works great. All values tested, all works except 3,4ns.
+    set_gtx_clk_dly(phydev);
+
+    return 0;
+}
+#endif // MAKE_AR8035_WORK_WITHOUT_DM
 
 int board_phy_config(struct phy_device *phydev)
 {
-	ar8035_phy_fixup(phydev);
+	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
+    phydev->interface = PHY_INTERFACE_MODE_RGMII_ID;
 
-	printf("Initalised the AR8035\n");
-
+    phy_init();
+#ifdef MAKE_AR8035_WORK_WITHOUT_DM
+    ar8035_init(phydev);
+#endif // MAKE_AR8035_WORK_WITHOUT_DM
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
-	return 0;
-}
+#ifdef MAKE_AR8035_WORK_WITHOUT_DM
+    if (phydev->drv->uid == AR8035_PHY_ID)
+    {
+        printf("Registers set for AR8035 PHY at address %d, interface type %s\n",
+               phydev->addr, phy_interface_strings[phydev->interface]);
+    }
+    else
+    {
+        printf("Unknown PHY: %08x\n", phydev->drv->uid);
+    }
+#endif // MAKE_AR8035_WORK_WITHOUT_DM
 
+    return 0;
+}
 
 int board_eth_init(struct bd_info *bis)
 {
-	// struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
-	uint32_t base = IMX_FEC_BASE;
-	struct mii_dev *bus = NULL;
-	struct phy_device *phydev = NULL;
-	int ret;
-
-	setup_iomux_enet();
-
-	// Config environment variables
-	//env_set("ethaddr", "00:19:b8:04:42:1b");
-
-
-#ifdef CONFIG_FEC_MXC
-
-	bus = fec_get_miibus(base, -1);
-	if (!bus)
-		return 0;
-	// scan phy 4,5,6,7
-	phydev = phy_find_by_mask(bus, (0xf << 4), PHY_INTERFACE_MODE_RGMII);
-	if (!phydev) {
-		free(bus);
-		return 0;
-	}
-	printf("Using phy at %d\n", phydev->addr);
-
-	printf("Resetting the AR8035\n");
-
-	ret  = fec_probe(bis, -1, base, bus, phydev);
-	if (ret) {
-		printf("FEC MXC: %s:failed\n", __func__);
-		free(phydev);
-		free(bus);
-	}
-
-#endif
-
-#ifdef CONFIG_CI_UDC
-	// For otg ethernet //
-	//usb_eth_initialize(bis);
-#endif
-
-	return ret;
+#ifdef MAKE_AR8035_WORK_WITHOUT_DM
+    printf("\n"); // Newline after 'Net:'
+#endif // MAKE_AR8035_WORK_WITHOUT_DM
+    setup_iomux_enet();
+    return cpu_eth_init(bis);
 }
-
-#if defined(CONFIG_SPLASH_SCREEN)
-int splash_screen_prepare(void)
-{
-	char *env_loadsplash;
-
-	if (!env_get("splashimage") || !env_get("splashsize")) {
-		return -1;
-	}
-
-	env_loadsplash = env_get("loadsplash");
-	if (env_loadsplash == NULL) {
-		printf("Environment variable loadsplash not found!\n");
-		return -1;
-	}
-
-	if (run_command_list(env_loadsplash, -1, 0)) {
-		printf("failed to run loadsplash %s\n\n", env_loadsplash);
-		return -1;
-	}
-
-	return 0;
-}
-#endif
-
 
 static iomux_v3_cfg_t const backlight_pads[] = {
 	/* Backlight on RGB connector: J15 */
@@ -1002,7 +987,7 @@ static iomux_v3_cfg_t const rgb_pads[] = {
 
 static void do_enable_hdmi(struct display_info_t const *dev)
 {
-	imx_enable_hdmi_phy();
+	//imx_enable_hdmi_phy(); 20210803 CTP Should the whole function be removed?
 	printf("Enable HDMI \n");
 
 }
@@ -1303,7 +1288,7 @@ static void setup_display(void)
 	printf("Initialising the display \n");
 
 	enable_ipu_clock();
-	imx_setup_hdmi();
+	// imx_setup_hdmi(); 20210803 CTP Should the whole function be removed?
 	/* Turn on LDB0,IPU,IPU DI0 clocks */
 	reg = __raw_readl(&mxc_ccm->CCGR3);
 	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK;
@@ -1384,20 +1369,46 @@ static void led_logosni8_party_light(void)
 }
 #endif
 
+// Change driving strength
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII		0x20e0768	//0x02e0790
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM			0x20e0788 //0x02e07ac //
+#define IOMUXC_ENET_REF_CLK_SELECT_INPUT			0x20e080C
+
+//Enable Reference CLock
+#define IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK			0x00000001
+
+/* disable on die termination for RGMII */
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_DISABLE	0x00000000
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_30OHMS	0x00000400
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_40OHMS	0x00000300
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_60OHMS	0x00000200
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_120OHMS	0x00000100
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS	0x00000000
+#define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_17OHMS  0x00000700
+/* optimised drive strength for 1.0 .. 1.3 V signal on RGMII */
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P2V	0x00080000
+/* optimised drive strength for 1.3 .. 2.5 V signal on RGMII */
+#define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V	0x000C0000
+
 static int setup_fec(void)
 {
 	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
-	// Not removed for now - this is not needed because the clock is generated by the PHY
-
-	/* set gpr1[21] to select anatop clock */
-	//clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK,
-	//				IOMUXC_GPR1_ENET_CLK_SEL_MASK);
-
 	/* Clear gpr1[ENET_CLK_SEL] for external clock  - see page 2032 in reference manual */
 	clrbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
-	//return enable_fec_anatop_clock(0, ENET_125MHZ);
 
+	// Change the drive strength
+	__raw_writel(IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS,
+				 (void *)IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM);
+	__raw_writel(IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V,
+				 (void *)IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII);
+
+	// Daisy Chain
+	__raw_writel(IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK,
+				 (void *)IOMUXC_ENET_REF_CLK_SELECT_INPUT);
+
+	//printf("Read value of register: %d \n", __raw_readl(0x20e080C));
+	//printf("IOMUX Base Address %d\n",IOMUXC_BASE_ADDR);
 	return 0;
 }
 
@@ -1746,9 +1757,11 @@ int board_init(void)
 	board_mmc_init_dts();
 
 	// Init USB
+	/*
 	board_ehci_hcd_init(0);
 	board_ehci_hcd_init(1);
 	board_ehci_power(0, 1);
+	*/
 
 	// ETH init
 	setup_iomux_enet();
@@ -1789,30 +1802,6 @@ int board_init(void)
 }
 
 /*
-
-void cpuinfo()
-{
-    if (is_cpu_type(MXC_CPU_MX6SOLO))
-    {
-        u32 rev = get_cpu_rev();
-        u32 freq = get_cpu_speed_grade_hz();
-
-        int min = 0;
-        int max = 0;
-        u32 grade = get_cpu_temp_grade(&min, &max);
-
-        printf("CPU: 1 GHz i.MX 6Solo 1x ARM Cortex-A9 (rev: %d, speed grade: %d Hz, temp grade: %d to %d degree Celsius)\n", rev, freq, min, max);
-
-        // CTP TODO: Actual speed? and uuid Nice features in cpu.h under imx seems not to work with imx6s
-    }
-    else
-    {
-        puts("CPU: Unknown\n");
-    }
-}
-*/
-
-/*
  * Simple function for printing the CPU information
  * This is hardcoded for now - Only on CPU using this bootloader.
  */
@@ -1821,7 +1810,6 @@ int print_cpuinfo(void)
 	printf("CPU:   NXP MX6S Rev 5 with a ARM Cortex-A9 core running at 1 GHz - 512MB RAM\n");
 	return 0;
 }
-
 
 int checkboard(void)
 {
@@ -1866,6 +1854,13 @@ int board_late_init(void)
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
 	initial_Printing();
 
+	/*
+	printf("Read value of register- IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII: %d \n", __raw_readl(IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII));
+	printf("Read value of register - IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM: %d \n", __raw_readl(IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM));
+	printf("Read value of register - IOMUXC_ENET_REF_CLK_SELECT_INPUT: %d \n", __raw_readl(IOMUXC_ENET_REF_CLK_SELECT_INPUT));
+	printf("Verify that it reads correctly: %d\n", __raw_readl(0x20e073C));
+    */
+
 	// TODO: Remove, can be read using u-boot command 'fuse read 0 1 and fuse read 0 2' or 'env print'
 	const char* sn = env_get("serial#");
 	if (sn)
@@ -1883,3 +1878,402 @@ int board_late_init(void)
 #endif
 	return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//----------------------------------------------- SPL Mode Code ------------------------------------------------------//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef CONFIG_SPL_BUILD
+#include <spl.h>
+#include <linux/libfdt.h>
+#include "asm/arch/mx6dl-ddr.h"
+#include "asm/arch/iomux.h"
+#include "asm/arch/crm_regs.h"
+
+static int mx6s_dcd_table[] = {
+/* ddr-setup.cfg */
+
+MX6_IOM_DRAM_SDQS0, 0x00000030,
+MX6_IOM_DRAM_SDQS1, 0x00000030,
+MX6_IOM_DRAM_SDQS2, 0x00000030,
+MX6_IOM_DRAM_SDQS3, 0x00000030,
+MX6_IOM_DRAM_SDQS4, 0x00000030,
+MX6_IOM_DRAM_SDQS5, 0x00000030,
+MX6_IOM_DRAM_SDQS6, 0x00000030,
+MX6_IOM_DRAM_SDQS7, 0x00000030,
+
+MX6_IOM_GRP_B0DS, 0x00000030,
+MX6_IOM_GRP_B1DS, 0x00000030,
+MX6_IOM_GRP_B2DS, 0x00000030,
+MX6_IOM_GRP_B3DS, 0x00000030,
+MX6_IOM_GRP_B4DS, 0x00000030,
+MX6_IOM_GRP_B5DS, 0x00000030,
+MX6_IOM_GRP_B6DS, 0x00000030,
+MX6_IOM_GRP_B7DS, 0x00000030,
+MX6_IOM_GRP_ADDDS, 0x00000030,
+/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
+MX6_IOM_GRP_CTLDS, 0x00000030,
+
+MX6_IOM_DRAM_DQM0, 0x00020030,
+MX6_IOM_DRAM_DQM1, 0x00020030,
+MX6_IOM_DRAM_DQM2, 0x00020030,
+MX6_IOM_DRAM_DQM3, 0x00020030,
+MX6_IOM_DRAM_DQM4, 0x00020030,
+MX6_IOM_DRAM_DQM5, 0x00020030,
+MX6_IOM_DRAM_DQM6, 0x00020030,
+MX6_IOM_DRAM_DQM7, 0x00020030,
+
+MX6_IOM_DRAM_CAS, 0x00020030,
+MX6_IOM_DRAM_RAS, 0x00020030,
+MX6_IOM_DRAM_SDCLK_0, 0x00020030,
+MX6_IOM_DRAM_SDCLK_1, 0x00020030,
+
+MX6_IOM_DRAM_RESET, 0x00020030,
+MX6_IOM_DRAM_SDCKE0, 0x00003000,
+MX6_IOM_DRAM_SDCKE1, 0x00003000,
+
+MX6_IOM_DRAM_SDODT0, 0x00003030,
+MX6_IOM_DRAM_SDODT1, 0x00003030,
+
+/* (differential input) */
+MX6_IOM_DDRMODE_CTL, 0x00020000,
+/* (differential input) */
+MX6_IOM_GRP_DDRMODE, 0x00020000,
+/* disable ddr pullups */
+MX6_IOM_GRP_DDRPKE, 0x00000000,
+MX6_IOM_DRAM_SDBA2, 0x00000000,
+/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
+MX6_IOM_GRP_DDR_TYPE, 0x000C0000,
+
+/* Read data DQ Byte0-3 delay */
+MX6_MMDC_P0_MPRDDQBY0DL, 0x33333333,
+MX6_MMDC_P0_MPRDDQBY1DL, 0x33333333,
+MX6_MMDC_P0_MPRDDQBY2DL, 0x33333333,
+MX6_MMDC_P0_MPRDDQBY3DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY0DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY1DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY2DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY3DL, 0x33333333,
+
+/*
+ * MDMISC	mirroring	interleaved (row/bank/col)
+ */
+/* TODO: check what the RALAT field does */
+MX6_MMDC_P0_MDMISC, 0x00081740,
+
+/*
+ * MDSCR	con_req
+ */
+MX6_MMDC_P0_MDSCR, 0x00008000,
+
+
+/* 800mhz_2x64mx16.cfg */
+
+MX6_MMDC_P0_MDPDC, 0x0002002D,
+MX6_MMDC_P0_MDCFG0, 0x2C305503,
+MX6_MMDC_P0_MDCFG1, 0xB66D8D63,
+MX6_MMDC_P0_MDCFG2, 0x01FF00DB,
+MX6_MMDC_P0_MDRWD, 0x000026D2,
+MX6_MMDC_P0_MDOR, 0x00301023,
+MX6_MMDC_P0_MDOTC, 0x00333030,
+MX6_MMDC_P0_MDPDC, 0x0002556D,
+/* CS0 End: 7MSB of ((0x10000000, + 512M) -1) >> 25 */
+MX6_MMDC_P0_MDASP, 0x00000017,
+/* DDR3 DATA BUS SIZE: 64BIT */
+/* MX6_MMDC_P0_MDCTL, 0x821A0000, */
+/* DDR3 DATA BUS SIZE: 32BIT */
+MX6_MMDC_P0_MDCTL, 0x82190000,
+
+/* Write commands to DDR */
+/* Load Mode Registers */
+/* TODO Use Auto Self-Refresh mode (Extended Temperature)*/
+/* MX6_MMDC_P0_MDSCR, 0x04408032, */
+MX6_MMDC_P0_MDSCR, 0x04008032,
+MX6_MMDC_P0_MDSCR, 0x00008033,
+MX6_MMDC_P0_MDSCR, 0x00048031,
+MX6_MMDC_P0_MDSCR, 0x13208030,
+/* ZQ calibration */
+MX6_MMDC_P0_MDSCR, 0x04008040,
+
+MX6_MMDC_P0_MPZQHWCTRL, 0xA1390003,
+MX6_MMDC_P1_MPZQHWCTRL, 0xA1390003,
+MX6_MMDC_P0_MDREF, 0x00005800,
+
+MX6_MMDC_P0_MPODTCTRL, 0x00000000,
+MX6_MMDC_P1_MPODTCTRL, 0x00000000,
+
+MX6_MMDC_P0_MPDGCTRL0, 0x42360232,
+MX6_MMDC_P0_MPDGCTRL1, 0x021F022A,
+MX6_MMDC_P1_MPDGCTRL0, 0x421E0224,
+MX6_MMDC_P1_MPDGCTRL1, 0x02110218,
+
+MX6_MMDC_P0_MPRDDLCTL, 0x41434344,
+MX6_MMDC_P1_MPRDDLCTL, 0x4345423E,
+MX6_MMDC_P0_MPWRDLCTL, 0x39383339,
+MX6_MMDC_P1_MPWRDLCTL, 0x3E363930,
+
+MX6_MMDC_P0_MPWLDECTRL0, 0x00340039,
+MX6_MMDC_P0_MPWLDECTRL1, 0x002C002D,
+MX6_MMDC_P1_MPWLDECTRL0, 0x00120019,
+MX6_MMDC_P1_MPWLDECTRL1, 0x0012002D,
+
+MX6_MMDC_P0_MPMUR0, 0x00000800,
+MX6_MMDC_P1_MPMUR0, 0x00000800,
+MX6_MMDC_P0_MDSCR, 0x00000000,
+MX6_MMDC_P0_MAPSR, 0x00011006,
+};
+
+static int mx6dl_dcd_table[] = {
+/* ddr-setup.cfg */
+
+MX6_IOM_DRAM_SDQS0, 0x00000030,
+MX6_IOM_DRAM_SDQS1, 0x00000030,
+MX6_IOM_DRAM_SDQS2, 0x00000030,
+MX6_IOM_DRAM_SDQS3, 0x00000030,
+MX6_IOM_DRAM_SDQS4, 0x00000030,
+MX6_IOM_DRAM_SDQS5, 0x00000030,
+MX6_IOM_DRAM_SDQS6, 0x00000030,
+MX6_IOM_DRAM_SDQS7, 0x00000030,
+
+MX6_IOM_GRP_B0DS, 0x00000030,
+MX6_IOM_GRP_B1DS, 0x00000030,
+MX6_IOM_GRP_B2DS, 0x00000030,
+MX6_IOM_GRP_B3DS, 0x00000030,
+MX6_IOM_GRP_B4DS, 0x00000030,
+MX6_IOM_GRP_B5DS, 0x00000030,
+MX6_IOM_GRP_B6DS, 0x00000030,
+MX6_IOM_GRP_B7DS, 0x00000030,
+MX6_IOM_GRP_ADDDS, 0x00000030,
+/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
+MX6_IOM_GRP_CTLDS, 0x00000030,
+
+MX6_IOM_DRAM_DQM0, 0x00020030,
+MX6_IOM_DRAM_DQM1, 0x00020030,
+MX6_IOM_DRAM_DQM2, 0x00020030,
+MX6_IOM_DRAM_DQM3, 0x00020030,
+MX6_IOM_DRAM_DQM4, 0x00020030,
+MX6_IOM_DRAM_DQM5, 0x00020030,
+MX6_IOM_DRAM_DQM6, 0x00020030,
+MX6_IOM_DRAM_DQM7, 0x00020030,
+
+MX6_IOM_DRAM_CAS, 0x00020030,
+MX6_IOM_DRAM_RAS, 0x00020030,
+MX6_IOM_DRAM_SDCLK_0, 0x00020030,
+MX6_IOM_DRAM_SDCLK_1, 0x00020030,
+
+MX6_IOM_DRAM_RESET, 0x00020030,
+MX6_IOM_DRAM_SDCKE0, 0x00003000,
+MX6_IOM_DRAM_SDCKE1, 0x00003000,
+
+MX6_IOM_DRAM_SDODT0, 0x00003030,
+MX6_IOM_DRAM_SDODT1, 0x00003030,
+
+/* (differential input) */
+MX6_IOM_DDRMODE_CTL, 0x00020000,
+/* (differential input) */
+MX6_IOM_GRP_DDRMODE, 0x00020000,
+/* disable ddr pullups */
+MX6_IOM_GRP_DDRPKE, 0x00000000,
+MX6_IOM_DRAM_SDBA2, 0x00000000,
+/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
+MX6_IOM_GRP_DDR_TYPE, 0x000C0000,
+
+/* Read data DQ Byte0-3 delay */
+MX6_MMDC_P0_MPRDDQBY0DL, 0x33333333,
+MX6_MMDC_P0_MPRDDQBY1DL, 0x33333333,
+MX6_MMDC_P0_MPRDDQBY2DL, 0x33333333,
+MX6_MMDC_P0_MPRDDQBY3DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY0DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY1DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY2DL, 0x33333333,
+MX6_MMDC_P1_MPRDDQBY3DL, 0x33333333,
+
+/*
+ * MDMISC	mirroring	interleaved (row/bank/col)
+ */
+/* TODO: check what the RALAT field does */
+MX6_MMDC_P0_MDMISC, 0x00081740,
+
+/*
+ * MDSCR	con_req
+ */
+MX6_MMDC_P0_MDSCR, 0x00008000,
+
+
+/* 800mhz_2x64mx16.cfg */
+
+MX6_MMDC_P0_MDPDC, 0x0002002D,
+MX6_MMDC_P0_MDCFG0, 0x2C305503,
+MX6_MMDC_P0_MDCFG1, 0xB66D8D63,
+MX6_MMDC_P0_MDCFG2, 0x01FF00DB,
+MX6_MMDC_P0_MDRWD, 0x000026D2,
+MX6_MMDC_P0_MDOR, 0x00301023,
+MX6_MMDC_P0_MDOTC, 0x00333030,
+MX6_MMDC_P0_MDPDC, 0x0002556D,
+/* CS0 End: 7MSB of ((0x10000000, + 512M) -1) >> 25 */
+MX6_MMDC_P0_MDASP, 0x00000017,
+/* DDR3 DATA BUS SIZE: 64BIT */
+MX6_MMDC_P0_MDCTL, 0x821A0000,
+/* DDR3 DATA BUS SIZE: 32BIT */
+/* MX6_MMDC_P0_MDCTL, 0x82190000, */
+
+/* Write commands to DDR */
+/* Load Mode Registers */
+/* TODO Use Auto Self-Refresh mode (Extended Temperature)*/
+/* MX6_MMDC_P0_MDSCR, 0x04408032, */
+MX6_MMDC_P0_MDSCR, 0x04008032,
+MX6_MMDC_P0_MDSCR, 0x00008033,
+MX6_MMDC_P0_MDSCR, 0x00048031,
+MX6_MMDC_P0_MDSCR, 0x13208030,
+/* ZQ calibration */
+MX6_MMDC_P0_MDSCR, 0x04008040,
+
+MX6_MMDC_P0_MPZQHWCTRL, 0xA1390003,
+MX6_MMDC_P1_MPZQHWCTRL, 0xA1390003,
+MX6_MMDC_P0_MDREF, 0x00005800,
+
+MX6_MMDC_P0_MPODTCTRL, 0x00000000,
+MX6_MMDC_P1_MPODTCTRL, 0x00000000,
+
+MX6_MMDC_P0_MPDGCTRL0, 0x42360232,
+MX6_MMDC_P0_MPDGCTRL1, 0x021F022A,
+MX6_MMDC_P1_MPDGCTRL0, 0x421E0224,
+MX6_MMDC_P1_MPDGCTRL1, 0x02110218,
+
+MX6_MMDC_P0_MPRDDLCTL, 0x41434344,
+MX6_MMDC_P1_MPRDDLCTL, 0x4345423E,
+MX6_MMDC_P0_MPWRDLCTL, 0x39383339,
+MX6_MMDC_P1_MPWRDLCTL, 0x3E363930,
+
+MX6_MMDC_P0_MPWLDECTRL0, 0x00340039,
+MX6_MMDC_P0_MPWLDECTRL1, 0x002C002D,
+MX6_MMDC_P1_MPWLDECTRL0, 0x00120019,
+MX6_MMDC_P1_MPWLDECTRL1, 0x0012002D,
+
+MX6_MMDC_P0_MPMUR0, 0x00000800,
+MX6_MMDC_P1_MPMUR0, 0x00000800,
+MX6_MMDC_P0_MDSCR, 0x00000000,
+MX6_MMDC_P0_MAPSR, 0x00011006,
+};
+
+static void ccgr_init(void)
+{
+	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+
+	writel(0x00C03F3F, &ccm->CCGR0);
+	writel(0x0030FC03, &ccm->CCGR1);
+	writel(0x0FFFFFF3, &ccm->CCGR2);
+	writel(0x3FF0300F, &ccm->CCGR3);
+	writel(0x00FFF300, &ccm->CCGR4);
+	writel(0x0F0000F3, &ccm->CCGR5);
+	writel(0x000003FF, &ccm->CCGR6);
+
+/*
+ * Setup CCM_CCOSR register as follows:
+ *
+ * cko1_en  = 1	   --> CKO1 enabled
+ * cko1_div = 111  --> divide by 8
+ * cko1_sel = 1011 --> ahb_clk_root
+ *
+ * This sets CKO1 at ahb_clk_root/8 = 132/8 = 16.5 MHz
+ */
+	writel(0x000000FB, &ccm->ccosr);
+}
+
+static void ddr_init(int *table, int size)
+{
+	int i;
+
+	for (i = 0; i < size / 2 ; i++)
+		writel(table[2 * i + 1], table[2 * i]);
+}
+
+static void spl_dram_init(void)
+{
+	int minc, maxc;
+
+	switch (get_cpu_temp_grade(&minc, &maxc)) {
+	case TEMP_COMMERCIAL:
+	case TEMP_EXTCOMMERCIAL:
+		if (is_cpu_type(MXC_CPU_MX6DL)) {
+			puts("Commercial temperature grade DDR3 timings, 64bit bus width.\n");
+			ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
+		} else {
+			puts("Commercial temperature grade DDR3 timings, 32bit bus width.\n");
+			ddr_init(mx6s_dcd_table, ARRAY_SIZE(mx6s_dcd_table));
+		}
+		break;
+	case TEMP_INDUSTRIAL:
+	case TEMP_AUTOMOTIVE:
+	default:
+		if (is_cpu_type(MXC_CPU_MX6DL)) {
+			puts("Industrial temperature grade DDR3 timings, 64bit bus width.\n");
+			ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
+		} else {
+			puts("Industrial temperature grade DDR3 timings, 32bit bus width.\n");
+			ddr_init(mx6s_dcd_table, ARRAY_SIZE(mx6s_dcd_table));
+		}
+		break;
+	};
+	udelay(100);
+}
+
+static iomux_v3_cfg_t const gpio_reset_pad[] = {
+	MX6_PAD_RGMII_RD1__GPIO6_IO27 | MUX_PAD_CTRL(NO_PAD_CTRL) |
+					MUX_MODE_SION
+#define GPIO_NRESET IMX_GPIO_NR(6, 27)
+};
+
+#define IMX_RESET_CAUSE_POR 0x00011
+static void nreset_out(void)
+{
+	int reset_cause = get_imx_reset_cause();
+
+	if (reset_cause != IMX_RESET_CAUSE_POR) {
+		imx_iomux_v3_setup_multiple_pads(gpio_reset_pad,
+						 ARRAY_SIZE(gpio_reset_pad));
+		gpio_direction_output(GPIO_NRESET, 1);
+		udelay(100);
+		gpio_direction_output(GPIO_NRESET, 0);
+	}
+}
+
+void board_init_f(ulong dummy)
+{
+	/* setup AIPS and disable watchdog */
+	arch_cpu_init();
+
+	ccgr_init();
+	gpr_init();
+
+	/* iomux */
+	board_early_init_f();
+
+	/* setup GP timer */
+	timer_init();
+
+	/* UART clocks enabled and gd valid - init serial console */
+	preloader_console_init();
+
+	/* Make sure we use dte mode */
+	setup_dtemode_uart();
+
+	/* DDR initialization */
+	spl_dram_init();
+
+	/* Clear the BSS. */
+	memset(__bss_start, 0, __bss_end - __bss_start);
+
+	/* Assert nReset_Out */
+	nreset_out();
+
+	/* load/boot image from boot device */
+	board_init_r(NULL, 0);
+}
+
+void reset_cpu(ulong addr)
+{
+}
+
+#endif /* CONFIG_SPL_BUILD */
+
