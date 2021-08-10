@@ -120,8 +120,10 @@
 	"ramdisk_addr_r=0x13000000\0" \
 	"ramdiskaddr=0x13000000\0" \
 	"ip_dyn=yes\0" \
-	"usb_pgood_delay=2000\0" \
+	"usb_pgood_delay=2000\0"	\
+	"altbootcmd=run recoveryboot\0"  \
 	BOOTENV
+// Added altbootcmd for supporting recovery boot, if the normal boot fails
 
 //Uncomment to enable the demo
 //#define DEMO_MODE
