@@ -1583,9 +1583,9 @@ int misc_init_r(void)
  */
 int board_late_init(void)
 {
-    // The test carrier board is now powered up and the UART is ready - make a startup screen
-    print_Logos_Logo();
-    printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
+	// The test carrier board is now powered up and the UART is ready - make a startup screen
+	print_Logos_Logo();
+	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
 
 #ifdef DEMO_MODE
 	// Boot up Song
@@ -1594,6 +1594,13 @@ int board_late_init(void)
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 	led_logosni8_party_light();
 #endif
+	// Set i2c bus to 3 - Boot Counter
+	int res = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
+
+	if (res < 0) {
+		puts("Error switching I2C bus\n");
+		return res;
+	}
 
 	return 0;
 }
