@@ -57,6 +57,18 @@ CONFIG_SUPPORT_RAW_INITRD=y
 CONFIG_USE_PREBOOT=y
 CONFIG_BOOTDELAY=10
 
+# Watchdog Configs
+# This config changes reset time - after calling reset it will wait 30s
+CONFIG_WATCHDOG_TIMEOUT_MSECS=5000
+CONFIG_IMX_WATCHDOG=y
+CONFIG_SYSRESET_WATCHDOG=y
+CONFIG_WDT_CDNS=y
+
+# Config Boot Count - Save in FRAM - I2C
+#CONFIG_BOOTCOUNT_I2C=y
+#CONFIG_CMD_BOOTCOUNT=y
+#CONFIG_BOOTCOUNT_BOOTLIMIT=10
+
 # Enable the hush shell, if, then, else logic in scripts
 CONFIG_HUSH_PARSER=y
 
@@ -129,6 +141,8 @@ CONFIG_DM_MMC=y
 CONFIG_DM_ETH=y
 CONFIG_DM_SPI=y
 CONFIG_DM_SPI_FLASH=y
+# DM Watchdog support
+CONFIG_WDT=y
 
 # Commands
 # Enable Caches for optimised bootup speed

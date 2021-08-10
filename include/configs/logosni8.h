@@ -13,6 +13,10 @@
 
 #include"mx6_common.h"
 
+// Watchdog defines
+#define TIMEOUT_MAX	128000
+#define TIMEOUT_MIN	500
+
 // If SPL is enabled include the SPL header file for imx6
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"

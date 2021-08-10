@@ -121,6 +121,13 @@
 		>;
 	};
 
+	pinctrl_wdog: wdoggrp {
+	fsl,pins = <
+			MX6QDL_PAD_GPIO_9__WDOG1_B				0x1b0b0
+			//MX6QDL_PAD_NANDF_ALE__GPIO6_IO08		0x1b0b0
+			>;
+	};
+
 	pinctrl_usbh1: usbh1grp {
 		fsl,pins = <
 			#define GP_USBH1_HUB_RESET	<&gpio1 0 GPIO_ACTIVE_LOW>
@@ -311,5 +318,18 @@
 	vmmc-supply = <&reg_3p3v>;
 	bus-width = <8>;
 	non-removable;
+	status = "okay";
+};
+
+/* WDOG - 1 */
+&wdog1 {
+	status = "disabled";
+};
+
+/* WDOG - 2 */
+&wdog2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_wdog>;
+	fsl,ext-reset-output;
 	status = "okay";
 };
