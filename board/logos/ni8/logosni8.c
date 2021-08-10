@@ -38,6 +38,13 @@
 #include <usb/ehci-ci.h>
 #include <version.h>
 
+// Watchdog
+#include <wdt.h>
+#include <watchdog.h>
+#include <fsl_wdog.h>
+#include <div64.h>
+#include <dm.h>
+
 #include "logosLogo.h"
 
 #ifdef DEMO_MODE
@@ -590,7 +597,7 @@ static void setup_iomux_gpio(void)
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
 	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	1);		// Carrier_PWR_ON
 	gpio_direction_output(GPIO_MCLK, 			0);		// GPIO_MCLK
-	gpio_direction_output(GPIO_RESET, 			0);		// GPIO_RESET
+	gpio_direction_output(GPIO_RESET, 			0);		// GPIO_RESET - Reset Bluetooth Chip on Carrier Board
 	gpio_direction_output(GPIO_0, 				0);		// GPIO_0 -> S_D_INT
 	gpio_direction_output(GPIO_1, 				0);		// GPIO_1 -> AUDIO_AMP_EN
 	gpio_direction_output(GPIO_2, 				0);		// GPIO_2 -> SOUND2
@@ -785,9 +792,9 @@ static void setup_spi(void)
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
-    phydev->interface = PHY_INTERFACE_MODE_RGMII_ID;
+	phydev->interface = PHY_INTERFACE_MODE_RGMII_ID;
 
-    phy_init();
+	phy_init();
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
@@ -1591,6 +1598,76 @@ int board_late_init(void)
 	return 0;
 }
 
+// Enable watchdog when device tree is enabled
+#ifdef CONFIG_WDT
+#if defined(CONFIG_IMX_WATCHDOG)
+static void imx_watchdog_reset(struct watchdog_regs *wdog)
+{
+#ifndef CONFIG_WATCHDOG_RESET_DISABLE
+	writew(0x5555, &wdog->wsr);
+	writew(0xaaaa, &wdog->wsr);
+#endif /* CONFIG_WATCHDOG_RESET_DISABLE*/
+}
+
+static void imx_watchdog_init(struct watchdog_regs *wdog, bool ext_reset,
+				u64 timeout)
+{
+	u16 wcr;
+	/*
+	 * The timer watchdog can be set between
+	 * 0.5 and 128 Seconds. If not defined
+	 * in configuration file, sets 128 Seconds
+	 */
+#ifndef CONFIG_WATCHDOG_TIMEOUT_MSECS
+#define CONFIG_WATCHDOG_TIMEOUT_MSECS 128000
+#endif
+
+	timeout = max_t(u64, timeout, TIMEOUT_MIN);
+	timeout = min_t(u64, timeout, TIMEOUT_MAX);
+	timeout = lldiv(timeout, 500) - 1;
+
+#ifdef CONFIG_FSL_LSCH2
+	wcr = (WCR_WDA | WCR_SRS | WCR_WDE) << 8 | timeout;
+#else
+	wcr = WCR_WDZST | WCR_WDBG | WCR_WDE | WCR_SRS |
+			WCR_WDA | SET_WCR_WT(timeout);
+	if (ext_reset)
+		wcr |= WCR_WDT;
+#endif /* CONFIG_FSL_LSCH2*/
+	writew(wcr, &wdog->wcr);
+	imx_watchdog_reset(wdog);
+}
+
+static int imx_wdt_start(struct udevice *dev, u64 timeout, ulong flags)
+{
+	struct watchdog_regs *wdog = (struct watchdog_regs *)WDOG1_BASE_ADDR;
+
+	imx_watchdog_init(wdog, true, CONFIG_WATCHDOG_TIMEOUT_MSECS);
+
+	while(1)
+	{
+		//Wait for reboot
+	}
+	return 0;
+}
+
+/*
+ * Board specific reset that is system reset.
+ */
+
+void reset_cpu(ulong addr)
+{ 	struct udevice *dev = 0;
+	u64 timeout = 0;
+	ulong flags = 0;
+
+	// TODO: ADD some reset needed features - Have GPIO to PMIC to reset - This is not a true reset
+ 	// Reset CPU
+ 	imx_wdt_start(dev, timeout, flags);
+}
+
+#endif /* CONFIG_IMX_WATCHDOG */
+#endif /* CONFIG_WDT */
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //----------------------------------------------- SPL Mode Code ------------------------------------------------------//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1982,10 +2059,10 @@ void board_init_f(ulong dummy)
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
 }
-
 void reset_cpu(ulong addr)
 {
-}
+	// TODO: ADD some reset needed features
 
+}
 #endif /* CONFIG_SPL_BUILD */
 
