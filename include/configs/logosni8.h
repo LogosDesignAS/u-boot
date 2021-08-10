@@ -53,6 +53,10 @@
 #define CONFIG_SYS_I2C_SPEED		        100000
 #define CONFIG_I2C_EDID
 
+/* Bootcount Commands - Use i2C */
+#define BOOTCOUNT_I2C_BUS					3
+#define CONFIG_SYS_I2C_RTC_ADDR				0x51
+
 /* MMC Configs */
 #define CONFIG_SYS_FSL_ESDHC_ADDR           USDHC4_BASE_ADDR
 #define CONFIG_SYS_FSL_USDHC_NUM            3
