@@ -45,6 +45,10 @@
 #include <div64.h>
 #include <dm.h>
 
+// Thermal Configs
+#include <imx_thermal.h>
+#include <thermal.h>
+
 #include "logosLogo.h"
 
 #ifdef DEMO_MODE
@@ -1459,7 +1463,7 @@ void i2c_multiplexer(uint8_t select)
 
 	// Write to the I2c Device
 	if (i2c_write(0x70, 0x00, 1, &select, 1)) {
-	    printf("i2c_write: error sending\n");
+		printf("i2c_write: error sending\n");
 	}
 };
 
@@ -1589,6 +1593,22 @@ int board_late_init(void)
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
 	print_Logos_Logo();
 	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
+
+#ifdef CONFIG_IMX_THERMAL
+	struct udevice *thermal_dev;
+	int cpu_tmp, ret;
+
+	// Get the device
+	ret = uclass_get_device(UCLASS_THERMAL, 0, &thermal_dev);
+
+	// Get some information about the temperatur of the CPU
+	ret = imx_thermal_get_temp(thermal_dev, &cpu_tmp);
+
+	if (!ret)
+		printf("CPU temperature at %d Celsius\n", cpu_tmp);
+	else
+		printf("Error Getting the CPU Temperature\n");
+#endif /* CONFIG_IMX_THERMAL */
 
 #ifdef DEMO_MODE
 	// Boot up Song

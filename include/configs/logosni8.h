@@ -44,13 +44,14 @@
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* I2C Configs */
+
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
-#define CONFIG_SYS_I2C_MXC_I2C1		        /* enable I2C bus 1 */
-#define CONFIG_SYS_I2C_MXC_I2C2		        /* enable I2C bus 2 */
-#define CONFIG_SYS_I2C_MXC_I2C3		        /* enable I2C bus 3 */
-#define CONFIG_SYS_I2C_MXC_I2C4		        /* enable I2C bus 4 */
-#define CONFIG_SYS_I2C_SPEED		        100000
+#define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
+#define CONFIG_SYS_I2C_MXC_I2C2				// enable I2C bus 2
+#define CONFIG_SYS_I2C_MXC_I2C3				// enable I2C bus 3
+#define CONFIG_SYS_I2C_MXC_I2C4				// enable I2C bus 4
+#define CONFIG_SYS_I2C_SPEED				100000
 #define CONFIG_I2C_EDID
 
 /* Bootcount Commands - Use i2C */
