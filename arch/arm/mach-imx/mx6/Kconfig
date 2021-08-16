@@ -474,6 +474,7 @@ config TARGET_NITROGEN6X
 config TARGET_LOGOSNI8
 	bool "logosni8"
 	depends on MX6DL || MX6Q || MX6QDL || MX6S
+	select SUPPORT_SPL
 	imply USB_ETHER_ASIX
 	imply USB_ETHER_MCS7830
 	imply USB_ETHER_SMSC95XX
