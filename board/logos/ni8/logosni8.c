@@ -1684,277 +1684,68 @@ void reset_cpu(ulong addr)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef CONFIG_SPL_BUILD
+#include <asm/arch/mx6-ddr.h>
 #include <spl.h>
+//#include <imx6_spl.h>
 #include <linux/libfdt.h>
-#include "asm/arch/mx6dl-ddr.h"
-#include "asm/arch/iomux.h"
-#include "asm/arch/crm_regs.h"
 
-static int mx6s_dcd_table[] = {
-/* ddr-setup.cfg */
+#ifdef CONFIG_SPL_OS_BOOT
+int spl_start_uboot(void)
+{
+	gpio_request(KEY_VOL_UP, "KEY Volume UP");
+	gpio_direction_input(KEY_VOL_UP);
 
-MX6_IOM_DRAM_SDQS0, 0x00000030,
-MX6_IOM_DRAM_SDQS1, 0x00000030,
-MX6_IOM_DRAM_SDQS2, 0x00000030,
-MX6_IOM_DRAM_SDQS3, 0x00000030,
-MX6_IOM_DRAM_SDQS4, 0x00000030,
-MX6_IOM_DRAM_SDQS5, 0x00000030,
-MX6_IOM_DRAM_SDQS6, 0x00000030,
-MX6_IOM_DRAM_SDQS7, 0x00000030,
+	/* Only enter in Falcon mode if KEY_VOL_UP is pressed */
+	return gpio_get_value(KEY_VOL_UP);
+}
+#else
 
-MX6_IOM_GRP_B0DS, 0x00000030,
-MX6_IOM_GRP_B1DS, 0x00000030,
-MX6_IOM_GRP_B2DS, 0x00000030,
-MX6_IOM_GRP_B3DS, 0x00000030,
-MX6_IOM_GRP_B4DS, 0x00000030,
-MX6_IOM_GRP_B5DS, 0x00000030,
-MX6_IOM_GRP_B6DS, 0x00000030,
-MX6_IOM_GRP_B7DS, 0x00000030,
-MX6_IOM_GRP_ADDDS, 0x00000030,
-/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
-MX6_IOM_GRP_CTLDS, 0x00000030,
+#endif
 
-MX6_IOM_DRAM_DQM0, 0x00020030,
-MX6_IOM_DRAM_DQM1, 0x00020030,
-MX6_IOM_DRAM_DQM2, 0x00020030,
-MX6_IOM_DRAM_DQM3, 0x00020030,
-MX6_IOM_DRAM_DQM4, 0x00020030,
-MX6_IOM_DRAM_DQM5, 0x00020030,
-MX6_IOM_DRAM_DQM6, 0x00020030,
-MX6_IOM_DRAM_DQM7, 0x00020030,
+/* called from board_init_r after gd setup if CONFIG_SPL_BOARD_INIT defined */
+/* its our chance to print info about boot device */
+void spl_board_init(void)
+{
+	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
+	u32 boot_device = BOOT_DEVICE_MMC2;
 
-MX6_IOM_DRAM_CAS, 0x00020030,
-MX6_IOM_DRAM_RAS, 0x00020030,
-MX6_IOM_DRAM_SDCLK_0, 0x00020030,
-MX6_IOM_DRAM_SDCLK_1, 0x00020030,
+	switch (boot_device) {
+	case BOOT_DEVICE_MMC2:
+		puts("Booting from MMC\n");
+		break;
+	case BOOT_DEVICE_NAND:
+		puts("Booting from NAND\n");
+		break;
+	case BOOT_DEVICE_SATA:
+		puts("Booting from SATA\n");
+		break;
+	default:
+		puts("Unknown boot device\n");
+	}
 
-MX6_IOM_DRAM_RESET, 0x00020030,
-MX6_IOM_DRAM_SDCKE0, 0x00003000,
-MX6_IOM_DRAM_SDCKE1, 0x00003000,
+	/* PMIC init */
+	//setup_pmic();
+}
 
-MX6_IOM_DRAM_SDODT0, 0x00003030,
-MX6_IOM_DRAM_SDODT1, 0x00003030,
+void board_boot_order(u32 *spl_boot_list)
+{
+	//spl_boot_list[0] = spl_boot_device();
+	spl_boot_list[0] = 3;
+	spl_boot_list[1] = 2;
+	spl_boot_list[2] = 1;
+	spl_boot_list[3] = 4;
+	spl_boot_list[4] = 0;
+	switch (spl_boot_list[0]) {
+	case BOOT_DEVICE_NAND:
+		spl_boot_list[1] = BOOT_DEVICE_MMC1;
+		spl_boot_list[2] = BOOT_DEVICE_UART;
+		break;
+	case BOOT_DEVICE_MMC1:
+		spl_boot_list[1] = BOOT_DEVICE_UART;
+		break;
+	}
+}
 
-/* (differential input) */
-MX6_IOM_DDRMODE_CTL, 0x00020000,
-/* (differential input) */
-MX6_IOM_GRP_DDRMODE, 0x00020000,
-/* disable ddr pullups */
-MX6_IOM_GRP_DDRPKE, 0x00000000,
-MX6_IOM_DRAM_SDBA2, 0x00000000,
-/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
-MX6_IOM_GRP_DDR_TYPE, 0x000C0000,
-
-/* Read data DQ Byte0-3 delay */
-MX6_MMDC_P0_MPRDDQBY0DL, 0x33333333,
-MX6_MMDC_P0_MPRDDQBY1DL, 0x33333333,
-MX6_MMDC_P0_MPRDDQBY2DL, 0x33333333,
-MX6_MMDC_P0_MPRDDQBY3DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY0DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY1DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY2DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY3DL, 0x33333333,
-
-/*
- * MDMISC	mirroring	interleaved (row/bank/col)
- */
-/* TODO: check what the RALAT field does */
-MX6_MMDC_P0_MDMISC, 0x00081740,
-
-/*
- * MDSCR	con_req
- */
-MX6_MMDC_P0_MDSCR, 0x00008000,
-
-
-/* 800mhz_2x64mx16.cfg */
-
-MX6_MMDC_P0_MDPDC, 0x0002002D,
-MX6_MMDC_P0_MDCFG0, 0x2C305503,
-MX6_MMDC_P0_MDCFG1, 0xB66D8D63,
-MX6_MMDC_P0_MDCFG2, 0x01FF00DB,
-MX6_MMDC_P0_MDRWD, 0x000026D2,
-MX6_MMDC_P0_MDOR, 0x00301023,
-MX6_MMDC_P0_MDOTC, 0x00333030,
-MX6_MMDC_P0_MDPDC, 0x0002556D,
-/* CS0 End: 7MSB of ((0x10000000, + 512M) -1) >> 25 */
-MX6_MMDC_P0_MDASP, 0x00000017,
-/* DDR3 DATA BUS SIZE: 64BIT */
-/* MX6_MMDC_P0_MDCTL, 0x821A0000, */
-/* DDR3 DATA BUS SIZE: 32BIT */
-MX6_MMDC_P0_MDCTL, 0x82190000,
-
-/* Write commands to DDR */
-/* Load Mode Registers */
-/* TODO Use Auto Self-Refresh mode (Extended Temperature)*/
-/* MX6_MMDC_P0_MDSCR, 0x04408032, */
-MX6_MMDC_P0_MDSCR, 0x04008032,
-MX6_MMDC_P0_MDSCR, 0x00008033,
-MX6_MMDC_P0_MDSCR, 0x00048031,
-MX6_MMDC_P0_MDSCR, 0x13208030,
-/* ZQ calibration */
-MX6_MMDC_P0_MDSCR, 0x04008040,
-
-MX6_MMDC_P0_MPZQHWCTRL, 0xA1390003,
-MX6_MMDC_P1_MPZQHWCTRL, 0xA1390003,
-MX6_MMDC_P0_MDREF, 0x00005800,
-
-MX6_MMDC_P0_MPODTCTRL, 0x00000000,
-MX6_MMDC_P1_MPODTCTRL, 0x00000000,
-
-MX6_MMDC_P0_MPDGCTRL0, 0x42360232,
-MX6_MMDC_P0_MPDGCTRL1, 0x021F022A,
-MX6_MMDC_P1_MPDGCTRL0, 0x421E0224,
-MX6_MMDC_P1_MPDGCTRL1, 0x02110218,
-
-MX6_MMDC_P0_MPRDDLCTL, 0x41434344,
-MX6_MMDC_P1_MPRDDLCTL, 0x4345423E,
-MX6_MMDC_P0_MPWRDLCTL, 0x39383339,
-MX6_MMDC_P1_MPWRDLCTL, 0x3E363930,
-
-MX6_MMDC_P0_MPWLDECTRL0, 0x00340039,
-MX6_MMDC_P0_MPWLDECTRL1, 0x002C002D,
-MX6_MMDC_P1_MPWLDECTRL0, 0x00120019,
-MX6_MMDC_P1_MPWLDECTRL1, 0x0012002D,
-
-MX6_MMDC_P0_MPMUR0, 0x00000800,
-MX6_MMDC_P1_MPMUR0, 0x00000800,
-MX6_MMDC_P0_MDSCR, 0x00000000,
-MX6_MMDC_P0_MAPSR, 0x00011006,
-};
-
-static int mx6dl_dcd_table[] = {
-/* ddr-setup.cfg */
-
-MX6_IOM_DRAM_SDQS0, 0x00000030,
-MX6_IOM_DRAM_SDQS1, 0x00000030,
-MX6_IOM_DRAM_SDQS2, 0x00000030,
-MX6_IOM_DRAM_SDQS3, 0x00000030,
-MX6_IOM_DRAM_SDQS4, 0x00000030,
-MX6_IOM_DRAM_SDQS5, 0x00000030,
-MX6_IOM_DRAM_SDQS6, 0x00000030,
-MX6_IOM_DRAM_SDQS7, 0x00000030,
-
-MX6_IOM_GRP_B0DS, 0x00000030,
-MX6_IOM_GRP_B1DS, 0x00000030,
-MX6_IOM_GRP_B2DS, 0x00000030,
-MX6_IOM_GRP_B3DS, 0x00000030,
-MX6_IOM_GRP_B4DS, 0x00000030,
-MX6_IOM_GRP_B5DS, 0x00000030,
-MX6_IOM_GRP_B6DS, 0x00000030,
-MX6_IOM_GRP_B7DS, 0x00000030,
-MX6_IOM_GRP_ADDDS, 0x00000030,
-/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
-MX6_IOM_GRP_CTLDS, 0x00000030,
-
-MX6_IOM_DRAM_DQM0, 0x00020030,
-MX6_IOM_DRAM_DQM1, 0x00020030,
-MX6_IOM_DRAM_DQM2, 0x00020030,
-MX6_IOM_DRAM_DQM3, 0x00020030,
-MX6_IOM_DRAM_DQM4, 0x00020030,
-MX6_IOM_DRAM_DQM5, 0x00020030,
-MX6_IOM_DRAM_DQM6, 0x00020030,
-MX6_IOM_DRAM_DQM7, 0x00020030,
-
-MX6_IOM_DRAM_CAS, 0x00020030,
-MX6_IOM_DRAM_RAS, 0x00020030,
-MX6_IOM_DRAM_SDCLK_0, 0x00020030,
-MX6_IOM_DRAM_SDCLK_1, 0x00020030,
-
-MX6_IOM_DRAM_RESET, 0x00020030,
-MX6_IOM_DRAM_SDCKE0, 0x00003000,
-MX6_IOM_DRAM_SDCKE1, 0x00003000,
-
-MX6_IOM_DRAM_SDODT0, 0x00003030,
-MX6_IOM_DRAM_SDODT1, 0x00003030,
-
-/* (differential input) */
-MX6_IOM_DDRMODE_CTL, 0x00020000,
-/* (differential input) */
-MX6_IOM_GRP_DDRMODE, 0x00020000,
-/* disable ddr pullups */
-MX6_IOM_GRP_DDRPKE, 0x00000000,
-MX6_IOM_DRAM_SDBA2, 0x00000000,
-/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
-MX6_IOM_GRP_DDR_TYPE, 0x000C0000,
-
-/* Read data DQ Byte0-3 delay */
-MX6_MMDC_P0_MPRDDQBY0DL, 0x33333333,
-MX6_MMDC_P0_MPRDDQBY1DL, 0x33333333,
-MX6_MMDC_P0_MPRDDQBY2DL, 0x33333333,
-MX6_MMDC_P0_MPRDDQBY3DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY0DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY1DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY2DL, 0x33333333,
-MX6_MMDC_P1_MPRDDQBY3DL, 0x33333333,
-
-/*
- * MDMISC	mirroring	interleaved (row/bank/col)
- */
-/* TODO: check what the RALAT field does */
-MX6_MMDC_P0_MDMISC, 0x00081740,
-
-/*
- * MDSCR	con_req
- */
-MX6_MMDC_P0_MDSCR, 0x00008000,
-
-
-/* 800mhz_2x64mx16.cfg */
-
-MX6_MMDC_P0_MDPDC, 0x0002002D,
-MX6_MMDC_P0_MDCFG0, 0x2C305503,
-MX6_MMDC_P0_MDCFG1, 0xB66D8D63,
-MX6_MMDC_P0_MDCFG2, 0x01FF00DB,
-MX6_MMDC_P0_MDRWD, 0x000026D2,
-MX6_MMDC_P0_MDOR, 0x00301023,
-MX6_MMDC_P0_MDOTC, 0x00333030,
-MX6_MMDC_P0_MDPDC, 0x0002556D,
-/* CS0 End: 7MSB of ((0x10000000, + 512M) -1) >> 25 */
-MX6_MMDC_P0_MDASP, 0x00000017,
-/* DDR3 DATA BUS SIZE: 64BIT */
-MX6_MMDC_P0_MDCTL, 0x821A0000,
-/* DDR3 DATA BUS SIZE: 32BIT */
-/* MX6_MMDC_P0_MDCTL, 0x82190000, */
-
-/* Write commands to DDR */
-/* Load Mode Registers */
-/* TODO Use Auto Self-Refresh mode (Extended Temperature)*/
-/* MX6_MMDC_P0_MDSCR, 0x04408032, */
-MX6_MMDC_P0_MDSCR, 0x04008032,
-MX6_MMDC_P0_MDSCR, 0x00008033,
-MX6_MMDC_P0_MDSCR, 0x00048031,
-MX6_MMDC_P0_MDSCR, 0x13208030,
-/* ZQ calibration */
-MX6_MMDC_P0_MDSCR, 0x04008040,
-
-MX6_MMDC_P0_MPZQHWCTRL, 0xA1390003,
-MX6_MMDC_P1_MPZQHWCTRL, 0xA1390003,
-MX6_MMDC_P0_MDREF, 0x00005800,
-
-MX6_MMDC_P0_MPODTCTRL, 0x00000000,
-MX6_MMDC_P1_MPODTCTRL, 0x00000000,
-
-MX6_MMDC_P0_MPDGCTRL0, 0x42360232,
-MX6_MMDC_P0_MPDGCTRL1, 0x021F022A,
-MX6_MMDC_P1_MPDGCTRL0, 0x421E0224,
-MX6_MMDC_P1_MPDGCTRL1, 0x02110218,
-
-MX6_MMDC_P0_MPRDDLCTL, 0x41434344,
-MX6_MMDC_P1_MPRDDLCTL, 0x4345423E,
-MX6_MMDC_P0_MPWRDLCTL, 0x39383339,
-MX6_MMDC_P1_MPWRDLCTL, 0x3E363930,
-
-MX6_MMDC_P0_MPWLDECTRL0, 0x00340039,
-MX6_MMDC_P0_MPWLDECTRL1, 0x002C002D,
-MX6_MMDC_P1_MPWLDECTRL0, 0x00120019,
-MX6_MMDC_P1_MPWLDECTRL1, 0x0012002D,
-
-MX6_MMDC_P0_MPMUR0, 0x00000800,
-MX6_MMDC_P1_MPMUR0, 0x00000800,
-MX6_MMDC_P0_MDSCR, 0x00000000,
-MX6_MMDC_P0_MAPSR, 0x00011006,
-};
 
 static void ccgr_init(void)
 {
@@ -1962,23 +1753,99 @@ static void ccgr_init(void)
 
 	writel(0x00C03F3F, &ccm->CCGR0);
 	writel(0x0030FC03, &ccm->CCGR1);
-	writel(0x0FFFFFF3, &ccm->CCGR2);
-	writel(0x3FF0300F, &ccm->CCGR3);
+	writel(0x0FFFC000, &ccm->CCGR2);
+	writel(0x3FF00000, &ccm->CCGR3);
 	writel(0x00FFF300, &ccm->CCGR4);
-	writel(0x0F0000F3, &ccm->CCGR5);
+	writel(0x0F0000C3, &ccm->CCGR5);
 	writel(0x000003FF, &ccm->CCGR6);
-
-/*
- * Setup CCM_CCOSR register as follows:
- *
- * cko1_en  = 1	   --> CKO1 enabled
- * cko1_div = 111  --> divide by 8
- * cko1_sel = 1011 --> ahb_clk_root
- *
- * This sets CKO1 at ahb_clk_root/8 = 132/8 = 16.5 MHz
- */
-	writel(0x000000FB, &ccm->ccosr);
 }
+
+
+static int mx6dl_dcd_table[] = {
+	0x020e0774, 0x000C0000,
+	0x020e0754, 0x00000000,
+	0x020e04ac, 0x00000030,
+	0x020e04b0, 0x00000030,
+	0x020e0464, 0x00000030,
+	0x020e0490, 0x00000030,
+	0x020e074c, 0x00000030,
+	0x020e0494, 0x00000030,
+	0x020e04a0, 0x00000000,
+	0x020e04b4, 0x00000030,
+	0x020e04b8, 0x00000030,
+	0x020e076c, 0x00000030,
+	0x020e0750, 0x00020000,
+	0x020e04bc, 0x00000030,
+	0x020e04c0, 0x00000030,
+	0x020e04c4, 0x00000030,
+	0x020e04c8, 0x00000030,
+	0x020e04cc, 0x00000030,
+	0x020e04d0, 0x00000030,
+	0x020e04d4, 0x00000030,
+	0x020e04d8, 0x00000030,
+	0x020e0760, 0x00020000,
+	0x020e0764, 0x00000030,
+	0x020e0770, 0x00000030,
+	0x020e0778, 0x00000030,
+	0x020e077c, 0x00000030,
+	0x020e0780, 0x00000030,
+	0x020e0784, 0x00000030,
+	0x020e078c, 0x00000030,
+	0x020e0748, 0x00000030,
+	0x020e0470, 0x00000030,
+	0x020e0474, 0x00000030,
+	0x020e0478, 0x00000030,
+	0x020e047c, 0x00000030,
+	0x020e0480, 0x00000030,
+	0x020e0484, 0x00000030,
+	0x020e0488, 0x00000030,
+	0x020e048c, 0x00000030,
+	0x021b0800, 0xa1390003,
+	0x021b080c, 0x001F001F,
+	0x021b0810, 0x001F001F,
+	0x021b480c, 0x001F001F,
+	0x021b4810, 0x001F001F,
+	0x021b083c, 0x4220021F,
+	0x021b0840, 0x0207017E,
+	0x021b483c, 0x4201020C,
+	0x021b4840, 0x01660172,
+	0x021b0848, 0x4A4D4E4D,
+	0x021b4848, 0x4A4F5049,
+	0x021b0850, 0x3F3C3D31,
+	0x021b4850, 0x3238372B,
+	0x021b081c, 0x33333333,
+	0x021b0820, 0x33333333,
+	0x021b0824, 0x33333333,
+	0x021b0828, 0x33333333,
+	0x021b481c, 0x33333333,
+	0x021b4820, 0x33333333,
+	0x021b4824, 0x33333333,
+	0x021b4828, 0x33333333,
+	0x021b08b8, 0x00000800,
+	0x021b48b8, 0x00000800,
+	0x021b0004, 0x0002002D,
+	0x021b0008, 0x00333030,
+	0x021b000c, 0x3F435313,
+	0x021b0010, 0xB66E8B63,
+	0x021b0014, 0x01FF00DB,
+	0x021b0018, 0x00001740,
+	0x021b001c, 0x00008000,
+	0x021b002c, 0x000026d2,
+	0x021b0030, 0x00431023,
+	0x021b0040, 0x00000027,
+	0x021b0000, 0x831A0000,
+	0x021b001c, 0x04008032,
+	0x021b001c, 0x00008033,
+	0x021b001c, 0x00048031,
+	0x021b001c, 0x05208030,
+	0x021b001c, 0x04008040,
+	0x021b0020, 0x00005800,
+	0x021b0818, 0x00011117,
+	0x021b4818, 0x00011117,
+	0x021b0004, 0x0002556D,
+	0x021b0404, 0x00011006,
+	0x021b001c, 0x00000000,
+};
 
 static void ddr_init(int *table, int size)
 {
@@ -1990,90 +1857,86 @@ static void ddr_init(int *table, int size)
 
 static void spl_dram_init(void)
 {
-	int minc, maxc;
-
-	switch (get_cpu_temp_grade(&minc, &maxc)) {
-	case TEMP_COMMERCIAL:
-	case TEMP_EXTCOMMERCIAL:
-		if (is_cpu_type(MXC_CPU_MX6DL)) {
-			puts("Commercial temperature grade DDR3 timings, 64bit bus width.\n");
-			ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
-		} else {
-			puts("Commercial temperature grade DDR3 timings, 32bit bus width.\n");
-			ddr_init(mx6s_dcd_table, ARRAY_SIZE(mx6s_dcd_table));
-		}
-		break;
-	case TEMP_INDUSTRIAL:
-	case TEMP_AUTOMOTIVE:
-	default:
-		if (is_cpu_type(MXC_CPU_MX6DL)) {
-			puts("Industrial temperature grade DDR3 timings, 64bit bus width.\n");
-			ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
-		} else {
-			puts("Industrial temperature grade DDR3 timings, 32bit bus width.\n");
-			ddr_init(mx6s_dcd_table, ARRAY_SIZE(mx6s_dcd_table));
-		}
-		break;
-	};
-	udelay(100);
+	if (is_mx6sdl())
+		ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
 }
 
-static iomux_v3_cfg_t const gpio_reset_pad[] = {
-	MX6_PAD_RGMII_RD1__GPIO6_IO27 | MUX_PAD_CTRL(NO_PAD_CTRL) |
-					MUX_MODE_SION
-#define GPIO_NRESET IMX_GPIO_NR(6, 27)
-};
-
-#define IMX_RESET_CAUSE_POR 0x00011
-static void nreset_out(void)
+int board_early_init_f(void)
 {
-	int reset_cause = get_imx_reset_cause();
+	
+	// Setup of UART2, UART4 and UART5
+	setup_iomux_uart();//this is also int boar_early_init_f()
 
-	if (reset_cause != IMX_RESET_CAUSE_POR) {
-		imx_iomux_v3_setup_multiple_pads(gpio_reset_pad,
-						 ARRAY_SIZE(gpio_reset_pad));
-		gpio_direction_output(GPIO_NRESET, 1);
-		udelay(100);
-		gpio_direction_output(GPIO_NRESET, 0);
-	}
+	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
+	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
+
+	// Config environment variables
+	//env_set("ethact", "FEC");
+
+
+	//initilise our I2C
+	//FRAM
+
+	return 0;
 }
 
 void board_init_f(ulong dummy)
 {
+	/* DDR initialization */
+	//spl_dram_init();
+
 	/* setup AIPS and disable watchdog */
-	arch_cpu_init();
+	//arch_cpu_init(); //might not be needed
 
-	ccgr_init();
-	gpr_init();
+	//ccgr_init();//clocks
 
-	/* iomux */
-	board_early_init_f();
+	//gpr_init();//general purpose register that keep state after warm reset
 
+	/* iomux and setup of i2c */
+	board_early_init_f();//write now it is only uart. might put more
 	/* setup GP timer */
-	timer_init();
+	//timer_init(); //nothing is set
+
+		// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
+	//setup_iomux_leds();
+
+	/////
+	// Add a GPIO request for the two LEDS
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
+
+	// Setup the LEDS and the corresponding padding
+	SETUP_IOMUX_PADS(ni8_led_pads);
+
+	// Setup the LEDs as Output
+	gpio_direction_output(GPIO_LED_2, 1);			// LED2
+	gpio_direction_output(GPIO_LED_3, 0);			// LED3
+	///
+
+	// Setup of GPIOs
+	setup_iomux_gpio();
+
+	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
+	setup_iomux_afb_gpio();
+
+	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
+	setup_iomux_boot_config();
+
+	printf("Board init_f was called\n");
+
+
 
 	/* UART clocks enabled and gd valid - init serial console */
-	preloader_console_init();
+	//preloader_console_init(); // depends if this is necesary
+	//print_Logos_Logo();
+	//printf("some1");
 
-	/* Make sure we use dte mode */
-	setup_dtemode_uart();
-
-	/* DDR initialization */
-	spl_dram_init();
-
-	/* Clear the BSS. */
-	memset(__bss_start, 0, __bss_end - __bss_start);
-
-	/* Assert nReset_Out */
-	nreset_out();
+	/* Clear the BSS. */ 
+	//memset(__bss_start, 0, __bss_end - __bss_start); 
+	//comment out clearing of BSS should be done bi crt0
 
 	/* load/boot image from boot device */
-	board_init_r(NULL, 0);
+	//board_init_r(NULL, 0);
 }
-void reset_cpu(ulong addr)
-{
-	// TODO: ADD some reset needed features
-
-}
-#endif /* CONFIG_SPL_BUILD */
+#endif
 
