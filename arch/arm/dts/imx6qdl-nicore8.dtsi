@@ -36,8 +36,18 @@
 		compatible = "gpio-leds";
 	};
 
+
 	regulators {
 		compatible = "simple-bus";
+
+		reg_1p8v: 1p8v {
+			compatible = "regulator-fixed";
+			regulator-name = "1P8V";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-always-on;
+			vin-supply = <&reg_3p3v>;
+		};
 
 		reg_2p5v: 2p5v {
 			compatible = "regulator-fixed";
@@ -45,6 +55,7 @@
 			regulator-min-microvolt = <2500000>;
 			regulator-max-microvolt = <2500000>;
 			regulator-always-on;
+			vin-supply = <&reg_3p3v>;
 		};
 
 		reg_3p3v: 3p3v {
@@ -53,6 +64,15 @@
 			regulator-min-microvolt = <3300000>;
 			regulator-max-microvolt = <3300000>;
 			regulator-always-on;
+			vin-supply = <&v_5v0>;
+		};
+
+		v_5v0: regulator-v-5v0 {
+			compatible = "regulator-fixed";
+			regulator-always-on;
+			regulator-max-microvolt = <5000000>;
+			regulator-min-microvolt = <5000000>;
+			regulator-name = "v_5v0";
 		};
 
 		reg_usb_otg_vbus: regulator-usb-otg-vbus {
@@ -64,6 +84,7 @@
 			gpio = <&gpio4 15 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 			regulator-always-on;
+			vin-supply = <&reg_3p3v>;
 		};
 
 		reg_sd_vbus: regulator-sd-vbus {
@@ -74,6 +95,7 @@
 			pinctrl-0 = <&pinctrl_usdhc1_pwr_en_vbus>;
 			gpio = <&gpio6 16 GPIO_ACTIVE_HIGH>;
 			regulator-always-on;
+			vin-supply = <&reg_3p3v>;
 		};
 
 		reg_usb_h1_vbus: regulator-usb-h1-vbus {
@@ -82,6 +104,7 @@
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
 			regulator-always-on;
+			vin-supply = <&reg_3p3v>;
 		};
 	};
 };
