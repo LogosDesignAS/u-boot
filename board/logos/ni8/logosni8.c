@@ -142,8 +142,9 @@ enum SD_GPIOS {
 
 DECLARE_GLOBAL_DATA_PTR;
 #define GP_USB_OTG_PWR	IMX_GPIO_NR(3, 22)
-#define GP_USB1_PWR	IMX_GPIO_NR(1, 0)
-#define GP_USB0_PWR	IMX_GPIO_NR(4, 15)
+#define GP_USB1_PWR		IMX_GPIO_NR(1, 0)
+#define GP_USB0_PWR		IMX_GPIO_NR(4, 15)
+#define GP_TEST_SMARC	IMX_GPIO_NR(4, 9)
 
 #define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
@@ -500,6 +501,9 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 	// Pin configuration for SMARC inputs - CARRIER_PWR_ON
 	IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, WEAK_PULLDOWN),
+
+	// SMARC_Test from test carrier
+	IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, WEAK_PULLDOWN),
 };
 
 /* AFB_GPIO Pin Configuration on logosni8 */
@@ -1711,12 +1715,23 @@ void reset_cpu(ulong addr)
 #ifdef CONFIG_SPL_OS_BOOT
 int spl_start_uboot(void)
 {
-	//gpio_request(KEY_VOL_UP, "KEY Volume UP");
-	//gpio_direction_input(KEY_VOL_UP);
+	// Here look at the Test Pin from the DIP switch in order to choose the boot up method for now.
 
-	/* Only enter in Falcon mode if KEY_VOL_UP is pressed */
-	//return gpio_get_value(KEY_VOL_UP);
-	return 0;
+	// If it is low - then boot u-boot
+	gpio_request(GP_TEST_SMARC, "GP_TEST_SMARC");
+	gpio_direction_input(GP_TEST_SMARC);
+
+	/* Only enter in Falcon mode if GP_TEST_SMARC is enabled */
+	if ( gpio_get_value(GP_TEST_SMARC) == 0)
+	{
+		printf(" Booting U-Boot");
+		return 1;
+	}
+	else
+	{
+		printf(" Booting OS");
+		return 0;
+	}
 }
 #else
 
@@ -1727,11 +1742,14 @@ int spl_start_uboot(void)
 void spl_board_init(void)
 {
 	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
-	u32 boot_device = BOOT_DEVICE_MMC2;
+	u32 boot_device = BOOT_DEVICE_MMC1;
 
 	switch (boot_device) {
+	case BOOT_DEVICE_MMC1:
+		puts("Booting from MMC 1\n");
+		break;
 	case BOOT_DEVICE_MMC2:
-		puts("Booting from MMC\n");
+		puts("Booting from MMC 2\n");
 		break;
 	case BOOT_DEVICE_NAND:
 		puts("Booting from NAND\n");
@@ -1747,38 +1765,44 @@ void spl_board_init(void)
 	//setup_pmic();
 }
 
+
 void board_boot_order(u32 *spl_boot_list)
 {
-	//spl_boot_list[0] = spl_boot_device();
-	spl_boot_list[0] = 3;
-	spl_boot_list[1] = 2;
-	spl_boot_list[2] = 1;
-	spl_boot_list[3] = 4;
-	spl_boot_list[4] = 0;
-	switch (spl_boot_list[0]) {
-	case BOOT_DEVICE_NAND:
-		spl_boot_list[1] = BOOT_DEVICE_MMC1;
-		spl_boot_list[2] = BOOT_DEVICE_UART;
-		break;
-	case BOOT_DEVICE_MMC1:
-		spl_boot_list[1] = BOOT_DEVICE_UART;
-		break;
-	}
+	/*
+	* Upon reading BOOT_CFG register the following map is done:
+	 * Bit 11 and 12 of BOOT_CFG register can determine the current
+	 * mmc port
+	 * 0x1                  SD1
+	 * 0x2                  SD3
+	 * 0x3                  SD4
+	 */
+
+	// Map MMC 1
+	SETUP_IOMUX_PADS(sdmmc_pads);
+
+	// Request GPIOs
+	gpio_request(SDIO_PWR_EN, 			"SDIO_PWR_EN,");
+	gpio_request(SDIO_WP, 				"SDIO_WP");
+	gpio_request(SDIO_CD, 				"SDIO_CD");
+
+	// Enable power to SDCARD
+	gpio_direction_output(SDIO_PWR_EN, 	1);
+	gpio_direction_output(SDIO_WP, 		1);
+	gpio_direction_output(SDIO_CD, 		1);
+
+	// Initialise all mmc - Define clocks first
+	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+
+	// We need to decide which mmc to boot from - for now we are using the SD card
+	spl_boot_list[0] = BOOT_DEVICE_MMC1;
 }
 
 
 static void ccgr_init(void)
 {
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-/*
-	writel(0x00C03F3F, &ccm->CCGR0);
-	writel(0x0030FC03, &ccm->CCGR1);
-	writel(0x0FFFC000, &ccm->CCGR2);
-	writel(0x3FF00000, &ccm->CCGR3);
-	writel(0x00FFF300, &ccm->CCGR4);
-	writel(0x0F0000C3, &ccm->CCGR5);
-	writel(0x000003FF, &ccm->CCGR6);
- */
 
 	writel(0x00C03F3F, &ccm->CCGR0);
 	writel(0x0030FC03, &ccm->CCGR1);
@@ -1841,7 +1865,6 @@ static int mx6dl_dcd_table[] = {
 	0x021b4828, 0x33333333,
 	0x021b0018, 0x00001740,
 	0x021b001c, 0x00008000,
-
 // From U-Boot 800mhz_2x128mx16.cfg
 	0x021b0004, 0x0002002D,
 //Not define in Nitrogen lite board 800mhz
@@ -1866,7 +1889,6 @@ static int mx6dl_dcd_table[] = {
 	0x021b0818, 0x00011117,
 	0x021b4818, 0x00011117,
 	0x021b083c, 0x4220021F,
-// Something interesting here
 	0x021b483c, 0x4201020C,
 	0x021b0840, 0x0207017E,
 	0x021b4840, 0x01660172,
@@ -1884,6 +1906,7 @@ static int mx6dl_dcd_table[] = {
 	0x021b0404, 0x00011006,
 
 // Enable all clocks just to be sure
+/*
 	0x020c4068, 0xFFFFFFFF,
 	0x020c406c, 0xFFFFFFFF,
 	0x020c4070, 0xFFFFFFFF,
@@ -1895,6 +1918,7 @@ static int mx6dl_dcd_table[] = {
 	0x020e0018, 0x007F007F,
 	0x020e001c, 0x007F007F,
 	0x020c4060, 0x000000fb,
+ */
 };
 
 static void ddr_init(int *table, int size)
@@ -1908,6 +1932,22 @@ static void ddr_init(int *table, int size)
 static void spl_dram_init(void)
 {
 	ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
+}
+
+/* - This function looks for the name of the U-Boot binary
+ * This is not a perfect match. Avoid dependency on the DM GPIO driver needed
+ * for accurate board detection. Hummingboard2 DT is good enough for U-Boot on
+ * all Hummingboard/Cubox-i platforms.
+ */
+int board_fit_config_name_match(const char *name)
+{
+	char tmp_name[36];
+	puts("Name of board file is: \n");
+	puts(tmp_name);
+	snprintf(tmp_name, sizeof(tmp_name), "%s-hummingboard2-emmc-som-v15",
+			 is_mx6dq() ? "imx6q" : "imx6dl");
+
+	return strcmp(name, tmp_name);
 }
 
 int board_early_init_f(void)
@@ -1929,13 +1969,6 @@ int board_early_init_f(void)
 	// Setup the LEDs as Output
 	gpio_direction_output(GPIO_LED_2, 0);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
-
-	// Config environment variables
-	//env_set("ethact", "FEC");
-
-
-	//initilise our I2C
-	//FRAM
 
 	return 0;
 }
@@ -1981,22 +2014,19 @@ void board_init_f(ulong dummy)
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
 
-	led_logosni8_party_light();
+	// Disabled blinking for now
+	//led_logosni8_party_light();
 
 	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
 	setup_iomux_boot_config();
-
-	/* UART clocks enabled and gd valid - init serial console */
-	//preloader_console_init(); // depends if this is necesary
-	//print_Logos_Logo();
-	//printf("some1");
 
 	/* Clear the BSS. */ 
 	//memset(__bss_start, 0, __bss_end - __bss_start); 
 	//comment out clearing of BSS should be done bi crt0
 
 	/* load/boot image from boot device */
-	//board_init_r(NULL, 0);
+	board_init_r(NULL, 0);
 }
+
 #endif
 
