@@ -1742,7 +1742,7 @@ int spl_start_uboot(void)
 void spl_board_init(void)
 {
 	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
-	u32 boot_device = BOOT_DEVICE_MMC1;
+	u32 boot_device = BOOT_DEVICE_MMC2;
 
 	switch (boot_device) {
 	case BOOT_DEVICE_MMC1:
@@ -1780,6 +1780,9 @@ void board_boot_order(u32 *spl_boot_list)
 	// Map MMC 1
 	SETUP_IOMUX_PADS(sdmmc_pads);
 
+	// Map MMC 2
+	SETUP_IOMUX_PADS(usdhc4_pads);
+
 	// Request GPIOs
 	gpio_request(SDIO_PWR_EN, 			"SDIO_PWR_EN,");
 	gpio_request(SDIO_WP, 				"SDIO_WP");
@@ -1796,7 +1799,7 @@ void board_boot_order(u32 *spl_boot_list)
 	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
 
 	// We need to decide which mmc to boot from - for now we are using the SD card
-	spl_boot_list[0] = BOOT_DEVICE_MMC1;
+	spl_boot_list[0] = BOOT_DEVICE_MMC2;
 }
 
 
