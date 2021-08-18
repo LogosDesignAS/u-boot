@@ -50,10 +50,12 @@
 #include <thermal.h>
 
 #include "logosLogo.h"
-
+#define DEMO_MODE
 #ifdef DEMO_MODE
 #include "bootmelody.h"
 #endif // DEMO_MODE
+
+#include <debug_uart.h>
 
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
@@ -633,8 +635,8 @@ static void setup_iomux_afb_gpio(void)
 
 	// Setup the AFB GPIOs as Output if specified on the Schematic - Also configured for the Test Carrier
 	gpio_direction_output(AFB_GPIO_4, 			1);		// AFB_GPIO_4 -> LED6 on the Test Carrier Board
-	gpio_direction_output(AFB_GPIO_5, 			1);		// AFB_GPIO_5 -> LED5 on the Test Carrier Board
-	gpio_direction_output(AFB_GPIO_6, 			1);		// AFB_GPIO_6 -> LED4 on the Test Carrier Board
+	gpio_direction_output(AFB_GPIO_5, 			0);		// AFB_GPIO_5 -> LED5 on the Test Carrier Board
+	gpio_direction_output(AFB_GPIO_6, 			0);		// AFB_GPIO_6 -> LED4 on the Test Carrier Board
 	gpio_direction_output(AFB_GPIO_7, 			0);		// AFB_GPIO_7 -> LED3 on the Test Carrier Board
 }
 
@@ -1625,6 +1627,7 @@ int board_late_init(void)
 		puts("Error switching I2C bus\n");
 		return res;
 	}
+	
 
 	return 0;
 }
@@ -1712,11 +1715,12 @@ void reset_cpu(ulong addr)
 #ifdef CONFIG_SPL_OS_BOOT
 int spl_start_uboot(void)
 {
-	gpio_request(KEY_VOL_UP, "KEY Volume UP");
-	gpio_direction_input(KEY_VOL_UP);
+	//gpio_request(KEY_VOL_UP, "KEY Volume UP");
+	//gpio_direction_input(KEY_VOL_UP);
 
 	/* Only enter in Falcon mode if KEY_VOL_UP is pressed */
-	return gpio_get_value(KEY_VOL_UP);
+	//return gpio_get_value(KEY_VOL_UP);
+	return 0;
 }
 #else
 
@@ -1770,7 +1774,7 @@ void board_boot_order(u32 *spl_boot_list)
 static void ccgr_init(void)
 {
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-
+/*
 	writel(0x00C03F3F, &ccm->CCGR0);
 	writel(0x0030FC03, &ccm->CCGR1);
 	writel(0x0FFFC000, &ccm->CCGR2);
@@ -1778,23 +1782,19 @@ static void ccgr_init(void)
 	writel(0x00FFF300, &ccm->CCGR4);
 	writel(0x0F0000C3, &ccm->CCGR5);
 	writel(0x000003FF, &ccm->CCGR6);
+ */
+
+	writel(0x00C03F3F, &ccm->CCGR0);
+	writel(0x0030FC03, &ccm->CCGR1);
+	writel(0x0FFFFFF3, &ccm->CCGR2);
+	writel(0x3FF0300F, &ccm->CCGR3);
+	writel(0x00FFF300, &ccm->CCGR4);
+	writel(0x0F0000F3, &ccm->CCGR5);
+	writel(0x000003FF, &ccm->CCGR6);
 }
 
 
 static int mx6dl_dcd_table[] = {
-	0x020e0774, 0x000C0000,
-	0x020e0754, 0x00000000,
-	0x020e04ac, 0x00000030,
-	0x020e04b0, 0x00000030,
-	0x020e0464, 0x00000030,
-	0x020e0490, 0x00000030,
-	0x020e074c, 0x00000030,
-	0x020e0494, 0x00000030,
-	0x020e04a0, 0x00000000,
-	0x020e04b4, 0x00000030,
-	0x020e04b8, 0x00000030,
-	0x020e076c, 0x00000030,
-	0x020e0750, 0x00020000,
 	0x020e04bc, 0x00000030,
 	0x020e04c0, 0x00000030,
 	0x020e04c4, 0x00000030,
@@ -1803,7 +1803,6 @@ static int mx6dl_dcd_table[] = {
 	0x020e04d0, 0x00000030,
 	0x020e04d4, 0x00000030,
 	0x020e04d8, 0x00000030,
-	0x020e0760, 0x00020000,
 	0x020e0764, 0x00000030,
 	0x020e0770, 0x00000030,
 	0x020e0778, 0x00000030,
@@ -1812,27 +1811,30 @@ static int mx6dl_dcd_table[] = {
 	0x020e0784, 0x00000030,
 	0x020e078c, 0x00000030,
 	0x020e0748, 0x00000030,
-	0x020e0470, 0x00000030,
-	0x020e0474, 0x00000030,
-	0x020e0478, 0x00000030,
-	0x020e047c, 0x00000030,
-	0x020e0480, 0x00000030,
-	0x020e0484, 0x00000030,
-	0x020e0488, 0x00000030,
-	0x020e048c, 0x00000030,
-	0x021b0800, 0xa1390003,
-	0x021b080c, 0x001F001F,
-	0x021b0810, 0x001F001F,
-	0x021b480c, 0x001F001F,
-	0x021b4810, 0x001F001F,
-	0x021b083c, 0x4220021F,
-	0x021b0840, 0x0207017E,
-	0x021b483c, 0x4201020C,
-	0x021b4840, 0x01660172,
-	0x021b0848, 0x4A4D4E4D,
-	0x021b4848, 0x4A4F5049,
-	0x021b0850, 0x3F3C3D31,
-	0x021b4850, 0x3238372B,
+	0x020e074c, 0x00000030,
+	0x020e076c, 0x00000030,
+	0x020e0470, 0x00020030,
+	0x020e0474, 0x00020030,
+	0x020e0478, 0x00020030,
+	0x020e047c, 0x00020030,
+	0x020e0480, 0x00020030,
+	0x020e0484, 0x00020030,
+	0x020e0488, 0x00020030,
+	0x020e048c, 0x00020030,
+	0x020e0464, 0x00020030,
+	0x020e0490, 0x00020030,
+	0x020e04ac, 0x00020030,
+	0x020e04b0, 0x00020030,
+	0x020e0494, 0x00020030,
+	0x020e04a4, 0x00003000,
+	0x020e04a8, 0x00003000,
+	0x020e04b4, 0x00020030,
+	0x020e04b8, 0x00020030,
+	0x020e0750, 0x00020000,
+	0x020e0760, 0x00020000,
+	0x020e0754, 0x00000000,
+	0x020e04a0, 0x00000000,
+	0x020e0774, 0x000C0000,
 	0x021b081c, 0x33333333,
 	0x021b0820, 0x33333333,
 	0x021b0824, 0x33333333,
@@ -1841,30 +1843,62 @@ static int mx6dl_dcd_table[] = {
 	0x021b4820, 0x33333333,
 	0x021b4824, 0x33333333,
 	0x021b4828, 0x33333333,
-	0x021b08b8, 0x00000800,
-	0x021b48b8, 0x00000800,
-	0x021b0004, 0x0002002D,
-	0x021b0008, 0x00333030,
-	0x021b000c, 0x3F435313,
-	0x021b0010, 0xB66E8B63,
-	0x021b0014, 0x01FF00DB,
 	0x021b0018, 0x00001740,
 	0x021b001c, 0x00008000,
-	0x021b002c, 0x000026d2,
+
+// From U-Boot 800mhz_2x128mx16.cfg
+	0x021b0004, 0x0002002D,
+//Not define in Nitrogen lite board 800mhz
+	0x021b001c, 0x00008000,
+	0x021b000c, 0x3F435333,
+	0x021b0010, 0xB50D0AA4,
+	0x021b0014, 0x01FF00DB,
+	0x021b002c, 0x000026D2,
 	0x021b0030, 0x00431023,
-	0x021b0040, 0x00000027,
-	0x021b0000, 0x831A0000,
-	0x021b001c, 0x04008032,
+	0x021b0008, 0x1B444040,
+	0x021b0004, 0x0002556D,
+	0x021b0040, 0x00000017,
+	0x021b0000, 0x83190000,
+	0x021b001c, 0x04088032,
 	0x021b001c, 0x00008033,
 	0x021b001c, 0x00048031,
-	0x021b001c, 0x05208030,
+	0x021b001c, 0x15208030,
 	0x021b001c, 0x04008040,
+	0x021b0800, 0xA1390003,
+	0x021b4800, 0xA1390003,
 	0x021b0020, 0x00005800,
 	0x021b0818, 0x00011117,
 	0x021b4818, 0x00011117,
-	0x021b0004, 0x0002556D,
-	0x021b0404, 0x00011006,
+	0x021b083c, 0x4220021F,
+// Something interesting here
+	0x021b483c, 0x4201020C,
+	0x021b0840, 0x0207017E,
+	0x021b4840, 0x01660172,
+	0x021b0848, 0x4A4D4E4D,
+	0x021b4848, 0x4A4F5049,
+	0x021b0850, 0x3F3C3D31,
+	0x021b4850, 0x3238372B,
+	0x021b080c, 0x001F001F,
+	0x021b0810, 0x001F001F,
+	0x021b480c, 0x001F001F,
+	0x021b4810, 0x001F001F,
+	0x021b08b8, 0x00000800,
+	0x021b48b8, 0x00000800,
 	0x021b001c, 0x00000000,
+	0x021b0404, 0x00011006,
+
+// Enable all clocks just to be sure
+	0x020c4068, 0xFFFFFFFF,
+	0x020c406c, 0xFFFFFFFF,
+	0x020c4070, 0xFFFFFFFF,
+	0x020c4074, 0xFFFFFFFF,
+	0x020c4078, 0xFFFFFFFF,
+	0x020c407c, 0xFFFFFFFF,
+	0x020c4080, 0xFFFFFFFF,
+	0x020e0010, 0xF00000CF,
+	0x020e0018, 0x007F007F,
+	0x020e001c, 0x007F007F,
+	0x020c4060, 0x000000fb,
 };
 
 static void ddr_init(int *table, int size)
@@ -1877,8 +1911,7 @@ static void ddr_init(int *table, int size)
 
 static void spl_dram_init(void)
 {
-	if (is_mx6sdl())
-		ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
+	ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
 }
 
 int board_early_init_f(void)
@@ -1889,6 +1922,17 @@ int board_early_init_f(void)
 
 	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
 	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
+
+	// Add a GPIO request for the two LEDS
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
+
+	// Setup the LEDS and the corresponding padding
+	SETUP_IOMUX_PADS(ni8_led_pads);
+
+	// Setup the LEDs as Output
+	gpio_direction_output(GPIO_LED_2, 0);			// LED2
+	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 
 	// Config environment variables
 	//env_set("ethact", "FEC");
@@ -1902,25 +1946,28 @@ int board_early_init_f(void)
 
 void board_init_f(ulong dummy)
 {
+	/* setup AIPS and disable watchdog */
+	arch_cpu_init();
+
+	ccgr_init();
+	gpr_init();
+
+	/* iomux */
+	board_early_init_f();
+
+	/* setup GP timer */
+	timer_init();
+
+	/* UART clocks enabled and gd valid - init serial console */
+	preloader_console_init();
+
 	/* DDR initialization */
 	//spl_dram_init();
 
-	/* setup AIPS and disable watchdog */
-	//arch_cpu_init(); //might not be needed
+	/* Clear the BSS. */
+	memset(__bss_start, 0, __bss_end - __bss_start);
 
-	//ccgr_init();//clocks
-
-	//gpr_init();//general purpose register that keep state after warm reset
-
-	/* iomux and setup of i2c */
-	board_early_init_f();//write now it is only uart. might put more
-	/* setup GP timer */
-	//timer_init(); //nothing is set
-
-		// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
-	//setup_iomux_leds();
-
-	/////
+	// Run our code
 	// Add a GPIO request for the two LEDS
 	gpio_request(GPIO_LED_2, "GPIO_LED_2");
 	gpio_request(GPIO_LED_3, "GPIO_LED_3");
@@ -1931,7 +1978,6 @@ void board_init_f(ulong dummy)
 	// Setup the LEDs as Output
 	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
-	///
 
 	// Setup of GPIOs
 	setup_iomux_gpio();
@@ -1939,12 +1985,10 @@ void board_init_f(ulong dummy)
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
 
+	led_logosni8_party_light();
+
 	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
 	setup_iomux_boot_config();
-
-	printf("Board init_f was called\n");
-
-
 
 	/* UART clocks enabled and gd valid - init serial console */
 	//preloader_console_init(); // depends if this is necesary
