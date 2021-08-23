@@ -304,9 +304,9 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
-        {USDHC1_BASE_ADDR}, /* SD Card Slot */
-        {USDHC3_BASE_ADDR}, /* eMMC on Test Carrier */
-        {USDHC4_BASE_ADDR}, /* eMMC on Nicore8 */
+		{USDHC4_BASE_ADDR}, /* eMMC on Nicore8 */
+		{USDHC1_BASE_ADDR}, /* SD Card Slot */
+		{USDHC3_BASE_ADDR}, /* eMMC on Test Carrier */
 };
 
 //Logosni8 - Map the SD CARD on the Test Carrier Board
@@ -1436,9 +1436,9 @@ int board_mmc_init(struct bd_info *bis) {
 	gpio_direction_output(SDIO_CD, 		1);
 
 	// Initialise all mmc - Define clocks first
-	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
-	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 
 	if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
 		puts("WARNING: failed to initialize SD\n");
@@ -1724,12 +1724,12 @@ int spl_start_uboot(void)
 	/* Only enter in Falcon mode if GP_TEST_SMARC is enabled */
 	if ( gpio_get_value(GP_TEST_SMARC) == 0)
 	{
-		printf(" Booting U-Boot");
+		puts(" Booting U-Boot");
 		return 1;
 	}
 	else
 	{
-		printf(" Booting OS");
+		puts(" Booting OS");
 		return 0;
 	}
 }
@@ -1742,14 +1742,11 @@ int spl_start_uboot(void)
 void spl_board_init(void)
 {
 	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
-	u32 boot_device = BOOT_DEVICE_MMC2;
+	u32 boot_device = BOOT_DEVICE_MMC1;
 
 	switch (boot_device) {
 	case BOOT_DEVICE_MMC1:
-		puts("Booting from MMC 1\n");
-		break;
-	case BOOT_DEVICE_MMC2:
-		puts("Booting from MMC 2\n");
+		puts("Booting from MMC\n");
 		break;
 	case BOOT_DEVICE_NAND:
 		puts("Booting from NAND\n");
@@ -1780,6 +1777,8 @@ void board_boot_order(u32 *spl_boot_list)
 	// Map MMC 1
 	SETUP_IOMUX_PADS(sdmmc_pads);
 
+	SETUP_IOMUX_PADS(usdhc3_pads);
+
 	// Map MMC 2
 	SETUP_IOMUX_PADS(usdhc4_pads);
 
@@ -1795,11 +1794,13 @@ void board_boot_order(u32 *spl_boot_list)
 
 	// Initialise all mmc - Define clocks first
 	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
-	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
-	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 
 	// We need to decide which mmc to boot from - for now we are using the SD card
-	spl_boot_list[0] = BOOT_DEVICE_MMC2;
+	spl_boot_list[0] = BOOT_DEVICE_MMC2_2;
+	spl_boot_list[1] = BOOT_DEVICE_MMC1;
+	spl_boot_list[2] = BOOT_DEVICE_MMC2;
 }
 
 
@@ -1978,6 +1979,10 @@ int board_early_init_f(void)
 
 void board_init_f(ulong dummy)
 {
+
+	/* DDR initialization */
+	//spl_dram_init();
+
 	/* setup AIPS and disable watchdog */
 	arch_cpu_init();
 
@@ -1990,11 +1995,11 @@ void board_init_f(ulong dummy)
 	/* setup GP timer */
 	timer_init();
 
+	/* Enable device tree and early DM support*/
+	spl_early_init();
+
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();
-
-	/* DDR initialization */
-	//spl_dram_init();
 
 	/* Clear the BSS. */
 	memset(__bss_start, 0, __bss_end - __bss_start);
