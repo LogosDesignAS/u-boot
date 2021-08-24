@@ -50,7 +50,7 @@
 #include <thermal.h>
 
 #include "logosLogo.h"
-#define DEMO_MODE
+
 #ifdef DEMO_MODE
 #include "bootmelody.h"
 #endif // DEMO_MODE
@@ -1631,7 +1631,7 @@ int board_late_init(void)
 		puts("Error switching I2C bus\n");
 		return res;
 	}
-	
+
 
 	return 0;
 }
@@ -2028,6 +2028,9 @@ int board_early_init_f(void)
 	gpio_direction_output(GPIO_LED_2, 0);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 
+	// Early setup of I2C
+	SETUP_IOMUX_PADS(conf_i2c_pads);
+
 	return 0;
 }
 
@@ -2044,14 +2047,6 @@ void board_init_f(ulong dummy)
 
 	/* setup GP timer */
 	timer_init();
-
-	/* Enable device tree and early DM support*/
-	int ret = spl_early_init();
-	if (ret)
-		led_logosni8_party_light();
-	ret = spl_init();
-	if (ret)
-		led_logosni8_party_light();
 
 	/* iomux */
 	board_early_init_f();
@@ -2082,9 +2077,6 @@ void board_init_f(ulong dummy)
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
 
-	// Disabled blinking for now
-	//led_logosni8_party_light();
-
 	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
 	setup_iomux_boot_config();
 
@@ -2095,13 +2087,19 @@ void board_init_f(ulong dummy)
 	// Set environment variable for OS Boot
 	env_set("falcon_args_file", "Nicore8");
 
+	// Set i2c bus to 3 - Boot Counter
+	int res = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
+
+	if (res < 0) {
+		puts("Error switching I2C bus\n");
+		return res;
+	}
+
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
 
-	puts("SPL U-Boot Initialised\n");
 	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 1);			// LED3
 }
-
 #endif
 
