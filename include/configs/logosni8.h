@@ -20,9 +20,20 @@
 // If SPL is enabled include the SPL header file for imx6
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
+
+// Defines for booting the kernel from SPL
+#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"uImage"
+#define		CONFIG_SYS_SPL_ARGS_ADDR					0x18000000
+#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME				"args"
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  		0x800   /* 1MB */
+#define 	CONFIG_CMD_SPL_WRITE_SIZE 					0x00100000
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 		(CONFIG_CMD_SPL_WRITE_SIZE / 512)
+#define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR		0x1000  /* 2MB */
+
 #endif
 
-#define CONFIG_MXC_UART_BASE			    UART4_BASE
+
+#define CONFIG_MXC_UART_BASE							UART4_BASE
 
 /*
  * Undefine the following defines
@@ -44,7 +55,6 @@
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* I2C Configs */
-
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
@@ -132,5 +142,6 @@
 
 //Uncomment to enable the demo
 //#define DEMO_MODE
+
 
 #endif				/* __LOGOS_NI8_H__*/

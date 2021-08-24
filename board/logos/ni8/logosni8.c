@@ -569,9 +569,9 @@ static iomux_v3_cfg_t const rgb_pads[] = {
 /* Functions below */
 int dram_init(void)
 {
-    gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
+	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
 
-    return 0;
+	return 0;
 }
 
 // Setup the GPIO pins on the Logosni8 board
@@ -1636,7 +1636,8 @@ int board_late_init(void)
 	return 0;
 }
 
-// Enable watchdog when device tree is enabled
+// Enable watchdog when device tree is enabled for SPL
+#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_WDT
 #if defined(CONFIG_IMX_WATCHDOG)
 static void imx_watchdog_reset(struct watchdog_regs *wdog)
@@ -1705,6 +1706,7 @@ void reset_cpu(ulong addr)
 
 #endif /* CONFIG_IMX_WATCHDOG */
 #endif /* CONFIG_WDT */
+#endif /* CONFIG_SPL_BUILD */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //----------------------------------------------- SPL Mode Code ------------------------------------------------------//
@@ -1713,8 +1715,15 @@ void reset_cpu(ulong addr)
 #ifdef CONFIG_SPL_BUILD
 #include <asm/arch/mx6-ddr.h>
 #include <spl.h>
-//#include <imx6_spl.h>
 #include <linux/libfdt.h>
+#include "asm/arch/crm_regs.h"
+#include "asm/arch/mx6dl-ddr.h"
+
+void reset_cpu(ulong addr)
+{
+}
+
+//#define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name | pad_ctrl)
 
 #ifdef CONFIG_SPL_OS_BOOT
 int spl_start_uboot(void)
@@ -1728,18 +1737,16 @@ int spl_start_uboot(void)
 	/* Only enter in Falcon mode if GP_TEST_SMARC is enabled */
 	if ( gpio_get_value(GP_TEST_SMARC) == 0)
 	{
-		puts(" Booting U-Boot");
+		puts("Booting U-Boot\n");
 		return 1;
 	}
 	else
 	{
-		puts(" Booting OS");
+		puts("Booting OS\n");
 		return 0;
 	}
 }
-#else
-
-#endif
+#endif /* CONFIG_SPL_OS_BOOT */
 
 /* called from board_init_r after gd setup if CONFIG_SPL_BOARD_INIT defined */
 /* its our chance to print info about boot device */
@@ -1821,82 +1828,124 @@ static void ccgr_init(void)
 	writel(0x000003FF, &ccm->CCGR6);
 }
 
-
 static int mx6dl_dcd_table[] = {
-	0x020e04bc, 0x00000030,
-	0x020e04c0, 0x00000030,
-	0x020e04c4, 0x00000030,
-	0x020e04c8, 0x00000030,
-	0x020e04cc, 0x00000030,
-	0x020e04d0, 0x00000030,
-	0x020e04d4, 0x00000030,
-	0x020e04d8, 0x00000030,
-	0x020e0764, 0x00000030,
-	0x020e0770, 0x00000030,
-	0x020e0778, 0x00000030,
-	0x020e077c, 0x00000030,
-	0x020e0780, 0x00000030,
-	0x020e0784, 0x00000030,
-	0x020e078c, 0x00000030,
-	0x020e0748, 0x00000030,
-	0x020e074c, 0x00000030,
-	0x020e076c, 0x00000030,
-	0x020e0470, 0x00020030,
-	0x020e0474, 0x00020030,
-	0x020e0478, 0x00020030,
-	0x020e047c, 0x00020030,
-	0x020e0480, 0x00020030,
-	0x020e0484, 0x00020030,
-	0x020e0488, 0x00020030,
-	0x020e048c, 0x00020030,
-	0x020e0464, 0x00020030,
-	0x020e0490, 0x00020030,
-	0x020e04ac, 0x00020030,
-	0x020e04b0, 0x00020030,
-	0x020e0494, 0x00020030,
-	0x020e04a4, 0x00003000,
-	0x020e04a8, 0x00003000,
-	0x020e04b4, 0x00020030,
-	0x020e04b8, 0x00020030,
-	0x020e0750, 0x00020000,
-	0x020e0760, 0x00020000,
-	0x020e0754, 0x00000000,
-	0x020e04a0, 0x00000000,
-	0x020e0774, 0x000C0000,
-	0x021b081c, 0x33333333,
-	0x021b0820, 0x33333333,
-	0x021b0824, 0x33333333,
-	0x021b0828, 0x33333333,
-	0x021b481c, 0x33333333,
-	0x021b4820, 0x33333333,
-	0x021b4824, 0x33333333,
-	0x021b4828, 0x33333333,
-	0x021b0018, 0x00001740,
-	0x021b001c, 0x00008000,
-// From U-Boot 800mhz_2x128mx16.cfg
-	0x021b0004, 0x0002002D,
-//Not define in Nitrogen lite board 800mhz
-	0x021b001c, 0x00008000,
-	0x021b000c, 0x3F435333,
-	0x021b0010, 0xB50D0AA4,
-	0x021b0014, 0x01FF00DB,
-	0x021b002c, 0x000026D2,
-	0x021b0030, 0x00431023,
-	0x021b0008, 0x1B444040,
-	0x021b0004, 0x0002556D,
-	0x021b0040, 0x00000017,
-	0x021b0000, 0x83190000,
-	0x021b001c, 0x04088032,
-	0x021b001c, 0x00008033,
-	0x021b001c, 0x00048031,
-	0x021b001c, 0x15208030,
-	0x021b001c, 0x04008040,
-	0x021b0800, 0xA1390003,
-	0x021b4800, 0xA1390003,
-	0x021b0020, 0x00005800,
-	0x021b0818, 0x00011117,
-	0x021b4818, 0x00011117,
-	0x021b083c, 0x4220021F,
+	/* ddr-setup.cfg */
+
+	/* SDQS */
+	MX6_IOM_DRAM_SDQS0, 0x00000030,
+	MX6_IOM_DRAM_SDQS1, 0x00000030,
+	MX6_IOM_DRAM_SDQS2, 0x00000030,
+	MX6_IOM_DRAM_SDQS3, 0x00000030,
+	MX6_IOM_DRAM_SDQS4, 0x00000030,
+	MX6_IOM_DRAM_SDQS5, 0x00000030,
+	MX6_IOM_DRAM_SDQS6, 0x00000030,
+	MX6_IOM_DRAM_SDQS7, 0x00000030,
+	// BDS
+	MX6_IOM_GRP_B0DS, 0x00000030,
+	MX6_IOM_GRP_B1DS, 0x00000030,
+	MX6_IOM_GRP_B2DS, 0x00000030,
+	MX6_IOM_GRP_B3DS, 0x00000030,
+	MX6_IOM_GRP_B4DS, 0x00000030,
+	MX6_IOM_GRP_B5DS, 0x00000030,
+	MX6_IOM_GRP_B6DS, 0x00000030,
+	MX6_IOM_GRP_B7DS, 0x00000030,
+	// Adds
+	MX6_IOM_GRP_ADDDS, 0x00000030,
+
+	/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
+	MX6_IOM_GRP_CTLDS, 0x00000030,
+
+	// DQM0
+	MX6_IOM_DRAM_DQM0, 0x00020030,
+	MX6_IOM_DRAM_DQM1, 0x00020030,
+	MX6_IOM_DRAM_DQM2, 0x00020030,
+	MX6_IOM_DRAM_DQM3, 0x00020030,
+	MX6_IOM_DRAM_DQM4, 0x00020030,
+	MX6_IOM_DRAM_DQM5, 0x00020030,
+	MX6_IOM_DRAM_DQM6, 0x00020030,
+	MX6_IOM_DRAM_DQM7, 0x00020030,
+
+
+	MX6_IOM_DRAM_CAS, 0x00020030,
+	MX6_IOM_DRAM_RAS, 0x00020030,
+	MX6_IOM_DRAM_SDCLK_0, 0x00020030,
+	MX6_IOM_DRAM_SDCLK_1, 0x00020030,
+
+	// DRAM RESET
+	MX6_IOM_DRAM_RESET, 0x00020030,
+	MX6_IOM_DRAM_SDCKE0, 0x00003000,
+	MX6_IOM_DRAM_SDCKE1, 0x00003000,
+
+ 	// Different than for the Colibri MX6
+	MX6_IOM_DRAM_SDODT0, 0x00020030,
+	MX6_IOM_DRAM_SDODT1, 0x00020030,
+
+	/* (differential input) */
+	MX6_IOM_DDRMODE_CTL, 0x00020000,
+	/* (differential input) */
+	MX6_IOM_GRP_DDRMODE, 0x00020000,
+	/* disable ddr pullups */
+	MX6_IOM_GRP_DDRPKE, 0x00000000,
+	MX6_IOM_DRAM_SDBA2, 0x00000000,
+	/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
+	MX6_IOM_GRP_DDR_TYPE, 0x000C0000,
+
+	/* Read data DQ Byte0-3 delay */
+	MX6_MMDC_P0_MPRDDQBY0DL, 0x33333333,
+	MX6_MMDC_P0_MPRDDQBY1DL, 0x33333333,
+	MX6_MMDC_P0_MPRDDQBY2DL, 0x33333333,
+	MX6_MMDC_P0_MPRDDQBY3DL, 0x33333333,
+	MX6_MMDC_P1_MPRDDQBY0DL, 0x33333333,
+	MX6_MMDC_P1_MPRDDQBY1DL, 0x33333333,
+	MX6_MMDC_P1_MPRDDQBY2DL, 0x33333333,
+	MX6_MMDC_P1_MPRDDQBY3DL, 0x33333333,
+
+	/*
+	 * MDMISC	mirroring	interleaved (row/bank/col)
+	 */
+	MX6_MMDC_P0_MDMISC, 0x00001740,
+
+	/*
+	 * MDSCR	con_req
+	 */
+	MX6_MMDC_P0_MDSCR, 0x00008000,
+	// From U-Boot 800mhz_2x128mx16.cfg
+	MX6_MMDC_P0_MDPDC, 0x0002002D,
+
+	//Not define in Nitrogen lite board 800mhz
+	MX6_MMDC_P0_MDSCR, 0x00008000,
+	MX6_MMDC_P0_MDCFG0, 0x3F435333,
+	MX6_MMDC_P0_MDCFG1, 0xB50D0AA4,
+	MX6_MMDC_P0_MDCFG2, 0x01FF00DB,
+	MX6_MMDC_P0_MDRWD, 0x000026D2,
+	MX6_MMDC_P0_MDOR, 0x00431023,
+	MX6_MMDC_P0_MDOTC, 0x1B444040,
+	MX6_MMDC_P0_MDPDC, 0x0002556D,
+
+	/* CS0 End: 7MSB of ((0x10000000, + 512M) -1) >> 25 */
+	MX6_MMDC_P0_MDASP, 0x00000017,
+	MX6_MMDC_P0_MDCTL, 0x83190000,
+
+	/* Write commands to DDR */
+	/* Load Mode Registers - we have the setting for the extended temperature */
+	MX6_MMDC_P0_MDSCR, 0x04088032,
+	MX6_MMDC_P0_MDSCR, 0x00008033,
+	MX6_MMDC_P0_MDSCR, 0x00048031,
+	MX6_MMDC_P0_MDSCR, 0x15208030,
+
+	/* ZQ calibration */
+	MX6_MMDC_P0_MDSCR, 0x04008040,
+
+	MX6_MMDC_P0_MPZQHWCTRL, 0xA1390003,
+	MX6_MMDC_P1_MPZQHWCTRL, 0xA1390003,
+	MX6_MMDC_P0_MDREF, 0x00005800,
+
+	MX6_MMDC_P0_MPODTCTRL, 0x00011117,
+	MX6_MMDC_P1_MPODTCTRL, 0x00011117,
+
+// Different sequence
+/*
+	MX6_MMDC_P0_MPDGCTRL0, 0x4220021F,
 	0x021b483c, 0x4201020C,
 	0x021b0840, 0x0207017E,
 	0x021b4840, 0x01660172,
@@ -1904,29 +1953,26 @@ static int mx6dl_dcd_table[] = {
 	0x021b4848, 0x4A4F5049,
 	0x021b0850, 0x3F3C3D31,
 	0x021b4850, 0x3238372B,
-	0x021b080c, 0x001F001F,
-	0x021b0810, 0x001F001F,
-	0x021b480c, 0x001F001F,
-	0x021b4810, 0x001F001F,
-	0x021b08b8, 0x00000800,
-	0x021b48b8, 0x00000800,
-	0x021b001c, 0x00000000,
-	0x021b0404, 0x00011006,
-
-// Enable all clocks just to be sure
-/*
-	0x020c4068, 0xFFFFFFFF,
-	0x020c406c, 0xFFFFFFFF,
-	0x020c4070, 0xFFFFFFFF,
-	0x020c4074, 0xFFFFFFFF,
-	0x020c4078, 0xFFFFFFFF,
-	0x020c407c, 0xFFFFFFFF,
-	0x020c4080, 0xFFFFFFFF,
-	0x020e0010, 0xF00000CF,
-	0x020e0018, 0x007F007F,
-	0x020e001c, 0x007F007F,
-	0x020c4060, 0x000000fb,
  */
+// Colibri Version
+	MX6_MMDC_P0_MPDGCTRL0, 0x4220021F,
+	MX6_MMDC_P0_MPDGCTRL1, 0x0207017E,
+	MX6_MMDC_P1_MPDGCTRL0, 0x4201020C,
+	MX6_MMDC_P1_MPDGCTRL1, 0x01660172,
+	MX6_MMDC_P0_MPRDDLCTL, 0x4A4D4E4D,
+	MX6_MMDC_P1_MPRDDLCTL, 0x3F3C3D31,
+	MX6_MMDC_P0_MPWRDLCTL, 0x4A4F5049,
+	MX6_MMDC_P1_MPWRDLCTL, 0x3238372B,
+
+	MX6_MMDC_P0_MPWLDECTRL0, 0x001F001F,
+	MX6_MMDC_P0_MPWLDECTRL1, 0x001F001F,
+	MX6_MMDC_P1_MPWLDECTRL0, 0x001F001F,
+	MX6_MMDC_P1_MPWLDECTRL1, 0x001F001F,
+
+	MX6_MMDC_P0_MPMUR0, 0x00000800,
+	MX6_MMDC_P1_MPMUR0, 0x00000800,
+	MX6_MMDC_P0_MDSCR, 0x00000000,
+	MX6_MMDC_P0_MAPSR, 0x00011006,
 };
 
 static void ddr_init(int *table, int size)
@@ -1939,6 +1985,10 @@ static void ddr_init(int *table, int size)
 
 static void spl_dram_init(void)
 {
+	//gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
+	//gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
+	//gd->bd->bi_dram[0].size = imx_ddr_size();
+
 	ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
 }
 
@@ -1983,9 +2033,8 @@ int board_early_init_f(void)
 
 void board_init_f(ulong dummy)
 {
-
 	/* DDR initialization */
-	//spl_dram_init();
+	spl_dram_init();
 
 	/* setup AIPS and disable watchdog */
 	arch_cpu_init();
@@ -1993,20 +2042,27 @@ void board_init_f(ulong dummy)
 	ccgr_init();
 	gpr_init();
 
-	/* iomux */
-	board_early_init_f();
-
 	/* setup GP timer */
 	timer_init();
 
 	/* Enable device tree and early DM support*/
-	spl_early_init();
+	int ret = spl_early_init();
+	if (ret)
+		led_logosni8_party_light();
+	ret = spl_init();
+	if (ret)
+		led_logosni8_party_light();
+
+	/* iomux */
+	board_early_init_f();
 
 	/* UART clocks enabled and gd valid - init serial console */
+#ifdef CONFIG_SPL_SERIAL_SUPPORT
+#ifndef CONFIG_SPL_DM
 	preloader_console_init();
-
-	/* Clear the BSS. */
-	memset(__bss_start, 0, __bss_end - __bss_start);
+	puts("SPL U-Boot Initialised - 1\n");
+#endif /* CONFIG_SPL_DM */
+#endif /*	CONFIG_SPL_SERIAL_SUPPORT	*/
 
 	// Run our code
 	// Add a GPIO request for the two LEDS
@@ -2033,11 +2089,18 @@ void board_init_f(ulong dummy)
 	setup_iomux_boot_config();
 
 	/* Clear the BSS. */ 
-	//memset(__bss_start, 0, __bss_end - __bss_start); 
+	memset(__bss_start, 0, __bss_end - __bss_start);
 	//comment out clearing of BSS should be done bi crt0
+
+	// Set environment variable for OS Boot
+	env_set("falcon_args_file", "Nicore8");
 
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
+
+	puts("SPL U-Boot Initialised\n");
+	gpio_direction_output(GPIO_LED_2, 1);			// LED2
+	gpio_direction_output(GPIO_LED_3, 1);			// LED3
 }
 
 #endif
