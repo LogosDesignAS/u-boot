@@ -21,16 +21,31 @@
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
+// Increase Bootmlimit - For booting the kernel
+/*
+#ifdef CONFIG_SYS_BOOTM_LEN
+#undef CONFIG_SYS_BOOTM_LEN
+#define CONFIG_SYS_BOOTM_LEN	 0x10000000
+#endif // CONFIG_SYS_BOOTM_LEN
+*/
+
 // Defines for booting the kernel from SPL
-#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"uImage"
-#define		CONFIG_SYS_SPL_ARGS_ADDR					0x18000000
-#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME				"args"
+#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"Nicore8.itb"//"uImage2"
+#define		CONFIG_SYS_SPL_ARGS_ADDR					0x27500000
+#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME				"Nicore8.itb"//"uImage2"
 #define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  		0x800   /* 1MB */
 #define 	CONFIG_CMD_SPL_WRITE_SIZE 					0x00100000
 #define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 		(CONFIG_CMD_SPL_WRITE_SIZE / 512)
 #define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR		0x1000  /* 2MB */
 
+// For SPL to run the kernel a larger Malloc size is needed
+#ifdef CONFIG_SYS_SPL_MALLOC_SIZE
+#undef CONFIG_SYS_SPL_MALLOC_SIZE
+#define		CONFIG_SYS_SPL_MALLOC_SIZE					0x1000000	/* 16 MB */
 #endif
+
+
+#endif /* CONFIG_SPL */
 
 
 #define CONFIG_MXC_UART_BASE							UART4_BASE
@@ -136,9 +151,10 @@
 	"ramdiskaddr=0x13000000\0" \
 	"ip_dyn=yes\0" \
 	"usb_pgood_delay=2000\0"	\
-	"altbootcmd=run recoveryboot\0"  \
+	"altbootcmd=run recoveryboot\0" \
 	BOOTENV
-// Added altbootcmd for supporting recovery boot, if the normal boot fails
+// Added altbootcmd for supporting recovery boot, if the normal boot fails - 	run bootcmd //"altbootcmd=run recoveryboot\0"  \ add a recoveryboot instead
+
 
 //Uncomment to enable the demo
 //#define DEMO_MODE
