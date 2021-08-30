@@ -1989,17 +1989,11 @@ static void spl_dram_init(void)
 }
 
 /* - This function looks for the name of the U-Boot binary
- * This is not a perfect match. Avoid dependency on the DM GPIO driver needed
- * for accurate board detection. Hummingboard2 DT is good enough for U-Boot on
- * all Hummingboard/Cubox-i platforms.
+ * This is not a perfect match. Add the name when building the fit image
  */
 int board_fit_config_name_match(const char *name)
-{
-	char tmp_name[36];
-	puts("Name of board file is: \n");
-	puts(tmp_name);
-	snprintf(tmp_name, sizeof(tmp_name), "%s-hummingboard2-emmc-som-v15",
-			 is_mx6dq() ? "imx6q" : "imx6dl");
+{	// TODO: Change the Description when building the FIT Image
+	char tmp_name[20] = "Standard Boot\0";
 
 	return strcmp(name, tmp_name);
 }
