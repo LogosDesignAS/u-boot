@@ -1751,6 +1751,7 @@ int spl_start_uboot(void)
 /* its our chance to print info about boot device */
 void spl_board_init(void)
 {
+	//printf("%d\n",spl_start_uboot());
 	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
 	u32 boot_device = BOOT_DEVICE_MMC1;
 
