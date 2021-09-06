@@ -323,10 +323,16 @@ static int initr_manual_reloc_cmdtable(void)
 
 static int initr_binman(void)
 {
+	int ret;
+
 	if (!CONFIG_IS_ENABLED(BINMAN_FDT))
 		return 0;
 
-	return binman_init();
+	ret = binman_init();
+	if (ret)
+		printf("binman_init failed:%d\n", ret);
+
+	return ret;
 }
 
 #if defined(CONFIG_MTD_NOR_FLASH)
@@ -458,6 +464,8 @@ static int initr_env(void)
 		env_relocate();
 	else
 		env_set_default(NULL, 0);
+
+	env_import_fdt();
 
 	if (IS_ENABLED(CONFIG_OF_CONTROL))
 		env_set_hex("fdtcontroladdr",

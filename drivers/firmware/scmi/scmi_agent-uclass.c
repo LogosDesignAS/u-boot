@@ -3,13 +3,14 @@
  * Copyright (C) 2020 Linaro Limited.
  */
 
+#define LOG_CATEGORY UCLASS_SCMI_AGENT
+
 #include <common.h>
 #include <dm.h>
-#include <dm/device_compat.h>
 #include <errno.h>
 #include <scmi_agent-uclass.h>
 #include <scmi_protocols.h>
-
+#include <dm/device_compat.h>
 #include <dm/device-internal.h>
 #include <linux/compat.h>
 
@@ -78,6 +79,16 @@ static int scmi_bind_protocols(struct udevice *dev)
 		case SCMI_PROTOCOL_ID_RESET_DOMAIN:
 			if (IS_ENABLED(CONFIG_RESET_SCMI))
 				drv = DM_DRIVER_GET(scmi_reset_domain);
+			break;
+		case SCMI_PROTOCOL_ID_VOLTAGE_DOMAIN:
+			if (IS_ENABLED(CONFIG_DM_REGULATOR_SCMI)) {
+				node = ofnode_find_subnode(node, "regulators");
+				if (!ofnode_valid(node)) {
+					dev_err(dev, "no regulators node\n");
+					return -ENXIO;
+				}
+				drv = DM_DRIVER_GET(scmi_voltage_domain);
+			}
 			break;
 		default:
 			break;

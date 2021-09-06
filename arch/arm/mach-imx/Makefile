@@ -16,6 +16,7 @@ endif
 obj-$(CONFIG_ENV_IS_IN_MMC) += mmc_env.o
 obj-$(CONFIG_FEC_MXC) += mac.o
 obj-$(CONFIG_SYS_I2C_MXC) += i2c-mxv7.o
+obj-$(CONFIG_IMX_HAB) += hab.o
 obj-y += cpu.o
 endif
 
@@ -29,12 +30,14 @@ obj-$(CONFIG_SYS_I2C_MXC) += i2c-mxv7.o
 endif
 ifeq ($(SOC),$(filter $(SOC),mx7 mx6 mxs imx8m imx8 imxrt))
 obj-y	+= misc.o
+obj-$(CONFIG_CMD_PRIBLOB) += priblob.o
 obj-$(CONFIG_SPL_BUILD)	+= spl.o
 endif
 ifeq ($(SOC),$(filter $(SOC),mx7))
 obj-y 	+= cpu.o
 obj-$(CONFIG_SYS_I2C_MXC) += i2c-mxv7.o
 obj-$(CONFIG_ENV_IS_IN_MMC) += mmc_env.o
+obj-$(CONFIG_FSL_MFGPROT) += cmd_mfgprot.o
 endif
 ifeq ($(SOC),$(filter $(SOC),mx5 mx6 mx7))
 obj-$(CONFIG_IMX_VIDEO_SKIP) += video.o
@@ -63,6 +66,10 @@ obj-$(CONFIG_CMD_BMODE) += cmd_bmode.o
 obj-$(CONFIG_CMD_HDMIDETECT) += cmd_hdmidet.o
 obj-$(CONFIG_CMD_DEKBLOB) += cmd_dek.o
 obj-$(CONFIG_CMD_NANDBCB) += cmd_nandbcb.o
+endif
+
+ifeq ($(CONFIG_SPL_BUILD),y)
+obj-$(CONFIG_SPL_LOAD_IMX_CONTAINER) += image-container.o parse-container.o
 endif
 
 PLUGIN = board/$(BOARDDIR)/plugin
@@ -224,6 +231,7 @@ obj-$(CONFIG_MX5) += mx5/
 obj-$(CONFIG_MX6) += mx6/
 obj-$(CONFIG_MX7) += mx7/
 obj-$(CONFIG_ARCH_MX7ULP) += mx7ulp/
+obj-$(CONFIG_ARCH_IMX8ULP) += imx8ulp/
 obj-$(CONFIG_IMX8M) += imx8m/
 obj-$(CONFIG_ARCH_IMX8) += imx8/
 obj-$(CONFIG_ARCH_IMXRT) += imxrt/

@@ -10,6 +10,8 @@ ccflags-y += -DHOST_ARCH="$(HOST_ARCH)"
 
 CFLAGS_dtbdump.o := $(CFLAGS_EFI) -Os -ffreestanding
 CFLAGS_REMOVE_dtbdump.o := $(CFLAGS_NON_EFI)
+CFLAGS_efi_selftest_miniapp_exception.o := $(CFLAGS_EFI) -Os -ffreestanding
+CFLAGS_REMOVE_efi_selftest_miniapp_exception.o := $(CFLAGS_NON_EFI)
 CFLAGS_efi_selftest_miniapp_exit.o := $(CFLAGS_EFI) -Os -ffreestanding
 CFLAGS_REMOVE_efi_selftest_miniapp_exit.o := $(CFLAGS_NON_EFI)
 CFLAGS_efi_selftest_miniapp_return.o := $(CFLAGS_EFI) -Os -ffreestanding
@@ -61,7 +63,6 @@ obj-$(CONFIG_CPU_V7) += efi_selftest_unaligned.o
 obj-$(CONFIG_EFI_LOADER_HII) += efi_selftest_hii.o
 obj-$(CONFIG_EFI_RNG_PROTOCOL) += efi_selftest_rng.o
 obj-$(CONFIG_EFI_GET_TIME) += efi_selftest_rtc.o
-obj-$(CONFIG_EFI_LOAD_FILE2_INITRD) += efi_selftest_load_initrd.o
 obj-$(CONFIG_EFI_TCG2_PROTOCOL) += efi_selftest_tcg2.o
 
 ifeq ($(CONFIG_GENERATE_ACPI_TABLE),)
@@ -71,6 +72,8 @@ endif
 ifeq ($(CONFIG_BLK)$(CONFIG_DOS_PARTITION),yy)
 obj-y += efi_selftest_block_device.o
 endif
+
+obj-$(CONFIG_EFI_ESRT) += efi_selftest_esrt.o
 
 targets += \
 efi_miniapp_file_image_exception.h \

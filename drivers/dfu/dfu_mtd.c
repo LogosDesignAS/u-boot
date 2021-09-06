@@ -150,7 +150,9 @@ static int mtd_block_op(enum dfu_op op, struct dfu_entity *dfu,
 		/* Write done, lock again */
 		debug("Locking the mtd device\n");
 		ret = mtd_lock(mtd, lock_ofs, lock_len);
-		if (ret && ret != -EOPNOTSUPP)
+		if (ret == -EOPNOTSUPP)
+			ret = 0;
+		else if (ret)
 			printf("MTD device lock failed\n");
 	}
 	return ret;
@@ -252,7 +254,6 @@ int dfu_fill_entity_mtd(struct dfu_entity *dfu, char *devstr, char *s)
 {
 	char *st;
 	struct mtd_info *mtd;
-	bool has_pages;
 	int ret, part;
 
 	mtd = get_mtd_device_nm(devstr);
@@ -262,16 +263,14 @@ int dfu_fill_entity_mtd(struct dfu_entity *dfu, char *devstr, char *s)
 
 	dfu->dev_type = DFU_DEV_MTD;
 	dfu->data.mtd.info = mtd;
-
-	has_pages = mtd->type == MTD_NANDFLASH || mtd->type == MTD_MLCNANDFLASH;
-	dfu->max_buf_size = has_pages ? mtd->erasesize : 0;
+	dfu->max_buf_size = mtd->erasesize;
 
 	st = strsep(&s, " ");
 	if (!strcmp(st, "raw")) {
 		dfu->layout = DFU_RAW_ADDR;
-		dfu->data.mtd.start = simple_strtoul(s, &s, 16);
+		dfu->data.mtd.start = hextoul(s, &s);
 		s++;
-		dfu->data.mtd.size = simple_strtoul(s, &s, 16);
+		dfu->data.mtd.size = hextoul(s, &s);
 	} else if ((!strcmp(st, "part")) || (!strcmp(st, "partubi"))) {
 		char mtd_id[32];
 		struct mtd_device *mtd_dev;
@@ -280,7 +279,7 @@ int dfu_fill_entity_mtd(struct dfu_entity *dfu, char *devstr, char *s)
 
 		dfu->layout = DFU_RAW_ADDR;
 
-		part = simple_strtoul(s, &s, 10);
+		part = dectoul(s, &s);
 
 		sprintf(mtd_id, "%s,%d", devstr, part - 1);
 		printf("using id '%s'\n", mtd_id);

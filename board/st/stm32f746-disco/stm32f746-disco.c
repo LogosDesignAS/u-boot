@@ -48,11 +48,6 @@ int dram_init_banksize(void)
 	return fdtdec_setup_memory_banksize();
 }
 
-int board_early_init_f(void)
-{
-	return 0;
-}
-
 #ifdef CONFIG_SPL_BUILD
 #ifdef CONFIG_SPL_OS_BOOT
 int spl_start_uboot(void)
@@ -74,8 +69,8 @@ int spl_dram_init(void)
 }
 void spl_board_init(void)
 {
-	spl_dram_init();
 	preloader_console_init();
+	spl_dram_init();
 	arch_cpu_init(); /* to configure mpu for sdram rw permissions */
 }
 u32 spl_boot_device(void)
