@@ -715,6 +715,9 @@ static void setup_iomux_enet(void)
 	// Do all the first mapping - GPIOs for Configuring the PHY and the AR8035 Mode
 	SETUP_IOMUX_PADS(enet_pads1);
 
+	/* wait until 3.3V of PHY and clock become stable */
+	mdelay(10);
+
 	// Set output for configuring AR8035
 	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 	0); 	// Logosni8 PHY rst
 
@@ -726,12 +729,12 @@ static void setup_iomux_enet(void)
 	gpio_direction_output(GPIO_RGMII_RX_D3,				1);
 	gpio_direction_output(GPIO_RGMII_RX_CLK, 			1); 	// low voltage - 1.5 0 and 1.8 is 1 - for 2.5V - PULL DOWN/PULL UP (Hardwired)
 
-	// Need delay 2ms according to AR8035 spec - to make sure the clock is stable - logosni8
-	mdelay(2);
+	// Need delay 5ms according to AR8035 spec - to make sure the clock is stable - logosni8
+	mdelay(5);
 	gpio_set_value(GPIO_RGMII_RESET_LOGISNI8, 			1); 	// Logosni8 PHY reset
 
 	SETUP_IOMUX_PADS(enet_pads2);
-	mdelay(2);	// Wait 2000 us before using mii interface - and pull the reset pin low
+	mdelay(5);	// Wait 5000 us before using mii interface - and pull the reset pin low
 }
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
