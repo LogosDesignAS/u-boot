@@ -2027,7 +2027,7 @@ int board_early_init_f(void)
 void board_init_f(ulong dummy)
 {
 	/* DDR initialization */
-	spl_dram_init();
+	//spl_dram_init(); //outcommented, uses DCD tabe to initilze ram
 
 	/* setup AIPS and disable watchdog */
 	arch_cpu_init();
