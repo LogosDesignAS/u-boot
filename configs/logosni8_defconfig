@@ -142,6 +142,10 @@ CONFIG_BOOTCOUNT_BOOTLIMIT=3
 CONFIG_BOOTCOUNT_I2C=y
 CONFIG_CMD_BOOTCOUNT=y
 
+# HAB - High Assurance Boot
+CONFIG_IMX_HAB=y
+CONFIG_SECURE_BOOT=y
+
 # Enable the hush shell, if, then, else logic in scripts
 CONFIG_HUSH_PARSER=y
 
@@ -203,7 +207,7 @@ CONFIG_FIT=y
 CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 
 # Lib for passing the device tree to the Kernel
-#CONFIG_OF_LIBFDT_OVERLAY=y
+CONFIG_OF_LIBFDT_OVERLAY=y
 
 # Driver models - (DM)'s
 CONFIG_DM=y
