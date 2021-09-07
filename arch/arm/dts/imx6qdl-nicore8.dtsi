@@ -279,8 +279,6 @@
     pinctrl-0 = <&pinctrl_enet>;
     phy-handle = <&phy>;
     phy-mode = "rgmii-id";
-    phy-reset-duration = <2>;
-    phy-reset-gpios = GP_ENET_PHY_RESET;
     status = "okay";
 
     mdio {
