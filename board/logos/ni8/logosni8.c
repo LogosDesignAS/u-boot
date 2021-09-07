@@ -1467,13 +1467,21 @@ int board_mmc_init(struct bd_info *bis) {
  */
 void i2c_multiplexer(uint8_t select)
 {
-	// Write commands to the PCA9546ABS to control the correct I2c bus
-	i2c_set_bus_num(2);
+	struct udevice *dev;
+	u8 addr = 0x00;
+	int err;
+
+	err = i2c_get_chip_for_busnum(2, 0x70, 1, &dev);
+	if (err) {
+		printf("%s: Cannot find I2C Multiplexer \n", __func__);
+		return err;
+	}
 
 	// Write to the I2c Device
-	if (i2c_write(0x70, 0x00, 1, &select, 1)) {
-		printf("i2c_write: error sending\n");
+	if (dm_i2c_write(dev, addr, &select, 1)) {
+		printf("dm_i2c_write: error sending\n");
 	}
+
 };
 
 int board_mmc_init_dts(void) {
@@ -1627,17 +1635,20 @@ int board_late_init(void)
 
 	led_logosni8_party_light();
 #endif
+
 	// Set i2c bus to 3 - Boot Counter
-	int res = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
+	struct udevice *dev;
+	int err;
 
-	if (res < 0) {
+	err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x50, 1, &dev);
+	if (err) {
 		puts("Error switching I2C bus\n");
-		return res;
+		return err;
 	}
-
-
 	return 0;
 }
+
+// Define a
 
 // Enable watchdog when device tree is enabled for SPL
 #ifndef CONFIG_SPL_BUILD
