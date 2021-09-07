@@ -128,10 +128,12 @@
 #define CONFIG_MXC_USB_FLAGS	            0
 
 #define BOOT_TARGET_DEVICES(func) \
-	DISTRO_BOOT_DEV_MMC(func) \
+	DISTRO_BOOT_DEV_MMC(func)
+    /*
 	DISTRO_BOOT_DEV_USB(func) \
 	DISTRO_BOOT_DEV_PXE(func) \
 	DISTRO_BOOT_DEV_DHCP(func)
+    */
 
 #define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
 
@@ -139,6 +141,9 @@
  * TODO Look into options below later.
  */
 #define CONFIG_EXTRA_ENV_SETTINGS \
+    "developer=setenv autoload no; setenv scriptaddr 0x12000000; setenv scriptfile nicore8/scripts/developer.img; dhcp; tftp ${scriptaddr} ${scriptfile}; source ${scriptaddr}\0" \
+    BOOTENV                              \
+    /*                              \
 	"console=ttymxc1\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -152,7 +157,8 @@
 	"ip_dyn=yes\0" \
 	"usb_pgood_delay=2000\0"	\
 	"altbootcmd=run recoveryboot\0" \
-	BOOTENV
+    */
+
 // Added altbootcmd for supporting recovery boot, if the normal boot fails - 	run bootcmd //"altbootcmd=run recoveryboot\0"  \ add a recoveryboot instead
 
 
