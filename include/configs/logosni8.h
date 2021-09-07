@@ -21,14 +21,6 @@
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
-// Increase Bootmlimit - For booting the kernel
-/*
-#ifdef CONFIG_SYS_BOOTM_LEN
-#undef CONFIG_SYS_BOOTM_LEN
-#define CONFIG_SYS_BOOTM_LEN	 0x10000000
-#endif // CONFIG_SYS_BOOTM_LEN
-*/
-
 // Defines for booting the kernel from SPL
 #define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"Nicore8.itb"//"uImage2"
 #define		CONFIG_SYS_SPL_ARGS_ADDR					0x27500000
@@ -43,7 +35,6 @@
 #undef CONFIG_SYS_SPL_MALLOC_SIZE
 #define		CONFIG_SYS_SPL_MALLOC_SIZE					0x1000000	/* 16 MB */
 #endif
-
 
 #endif /* CONFIG_SPL */
 
@@ -70,7 +61,8 @@
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* I2C Configs */
-#define CONFIG_SYS_I2C
+//#define CONFIG_SYS_I2C
+/*
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
 #define CONFIG_SYS_I2C_MXC_I2C2				// enable I2C bus 2
@@ -78,6 +70,7 @@
 #define CONFIG_SYS_I2C_MXC_I2C4				// enable I2C bus 4
 #define CONFIG_SYS_I2C_SPEED				100000
 #define CONFIG_I2C_EDID
+*/
 
 /* Bootcount Commands - Use i2C */
 #define BOOTCOUNT_I2C_BUS					3
