@@ -141,7 +141,7 @@
  * TODO Look into options below later.
  */
 #define CONFIG_EXTRA_ENV_SETTINGS \
-    "developer=setenv autoload no; setenv scriptaddr 0x12000000; setenv scriptfile nicore8/scripts/developer.img; dhcp; tftp ${scriptaddr} ${scriptfile}; source ${scriptaddr}\0" \
+    "developer=setenv autoload no; setenv serverip 172.16.1.60; setenv scriptaddr 0x12000000; setenv scriptfile nicore8/scripts/developer.img; dhcp; tftp ${scriptaddr} ${scriptfile}; source ${scriptaddr}\0" \
     BOOTENV                              \
     /*                              \
 	"console=ttymxc1\0" \
