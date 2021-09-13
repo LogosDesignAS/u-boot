@@ -63,16 +63,40 @@ CONFIG_SPL_ALLOC_BD=y
 CONFIG_SYS_SPL_MALLOC_START=y
 CONFIG_FIT_VERBOSE=y
 
+# We need a lean mean booting machine - we are happy, when it's snappy.
+# Disable stuff we don't need. Add lines below later, and clean-up in SPL stuff above.
+# And remember to remove this stupid comment.
+#CONFIG_SPL_MUSB_NEW_SUPPORT=n
+#CONFIG_SPL_EXT_SUPPORT=n
+#CONFIG_SPL_FAT_SUPPORT=n
+#CONFIG_SPL_ETH_SUPPORT=n
+#CONFIG_SPL_LIBDISK_SUPPORT=n
+#CONFIG_DRIVER_TI_CPSW=n
+#CONFIG_SPL_USBETH_SUPPORT=n
+#CONFIG_SPL_MUSB_NEW_SUPPORT=n
+#CONFIG_SPL_YMODEM_SUPPORT=n
+#CONFIG_SPL_EFI_PARTITION=n
+#CONFIG_SPL_DOS_PARTITION=n
+#CONFIG_SPL_ENV_SUPPORT=n
+
 # Environment Support
+CONFIG_ENV_IS_IN_MMC=y
+CONFIG_SYS_MMC_ENV_DEV=2
+CONFIG_SYS_MMC_ENV_PART=1
+CONFIG_SYS_REDUNDAND_ENVIRONMENT=y
+# Last 64 KB off first eMMC boot partition is for user environment variables.
+# Two 32 KB areas for redundancy.
+CONFIG_ENV_SIZE=0x8000
+# Negative value means backwards from the end.
+CONFIG_ENV_OFFSET=0xFFFF0000
+CONFIG_ENV_OFFSET_REDUND=0xFFFF8000
+CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 CONFIG_SPL_ENV_SUPPORT=y
-CONFIG_ENV_SIZE=0x100000
-CONFIG_ENV_OFFSET=0x400000
-CONFIG_ENV_IS_NOWHERE=y
-CONFIG_SPL_ENV_IS_NOWHERE=y
+CONFIG_SPL_ENV_IS_IN_MMC=y
 
 CONFIG_SPL_FIT=y
 CONFIG_SPL_OF_LIBFDT=y
-
 
 # Enable full uart support in spl - Debug support
 CONFIG_SPL_SERIAL_PRESENT=y
@@ -129,7 +153,10 @@ CONFIG_I2C_EEPROM=y
 # Boot Configs
 CONFIG_SUPPORT_RAW_INITRD=y
 CONFIG_USE_PREBOOT=y
+
+# Lower bootdelay to 0 and comment CONFIG_ZERO_BOOTDELAY_CHECK
 CONFIG_BOOTDELAY=10
+#CONFIG_ZERO_BOOTDELAY_CHECK=y
 
 # Watchdog Configs
 # This config changes reset time - after calling reset it will wait 30s
@@ -147,6 +174,10 @@ CONFIG_BOOTCOUNT_LIMIT=y
 CONFIG_BOOTCOUNT_BOOTLIMIT=3
 CONFIG_BOOTCOUNT_I2C=y
 CONFIG_CMD_BOOTCOUNT=y
+
+# HAB - High Assurance Boot
+CONFIG_IMX_HAB=y
+CONFIG_SECURE_BOOT=y
 
 # Enable the hush shell, if, then, else logic in scripts
 CONFIG_HUSH_PARSER=y
@@ -209,7 +240,7 @@ CONFIG_FIT=y
 CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 
 # Lib for passing the device tree to the Kernel
-#CONFIG_OF_LIBFDT_OVERLAY=y
+CONFIG_OF_LIBFDT_OVERLAY=y
 
 # Driver models - (DM)'s
 CONFIG_DM=y
@@ -273,3 +304,8 @@ CONFIG_CMD_LINK_LOCAL=y
 CONFIG_CMD_TIME=y
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_BOOTZ=y
+
+# Comment following in later, for speed optimization
+# CONFIG_UBI_SILENCE_MSG
+# TODO: Measure with or without L2 cache enabled and choose best option for our platform and SPL.
+# TODO: Make sure all display support is disabled (DCU) for SPL.

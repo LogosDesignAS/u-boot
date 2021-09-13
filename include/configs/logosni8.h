@@ -87,7 +87,6 @@
 /* MMC Configs */
 #define CONFIG_SYS_FSL_ESDHC_ADDR           USDHC4_BASE_ADDR
 #define CONFIG_SYS_FSL_USDHC_NUM            3
-#define CONFIG_SYS_MMC_ENV_DEV              0
 
 #ifdef CONFIG_CMD_MMC
 #define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 1) func(MMC, mmc, 2)
@@ -102,6 +101,7 @@
 #define CONFIG_FEC_MXC_PHYADDR				0x04
 #define CONFIG_ETHPRIME						"FEC"
 
+/*
 #ifdef CONFIG_USB_STORAGE
 #define DISTRO_BOOT_DEV_USB(func) func(USB, usb, 0) func(USB, usb, 1)
 #else
@@ -121,44 +121,26 @@
 #endif
 
 #define CONFIG_USBD_HS
+*/
 
 /* USB Configs */
+/*
 #define CONFIG_USB_MAX_CONTROLLER_COUNT     2
-#define CONFIG_EHCI_HCD_INIT_AFTER_RESET	/* For OTG port */
+#define CONFIG_EHCI_HCD_INIT_AFTER_RESET	// For OTG port
 #define CONFIG_MXC_USB_PORTSC	            (PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS	            0
+*/
 
 #define BOOT_TARGET_DEVICES(func) \
-	DISTRO_BOOT_DEV_MMC(func) \
+	DISTRO_BOOT_DEV_MMC(func)
+    /*
 	DISTRO_BOOT_DEV_USB(func) \
 	DISTRO_BOOT_DEV_PXE(func) \
 	DISTRO_BOOT_DEV_DHCP(func)
+    */
 
 #define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
 
-/*
- * TODO Look into options below later.
- */
-#define CONFIG_EXTRA_ENV_SETTINGS \
-	"console=ttymxc1\0" \
-	"fdt_high=0xffffffff\0" \
-	"initrd_high=0xffffffff\0" \
-	"fdt_addr_r=0x18000000\0" \
-	FDTFILE \
-	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0"  \
-	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
-	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
-	"ramdisk_addr_r=0x13000000\0" \
-	"ramdiskaddr=0x13000000\0" \
-	"ip_dyn=yes\0" \
-	"usb_pgood_delay=2000\0"	\
-	"altbootcmd=run recoveryboot\0" \
-	BOOTENV
-// Added altbootcmd for supporting recovery boot, if the normal boot fails - 	run bootcmd //"altbootcmd=run recoveryboot\0"  \ add a recoveryboot instead
+//#define CONFIG_EXTRA_ENV_SETTINGS
 
-
-//Uncomment to enable the demo
-//#define DEMO_MODE
-
-
-#endif				/* __LOGOS_NI8_H__*/
+#endif // __LOGOS_NI8_H__
