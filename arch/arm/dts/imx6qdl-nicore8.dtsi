@@ -289,14 +289,16 @@
 /* I2c - Bus 1 */
 
 &i2c1 {
+	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	//pinctrl-0 = <&pinctrl_i2c3>;
-	status = "okay";
+	status = "disabled";
 };
 
 
 /* I2c - Bus 2 */
 &i2c2 {
+	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
@@ -304,6 +306,7 @@
 
 /* I2c - Bus 3 */
 &i2c3 {
+	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c3>;
 	status = "okay";
@@ -311,6 +314,7 @@
 
 /* I2c - Bus 4 */
 &i2c4 {
+	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c4>;
 	status = "okay";

@@ -1571,6 +1571,9 @@ int board_init(void)
 
 	// ETH init
 	setup_iomux_enet();
+
+	// Early setup of I2C
+	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif
 
 	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID TODO Verify if this is needed
