@@ -62,6 +62,22 @@ CONFIG_SPL_ALLOC_BD=y
 CONFIG_SYS_SPL_MALLOC_START=y
 CONFIG_FIT_VERBOSE=y
 
+# We need a lean mean booting machine - we are happy, when it's snappy.
+# Disable stuff we don't need. Add lines below later, and clean-up in SPL stuff above.
+# And remember to remove this stupid comment.
+#CONFIG_SPL_MUSB_NEW_SUPPORT=n
+#CONFIG_SPL_EXT_SUPPORT=n
+#CONFIG_SPL_FAT_SUPPORT=n
+#CONFIG_SPL_ETH_SUPPORT=n
+#CONFIG_SPL_LIBDISK_SUPPORT=n
+#CONFIG_DRIVER_TI_CPSW=n
+#CONFIG_SPL_USBETH_SUPPORT=n
+#CONFIG_SPL_MUSB_NEW_SUPPORT=n
+#CONFIG_SPL_YMODEM_SUPPORT=n
+#CONFIG_SPL_EFI_PARTITION=n
+#CONFIG_SPL_DOS_PARTITION=n
+#CONFIG_SPL_ENV_SUPPORT=n
+
 # Environment Support
 CONFIG_ENV_IS_IN_MMC=y
 CONFIG_SYS_MMC_ENV_DEV=2
@@ -131,7 +147,10 @@ CONFIG_I2C_EEPROM=y
 # Boot Configs
 CONFIG_SUPPORT_RAW_INITRD=y
 CONFIG_USE_PREBOOT=y
+
+# Lower bootdelay to 0 and comment CONFIG_ZERO_BOOTDELAY_CHECK
 CONFIG_BOOTDELAY=10
+#CONFIG_ZERO_BOOTDELAY_CHECK=y
 
 # Watchdog Configs
 # This config changes reset time - after calling reset it will wait 30s
@@ -279,3 +298,8 @@ CONFIG_CMD_LINK_LOCAL=y
 CONFIG_CMD_TIME=y
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_BOOTZ=y
+
+# Comment following in later, for speed optimization
+# CONFIG_UBI_SILENCE_MSG
+# TODO: Measure with or without L2 cache enabled and choose best option for our platform and SPL.
+# TODO: Make sure all display support is disabled (DCU) for SPL.
