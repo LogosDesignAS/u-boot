@@ -55,6 +55,10 @@
 #include "bootmelody.h"
 #endif // DEMO_MODE
 
+// Bootcount
+//#include <bootcount.h>
+
+
 #include <debug_uart.h>
 
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
@@ -802,6 +806,14 @@ static void setup_spi(void)
 }
 #endif // CONFIG_MXC_SPI
 
+
+// Function for increasing Boot Count
+static inline void bootcount_inc(void) {
+	unsigned long bootcount = bootcount_load();
+	puts("Increase Bootcount\n");
+	bootcount_store(++bootcount);
+}
+
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
@@ -1409,6 +1421,41 @@ int board_mmc_getcd(struct mmc *mmc)
 	return ret;
 }
 
+// I2c Functions for the full u-boot
+int i2c_read(uint8_t chip, unsigned int addr, int alen,
+			 uint8_t *buffer, int len)
+
+			 // Call I2c DM read ..
+{
+	struct udevice *dev;
+	int err;
+
+	err = i2c_get_chip_for_busnum(3, chip, 1, &dev);
+	if (err) {
+		printf("%s: Cannot find FRAM \n", __func__);
+		return err;
+	}
+	// Reading from FRAM
+	return dm_i2c_read(dev, 0x0, buffer, alen);
+}
+
+int i2c_write(uint8_t chip, unsigned int addr, int alen,
+			  uint8_t *buffer, int len)
+{
+	struct udevice *dev;
+	int err;
+
+	err = i2c_get_chip_for_busnum(3, chip, 1, &dev);
+	if (err) {
+		printf("%s: Cannot find FRAM\n", __func__);
+		return err;
+	}
+	// Write to the I2c Device
+	return dm_i2c_write(dev, 0x00, buffer, alen);
+}
+
+// These function are not needed by SPL
+//#ifndef CONFIG_SPL_BUILD
 int board_mmc_init(struct bd_info *bis) {
 	/*
 	  * Upon reading BOOT_CFG register the following map is done:
@@ -1600,6 +1647,7 @@ int misc_init_r(void)
 	env_set_hex("reset_cause", get_imx_reset_cause());
 	return 0;
 }
+
 /*
  * The board_late_init function is called late during the bootloader initialisation
  * Therefore, all the functionality needed late during the bootup should be added here - this is e.g. the UART printing
@@ -1635,19 +1683,25 @@ int board_late_init(void)
 	led_logosni8_party_light();
 #endif
 
-	// // Set i2c bus to 3 - Boot Counter
-	// struct udevice *dev;
-	// int err;
+	// Set i2c bus to 3 - Boot Counter
+	struct udevice *dev;
+	int err;
 
-	// err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x50, 1, &dev);
-	// if (err) {
-	// 	puts("Error switching I2C bus\n");
-	// 	return err;
-	// }
+	err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x51, 1, &dev);
+	if (err) {
+		puts("Error switching I2C bus\n");
+		return err;
+	 }
+
+	// Increase bootcount Manually
+	bootcount_inc();
+
+
 	return 0;
-}
 
-// Define a
+}
+//#endif /* CONFIG_SPL_BUILD */
+
 
 // Enable watchdog when device tree is enabled for SPL
 #ifndef CONFIG_SPL_BUILD
@@ -2042,6 +2096,14 @@ int board_early_init_f(void)
 	return 0;
 }
 
+// Dummy function for I2C support
+int gpio_request_by_name_nodev(ofnode node, const char *list_name, int index,
+			       struct gpio_desc *desc, int flags)
+{
+
+	return 0;
+}
+
 void board_init_f(ulong dummy)
 {
 	/* DDR initialization */
@@ -2059,12 +2121,12 @@ void board_init_f(ulong dummy)
 	/* iomux */
 	board_early_init_f();
 
+	/* Enable device tree and early DM support*/
+	spl_early_init();
+
 	/* UART clocks enabled and gd valid - init serial console */
 #ifdef CONFIG_SPL_SERIAL_SUPPORT
-#ifndef CONFIG_SPL_DM
 	preloader_console_init();
-	puts("SPL U-Boot Initialised - 1\n");
-#endif /* CONFIG_SPL_DM */
 #endif /*	CONFIG_SPL_SERIAL_SUPPORT	*/
 
 	// Run our code
@@ -2096,12 +2158,19 @@ void board_init_f(ulong dummy)
 	env_set("falcon_args_file", "Nicore8");
 
 	// Set i2c bus to 3 - Boot Counter
-	// int res = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
+	struct udevice *dev;
+	int err;
 
-	// if (res < 0) {
-	// 	puts("Error switching I2C bus\n");
-	// 	return res;
-	// }
+	err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x51, 1, &dev);
+
+	if (err) {
+		puts("Error switching I2C bus\n");
+		return err;
+	}
+
+	// Increase bootcount Manually
+	bootcount_inc();
+
 
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
