@@ -4,7 +4,6 @@
  * Copyright (C) 2013, Boundary Devices <info@boundarydevices.com>
  * Copyright (C) 2021 Logos Payment Solutions A/S.
  */
-
 #include <asm/arch/clock.h>
 #include <asm/arch/crm_regs.h>
 #include <asm/arch/imx-regs.h>
@@ -51,21 +50,24 @@
 
 #include "logosLogo.h"
 
+// Bootcount
+#include <bootcount.h>
+
 #ifdef DEMO_MODE
 #include "bootmelody.h"
 #endif // DEMO_MODE
 
-// Bootcount
-//#include <bootcount.h>
+#ifdef CONFIG_SPL_BUILD
+//#define DRAM_INIT
+#endif /* CONFIG_SPL_BUILD */
 
-
-#include <debug_uart.h>
 
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
 	GPIO_I2C_BUS_SEL_RESET = IMX_GPIO_NR(2, 0)
 };
 // ENUM for configuring the AR8035 ethernet adapter
+#ifndef CONFIG_SPL_BUILD
 enum AR8035_CONFIGS {
 	GPIO_RGMII_RX_DV =   IMX_GPIO_NR(6, 24),
 	GPIO_ENET_RXD0_INT = IMX_GPIO_NR(1, 27),
@@ -75,6 +77,7 @@ enum AR8035_CONFIGS {
 	GPIO_RGMII_RX_D3 =   IMX_GPIO_NR(6, 29),
 	GPIO_RGMII_RX_CLK =  IMX_GPIO_NR(6, 30)
 };
+#endif /* CONFIG_SPL_BUILD */
 
 // ENUM for bootconfigs
 enum BOOT_CONFIGS {
@@ -276,14 +279,14 @@ static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT18__UART5_RTS_B, UART_PAD_CTRL),
 	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
-
+#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_MXC_SPI
 static iomux_v3_cfg_t const ecspi1_pads[] = {
-        /* SS1 */
-        IOMUX_PAD_CTRL(EIM_EB2__GPIO2_IO30, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
-        IOMUX_PAD_CTRL(EIM_D17__ECSPI1_MISO, SPI_PAD_CTRL),
-        IOMUX_PAD_CTRL(EIM_D18__ECSPI1_MOSI, SPI_PAD_CTRL),
-        IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
+	/* SS1 */
+	IOMUX_PAD_CTRL(EIM_EB2__GPIO2_IO30, NO_PAD_CTRL), /* -> BOOT_CFG_30 -> SPINOR_CS0 */
+	IOMUX_PAD_CTRL(EIM_D17__ECSPI1_MISO, SPI_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D18__ECSPI1_MOSI, SPI_PAD_CTRL),
+	IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
 };
 #endif // CONFIG_MXC_SPI
 
@@ -292,6 +295,7 @@ static iomux_v3_cfg_t const hdmi_reset_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_D0__GPIO2_IO00, WEAK_PULLUP),
 	IOMUX_PAD_CTRL(NANDF_D1__GPIO2_IO01, WEAK_PULLUP),
 };
+#endif /* CONFIG_SPL_BUILD */
 
 // Logosni8 - Map the onboard eMMC
 static iomux_v3_cfg_t const usdhc4_pads[] = {
@@ -342,6 +346,7 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 	IOMUX_PAD_CTRL(SD3_DAT7__SD3_DATA7, USDHC_PAD_CTRL),
 };
 
+#ifndef CONFIG_SPL_BUILD
 static iomux_v3_cfg_t const enet_pads1[] = {
 	/* MDIO */
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
@@ -387,6 +392,7 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
+#endif /* CONFIG_SPL_BUILD */
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
@@ -646,6 +652,7 @@ static void setup_iomux_afb_gpio(void)
 }
 
 /* Setup the LEDS on the Logosni8 board */
+#ifndef CONFIG_SPL_BUILD
 static void setup_iomux_leds(void)
 {
 	// Add a GPIO request for the two LEDS
@@ -659,6 +666,7 @@ static void setup_iomux_leds(void)
 	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 };
+#endif /* CONFIG_SPL_BUILD */
 
 static void setup_iomux_boot_config(void)
 {
@@ -701,7 +709,7 @@ static void setup_iomux_boot_config(void)
 	gpio_direction_input(GPIO_EIM_DA14);
 	gpio_direction_input(GPIO_EIM_DA15);
 };
-
+#ifndef CONFIG_SPL_BUILD
 static void setup_iomux_enet(void)
 {
 	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
@@ -737,6 +745,7 @@ static void setup_iomux_enet(void)
 	SETUP_IOMUX_PADS(enet_pads2);
 	mdelay(10);	// Wait 5000 us before using mii interface - and pull the reset pin low
 }
+#endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 static iomux_v3_cfg_t const usb_pads[] = {
@@ -799,21 +808,22 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
 	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(2, 30)) : -1;
 }
-
+#ifndef CONFIG_SPL_BUILD
 static void setup_spi(void)
 {
 	SETUP_IOMUX_PADS(ecspi1_pads);
 }
+#endif /* CONFIG_SPL_BUILD */
 #endif // CONFIG_MXC_SPI
 
 
 // Function for increasing Boot Count
-static inline void bootcount_inc(void) {
+static inline void bootcount_inc_logos(void) {
 	unsigned long bootcount = bootcount_load();
 	puts("Increase Bootcount\n");
 	bootcount_store(++bootcount);
 }
-
+#ifndef CONFIG_SPL_BUILD
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
@@ -823,14 +833,15 @@ int board_phy_config(struct phy_device *phydev)
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
-    return 0;
+	return 0;
 }
 
 int board_eth_init(struct bd_info *bis)
 {
-    setup_iomux_enet();
-    return cpu_eth_init(bis);
+	setup_iomux_enet();
+	return cpu_eth_init(bis);
 }
+#endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_VIDEO_IPUV3
 static void do_enable_hdmi(struct display_info_t const *dev)
@@ -1211,6 +1222,7 @@ static void led_logosni8_party_light(void)
 }
 #endif
 
+#ifndef CONFIG_SPL_BUILD
 static int setup_fec(void)
 {
 	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1230,6 +1242,7 @@ static int setup_fec(void)
 
 	return 0;
 }
+#endif /* CONFIG_SPL_BUILD */
 
 // TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_r(void)
@@ -1260,6 +1273,7 @@ int board_early_init_r(void)
  * Do not overwrite the console
  * Use always serial for U-Boot console
  */
+#ifndef CONFIG_SPL_BUILD
 int overwrite_console(void)
 {
 	return 1;
@@ -1274,6 +1288,7 @@ int print_Logos_Logo(void)
     }
     return 0;
 }
+#endif /* CONFIG_SPL_BUILD */
 
 #ifdef DEMO_MODE
 /*
@@ -1395,6 +1410,7 @@ int bootup_Song_Star_Wars(void)
 }
 #endif // DEMO_MODE
 
+#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_CMD_BMODE // TODO Adapt to our board or remove
 static const struct boot_mode board_boot_modes[] = {
 	/* 8 bit bus width */
@@ -1406,6 +1422,7 @@ static const struct boot_mode board_boot_modes[] = {
 	{NULL, 0},
 };
 #endif // CONFIG_CMD_BMODE
+#endif /* CONFIG_SPL_BUILD */
 
 // Card detected function for seeing if a card is present
 int board_mmc_getcd(struct mmc *mmc)
@@ -1413,12 +1430,18 @@ int board_mmc_getcd(struct mmc *mmc)
 	struct fsl_esdhc_cfg *cfg = (struct fsl_esdhc_cfg *)mmc->priv;
 	int ret = 0;
 
-	if (cfg->esdhc_base == USDHC1_BASE_ADDR)
-		ret = !gpio_get_value(SDIO_CD);
+	if (cfg->esdhc_base == USDHC1_BASE_ADDR) {
+		gpio_request(SDIO_CD, "SDIO_CD");
+		ret = !(gpio_get_value(SDIO_CD));
+		return ret;
+	}
 	else
-		ret = 1; // If it is not the SD card - it should be marked as present
+	{
+		ret = -1; // If it is not the SD card - it should be marked as present
+		return ret;
+	}
 
-	return ret;
+	return -1;
 }
 
 // I2c Functions for the full u-boot
@@ -1457,7 +1480,6 @@ int i2c_write(uint8_t chip, unsigned int addr, int alen,
 #endif /* CONFIG_SPL_BUILD */
 
 // These function are not needed by SPL
-//#ifndef CONFIG_SPL_BUILD
 int board_mmc_init(struct bd_info *bis) {
 	/*
 	  * Upon reading BOOT_CFG register the following map is done:
@@ -1512,7 +1534,7 @@ int board_mmc_init(struct bd_info *bis) {
  * 0x08 - selects I2C4_SDA_CAM
  */
 #ifndef CONFIG_SPL_BUILD
-void i2c_multiplexer(uint8_t select)
+int i2c_multiplexer(uint8_t select)
 {
 	struct udevice *dev;
 	u8 addr = 0x00;
@@ -1569,9 +1591,13 @@ int board_mmc_init_dts(void) {
 	return 0;
 }
 
+#ifndef CONFIG_SPL_BUILD
 int board_init(void)
 {
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
+
+	// Early setup of I2C
+	SETUP_IOMUX_PADS(conf_i2c_pads);
 
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
@@ -1651,7 +1677,7 @@ int misc_init_r(void)
 	env_set_hex("reset_cause", get_imx_reset_cause());
 	return 0;
 }
-
+#endif /* CONFIG_SPL_BUILD */
 /*
  * The board_late_init function is called late during the bootloader initialisation
  * Therefore, all the functionality needed late during the bootup should be added here - this is e.g. the UART printing
@@ -1672,7 +1698,8 @@ int board_late_init(void)
 	ret = uclass_get_device(UCLASS_THERMAL, 0, &thermal_dev);
 
 	// Get some information about the temperatur of the CPU
-	ret = imx_thermal_get_temp(thermal_dev, &cpu_tmp);
+	//ret = imx_thermal_get_temp(thermal_dev, &cpu_tmp);
+	ret = thermal_get_temp(thermal_dev, &cpu_tmp);
 
 	if (!ret)
 		printf("CPU temperature at %d Celsius\n", cpu_tmp);
@@ -1699,7 +1726,7 @@ int board_late_init(void)
 	 }
 
 	// Increase bootcount Manually
-	bootcount_inc();
+	bootcount_inc_logos();
 
 
 	return 0;
@@ -1767,7 +1794,7 @@ static int imx_wdt_start(struct udevice *dev, u64 timeout, ulong flags)
  * Board specific reset that is system reset.
  */
 
-void reset_cpu(ulong addr)
+void reset_cpu(void)
 { 	struct udevice *dev = 0;
 	u64 timeout = 0;
 	ulong flags = 0;
@@ -1792,7 +1819,7 @@ void reset_cpu(ulong addr)
 #include "asm/arch/crm_regs.h"
 #include "asm/arch/mx6dl-ddr.h"
 
-void reset_cpu(ulong addr)
+void reset_cpu(void)
 {
 }
 
@@ -1883,8 +1910,8 @@ void board_boot_order(u32 *spl_boot_list)
 	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 
 	// We need to decide which mmc to boot from - for now we are using the SD card
-	spl_boot_list[0] = BOOT_DEVICE_MMC2_2;
-	spl_boot_list[1] = BOOT_DEVICE_MMC1;
+	spl_boot_list[0] = BOOT_DEVICE_MMC1;
+	spl_boot_list[1] = BOOT_DEVICE_MMC2_2;
 	spl_boot_list[2] = BOOT_DEVICE_MMC2;
 }
 
@@ -1901,7 +1928,7 @@ static void ccgr_init(void)
 	writel(0x0F0000F3, &ccm->CCGR5);
 	writel(0x000003FF, &ccm->CCGR6);
 }
-
+#ifdef DRAM_INIT
 static int mx6dl_dcd_table[] = {
 	/* ddr-setup.cfg */
 
@@ -2059,12 +2086,9 @@ static void ddr_init(int *table, int size)
 
 static void spl_dram_init(void)
 {
-	//gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
-	//gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
-	//gd->bd->bi_dram[0].size = imx_ddr_size();
-
 	ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
 }
+#endif /* DRAM_INIT */
 
 /* - This function looks for the name of the U-Boot binary
  * This is not a perfect match. Add the name when building the fit image
@@ -2104,7 +2128,7 @@ int board_early_init_f(void)
 
 // Dummy function for I2C support
 int gpio_request_by_name_nodev(ofnode node, const char *list_name, int index,
-			       struct gpio_desc *desc, int flags)
+			struct gpio_desc *desc, int flags)
 {
 
 	return 0;
@@ -2164,19 +2188,15 @@ void board_init_f(ulong dummy)
 	env_set("falcon_args_file", "Nicore8");
 
 	// Set i2c bus to 3 - Boot Counter
-	struct udevice *dev;
 	int err;
 
-	//err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x51, 1, &dev);
 	err = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
 	if (err) {
 		puts("Error switching I2C bus\n");
-		return err;
 	}
 
 	// Increase bootcount Manually
-	bootcount_inc();
-
+	bootcount_inc_logos();
 
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
