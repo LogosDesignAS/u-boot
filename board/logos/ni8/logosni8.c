@@ -1422,6 +1422,7 @@ int board_mmc_getcd(struct mmc *mmc)
 }
 
 // I2c Functions for the full u-boot
+#ifndef CONFIG_SPL_BUILD
 int i2c_read(uint8_t chip, unsigned int addr, int alen,
 			 uint8_t *buffer, int len)
 
@@ -1453,6 +1454,7 @@ int i2c_write(uint8_t chip, unsigned int addr, int alen,
 	// Write to the I2c Device
 	return dm_i2c_write(dev, 0x00, buffer, alen);
 }
+#endif /* CONFIG_SPL_BUILD */
 
 // These function are not needed by SPL
 //#ifndef CONFIG_SPL_BUILD
@@ -1509,6 +1511,7 @@ int board_mmc_init(struct bd_info *bis) {
  * 0x04 - selects I2C4_SDA_GP
  * 0x08 - selects I2C4_SDA_CAM
  */
+#ifndef CONFIG_SPL_BUILD
 void i2c_multiplexer(uint8_t select)
 {
 	struct udevice *dev;
@@ -1527,6 +1530,7 @@ void i2c_multiplexer(uint8_t select)
 	}
 
 };
+#endif /* CONFIG_SPL_BUILD */
 
 int board_mmc_init_dts(void) {
 	/*
@@ -1653,6 +1657,7 @@ int misc_init_r(void)
  * Therefore, all the functionality needed late during the bootup should be added here - this is e.g. the UART printing
  * Which is first available late in the bootup, because the Test Carrier Board needs to be powered up.
  */
+#ifndef CONFIG_SPL_BUILD
 int board_late_init(void)
 {
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
@@ -1700,6 +1705,7 @@ int board_late_init(void)
 	return 0;
 
 }
+#endif /* CONFIG_SPL_BUILD */
 //#endif /* CONFIG_SPL_BUILD */
 
 
@@ -2161,8 +2167,8 @@ void board_init_f(ulong dummy)
 	struct udevice *dev;
 	int err;
 
-	err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x51, 1, &dev);
-
+	//err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x51, 1, &dev);
+	err = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
 	if (err) {
 		puts("Error switching I2C bus\n");
 		return err;
