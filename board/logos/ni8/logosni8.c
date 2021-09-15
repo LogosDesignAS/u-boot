@@ -1550,6 +1550,7 @@ int i2c_multiplexer(uint8_t select)
 	if (dm_i2c_write(dev, addr, &select, 1)) {
 		printf("dm_i2c_write: error sending\n");
 	}
+	return 0;
 
 };
 #endif /* CONFIG_SPL_BUILD */
