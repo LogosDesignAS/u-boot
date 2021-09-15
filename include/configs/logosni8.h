@@ -61,6 +61,10 @@
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* I2C Configs */
+#ifdef CONFIG_SPL_BUILD
+// For SPL use Legacy I2C Settings
+#define CONFIG_SYS_I2C_LEGACY
+#endif /* CONFIG_SPL_BUILD */
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
 #define CONFIG_SYS_I2C_MXC_I2C2				// enable I2C bus 2
