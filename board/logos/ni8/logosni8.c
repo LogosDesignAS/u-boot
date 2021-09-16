@@ -57,10 +57,12 @@
 #include "bootmelody.h"
 #endif // DEMO_MODE
 
+
 #ifdef CONFIG_SPL_BUILD
 //#define DRAM_INIT
 #endif /* CONFIG_SPL_BUILD */
 
+//#define LOGOS_DEBUG
 #ifdef LOGOS_DEBUG
 #define DEBUG_PUTS(s)  puts(s)
 #else
@@ -2130,7 +2132,7 @@ int board_early_init_f(void)
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 
 	// Early setup of I2C
-	SETUP_IOMUX_PADS(conf_i2c_pads);
+	//SETUP_IOMUX_PADS(conf_i2c_pads);
 
 	return 0;
 }
@@ -2197,12 +2199,13 @@ void board_init_f(ulong dummy)
 	env_set("falcon_args_file", "Nicore8");
 
 	// Set i2c bus to 3 - Boot Counter
+	/*
 	int err;
-
 	err = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
 	if (err) {
 		DEBUG_PUTS("Error switching I2C bus\n");
 	}
+	*/
 
 	// Increase bootcount Manually
 	bootcount_inc_logos();

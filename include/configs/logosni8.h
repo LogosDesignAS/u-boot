@@ -24,7 +24,7 @@
 //Enable timestamps to measure boot speed
 #define CONFIG_TIMESTAMP
 //define debug mode to remove prints
-//#define LOGOS_DEBUG
+
 
 // Defines for booting the kernel from SPL
 #define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"Nicore8.itb"//"uImage2"
