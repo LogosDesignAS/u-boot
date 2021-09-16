@@ -61,6 +61,14 @@
 //#define DRAM_INIT
 #endif /* CONFIG_SPL_BUILD */
 
+#ifdef LOGOS_DEBUG
+#define DEBUG_PUTS(s)  puts(s)
+#else
+#define DEBUG_PUTS(s) do {} while (0)  
+#endif
+
+
+
 
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
@@ -820,7 +828,7 @@ static void setup_spi(void)
 // Function for increasing Boot Count
 static inline void bootcount_inc_logos(void) {
 	unsigned long bootcount = bootcount_load();
-	puts("Increase Bootcount\n");
+	DEBUG_PUTS("Increase Bootcount\n");
 	bootcount_store(++bootcount);
 }
 #ifndef CONFIG_SPL_BUILD
@@ -1515,11 +1523,11 @@ int board_mmc_init(struct bd_info *bis) {
 	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 
 	if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
-		puts("WARNING: failed to initialize SD\n");
+		DEBUG_PUTS("WARNING: failed to initialize SD\n");
 	if(fsl_esdhc_initialize(bis, &usdhc_cfg[1]))
-		puts("WARNING: failed to initialize eMMC on Test Carrier\n");
+		DEBUG_PUTS("WARNING: failed to initialize eMMC on Test Carrier\n");
 	if(fsl_esdhc_initialize(bis, &usdhc_cfg[2]))
-		puts("WARNING: failed to initialize eMMC on Nicore8\n");
+		DEBUG_PUTS("WARNING: failed to initialize eMMC on Nicore8\n");
 
 	return 0;
 }
@@ -1722,7 +1730,7 @@ int board_late_init(void)
 
 	err = i2c_get_chip_for_busnum(BOOTCOUNT_I2C_BUS, 0x51, 1, &dev);
 	if (err) {
-		puts("Error switching I2C bus\n");
+		DEBUG_PUTS("Error switching I2C bus\n");
 		return err;
 	 }
 
@@ -1838,12 +1846,12 @@ int spl_start_uboot(void)
 	/* Only enter in Falcon mode if GP_TEST_SMARC is enabled */
 	if ( gpio_get_value(GP_TEST_SMARC) == 0)
 	{
-		puts("Booting U-Boot\n");
+		DEBUG_PUTS("Booting U-Boot\n");
 		return 1;
 	}
 	else
 	{
-		puts("Booting OS\n");
+		DEBUG_PUTS("Booting OS\n");
 		return 0;
 	}
 }
@@ -1859,16 +1867,16 @@ void spl_board_init(void)
 
 	switch (boot_device) {
 	case BOOT_DEVICE_MMC1:
-		puts("Booting from MMC\n");
+		DEBUG_PUTS("Booting from MMC\n");
 		break;
 	case BOOT_DEVICE_NAND:
-		puts("Booting from NAND\n");
+		DEBUG_PUTS("Booting from NAND\n");
 		break;
 	case BOOT_DEVICE_SATA:
-		puts("Booting from SATA\n");
+		DEBUG_PUTS("Booting from SATA\n");
 		break;
 	default:
-		puts("Unknown boot device\n");
+		DEBUG_PUTS("Unknown boot device\n");
 	}
 
 	/* PMIC init */
@@ -2193,7 +2201,7 @@ void board_init_f(ulong dummy)
 
 	err = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
 	if (err) {
-		puts("Error switching I2C bus\n");
+		DEBUG_PUTS("Error switching I2C bus\n");
 	}
 
 	// Increase bootcount Manually

@@ -21,6 +21,11 @@
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
+//Enable timestamps to measure boot speed
+#define CONFIG_TIMESTAMP
+//define debug mode to remove prints
+//#define LOGOS_DEBUG
+
 // Defines for booting the kernel from SPL
 #define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"Nicore8.itb"//"uImage2"
 #define		CONFIG_SYS_SPL_ARGS_ADDR					0x27500000
@@ -135,6 +140,27 @@
 
 #define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
 
-//#define CONFIG_EXTRA_ENV_SETTINGS
+//for developer mode
+/*
+#define CONFIG_EXTRA_ENV_SETTINGS \
+  "autoload=no\0"\
+  "serverip=172.16.1.60\0"\
+  "scriptaddr=0x12000000\0"\
+  "scriptfile=nicore8/scripts/developer.img"\
+    "dhcp;"\
+    "tftp ${scriptaddr} ${scriptfile} source ${scriptaddr};\0"\
+  "u-bootfile=nicore8/u-boot/u-boot-with-spl.imx\0"\
+  "u-bootaddr=0x12000000\0"\
+    "load_u-boot=mw.b ${u-bootaddr} 0x0 0x200000;"\
+    "tftp ${u-bootaddr} ${u-bootfile};\0"\
+  "install_u-boot=mmc dev 2 1;"\
+    "blocks= ${filesize} / 0x200;"\
+    "blocks=${blocks} + 1;"\
+    "mmc erase 0 0x1000;"\
+    "mmc write ${u-bootaddr} 2 ${blocks};\0"\
+  "update_u-boot=run load_u-boot;"\
+    "run install_u-boot;\0"\
+  
+*/
 
 #endif // __LOGOS_NI8_H__
