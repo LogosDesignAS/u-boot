@@ -347,6 +347,7 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 };
 
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_DM_ETH
 static iomux_v3_cfg_t const enet_pads1[] = {
 	/* MDIO */
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
@@ -392,7 +393,8 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
-#endif /* CONFIG_SPL_BUILD */
+#endif // CONFIG_DM_ETH
+#endif // CONFIG_SPL_BUILD
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
@@ -419,7 +421,7 @@ static iomux_v3_cfg_t const ni8_led_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), // - Configured as output 40Ohm
 };
 
-#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
+#ifdef CONFIG_DM_I2C
 /* I2C Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	// Pin configuration for I2C
@@ -434,12 +436,10 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	/* see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(KEY_COL3__I2C2_SCL, I2C_PAD_CTRL),
 
-	
 	IOMUX_PAD_CTRL(ENET_TX_EN__I2C4_SCL, I2C_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_TXD1__I2C4_SDA, I2C_PAD_CTRL),
-
 };
-#endif
+#endif // CONFIG_DM_I2C
 
 /* WatchDog Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_wdog_pads[] = {
@@ -709,7 +709,9 @@ static void setup_iomux_boot_config(void)
 	gpio_direction_input(GPIO_EIM_DA14);
 	gpio_direction_input(GPIO_EIM_DA15);
 };
+
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIUG_DM_ETH
 static void setup_iomux_enet(void)
 {
 	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
@@ -745,6 +747,7 @@ static void setup_iomux_enet(void)
 	SETUP_IOMUX_PADS(enet_pads2);
 	mdelay(10);	// Wait 5000 us before using mii interface - and pull the reset pin low
 }
+#endif // CONFIUG_DM_ETH
 #endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -824,6 +827,7 @@ static inline void bootcount_inc_logos(void) {
 	bootcount_store(++bootcount);
 }
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_DM_ETH
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
@@ -841,7 +845,8 @@ int board_eth_init(struct bd_info *bis)
 	setup_iomux_enet();
 	return cpu_eth_init(bis);
 }
-#endif /* CONFIG_SPL_BUILD */
+#endif // CONFIG_DM_ETH
+#endif // CONFIG_SPL_BUILD
 
 #ifdef CONFIG_VIDEO_IPUV3
 static void do_enable_hdmi(struct display_info_t const *dev)
@@ -1223,6 +1228,7 @@ static void led_logosni8_party_light(void)
 #endif
 
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_DM_ETH
 static int setup_fec(void)
 {
 	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1242,16 +1248,13 @@ static int setup_fec(void)
 
 	return 0;
 }
-#endif /* CONFIG_SPL_BUILD */
+#endif // CONFIG_DM_ETH
+#endif // CONFIG_SPL_BUILD
 
-// TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_r(void)
 {
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
-
-	// Config environment variables TODO Test if this is needed
-	env_set("ethact", "FEC");
 
 #ifdef CONFIG_CMD_I2C
 	// Early setup of I2C
@@ -1410,19 +1413,21 @@ int bootup_Song_Star_Wars(void)
 }
 #endif // DEMO_MODE
 
+/*
 #ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_CMD_BMODE // TODO Adapt to our board or remove
 static const struct boot_mode board_boot_modes[] = {
-	/* 8 bit bus width */
+	// 8 bit bus width
 	{"sd1", MAKE_CFGVAL(0x42, 0x28, 0x00, 0x00)},
-	/* 8 bit bus width */
+	// 8 bit bus width
 	{"emmc0", MAKE_CFGVAL(0x40, 0x30, 0x00, 0x00)},
-	/* 8 bit bus width */
+	// 8 bit bus width
 	{"emmc1", MAKE_CFGVAL(0x40, 0x38, 0x00, 0x00)},
 	{NULL, 0},
 };
 #endif // CONFIG_CMD_BMODE
-#endif /* CONFIG_SPL_BUILD */
+#endif // CONFIG_SPL_BUILD
+*/
 
 // Card detected function for seeing if a card is present
 int board_mmc_getcd(struct mmc *mmc)
@@ -1628,10 +1633,14 @@ int board_init(void)
 	setup_display();
 #endif // CONFIG_VIDEO_IPUV3
 
+#ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_DM_ETH
 	// Setup Clocks for Ethernet
-#ifdef CONFIG_FEC_MXC
 	setup_fec();
-#endif
+    // ETH init
+	setup_iomux_enet();
+#endif // CONFIG_DM_ETH
+#endif // CONFIG_SPL_BUILD
 
 #if defined(CONFIG_OF_CONTROL)
 	// Init mmc - Ontop of Device tree - Enable power for SD Card
@@ -1643,9 +1652,6 @@ int board_init(void)
 	board_ehci_hcd_init(1);
 	board_ehci_power(0, 1);
 #endif
-
-	// ETH init
-	setup_iomux_enet();
 
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
@@ -1661,23 +1667,6 @@ int board_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_PREBOOT
-// Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
-#endif
-
-int misc_init_r(void)
-{
-
-#ifdef CONFIG_PREBOOT
-	//preboot_keys();
-#endif
-
-#ifdef CONFIG_CMD_BMODE
-	add_board_boot_modes(board_boot_modes);
-#endif
-	env_set_hex("reset_cause", get_imx_reset_cause());
-	return 0;
-}
 #endif /* CONFIG_SPL_BUILD */
 /*
  * The board_late_init function is called late during the bootloader initialisation
@@ -1734,8 +1723,6 @@ int board_late_init(void)
 
 }
 #endif /* CONFIG_SPL_BUILD */
-//#endif /* CONFIG_SPL_BUILD */
-
 
 // Enable watchdog when device tree is enabled for SPL
 #ifndef CONFIG_SPL_BUILD
@@ -1824,8 +1811,6 @@ void reset_cpu(void)
 {
 }
 
-//#define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name | pad_ctrl)
-
 #ifdef CONFIG_SPL_OS_BOOT
 int spl_start_uboot(void)
 {
@@ -1853,7 +1838,6 @@ int spl_start_uboot(void)
 /* its our chance to print info about boot device */
 void spl_board_init(void)
 {
-	//printf("%d\n",spl_start_uboot());
 	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
 	u32 boot_device = BOOT_DEVICE_MMC1;
 
@@ -1870,11 +1854,7 @@ void spl_board_init(void)
 	default:
 		puts("Unknown boot device\n");
 	}
-
-	/* PMIC init */
-	//setup_pmic();
 }
-
 
 void board_boot_order(u32 *spl_boot_list)
 {
@@ -1915,7 +1895,6 @@ void board_boot_order(u32 *spl_boot_list)
 	spl_boot_list[1] = BOOT_DEVICE_MMC2_2;
 	spl_boot_list[2] = BOOT_DEVICE_MMC2;
 }
-
 
 static void ccgr_init(void)
 {
@@ -2121,8 +2100,10 @@ int board_early_init_f(void)
 	gpio_direction_output(GPIO_LED_2, 0);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 
+#ifdef CONFIG_DM_I2C
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
+#endif // CONFIG_DM_I2C
 
 	return 0;
 }
@@ -2153,7 +2134,7 @@ void board_init_f(ulong dummy)
 	board_early_init_f();
 
 	/* Enable device tree and early DM support*/
-	spl_early_init();
+	//spl_early_init();
 
 	/* UART clocks enabled and gd valid - init serial console */
 #ifdef CONFIG_SPL_SERIAL_SUPPORT
