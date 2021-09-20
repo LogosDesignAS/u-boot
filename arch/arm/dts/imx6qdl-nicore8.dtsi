@@ -286,15 +286,6 @@
 
 
 };
-/* I2c - Bus 1 */
-
-&i2c1 {
-	clock-frequency = <100000>;
-	pinctrl-names = "default";
-	//pinctrl-0 = <&pinctrl_i2c3>;
-	status = "disabled";
-};
-
 
 /* I2c - Bus 2 */
 &i2c2 {
@@ -326,27 +317,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi1>;
 	status = "okay";
-
-	flash: m25p80@0 {
-		compatible = "Winbond, w25q32dw";
-		spi-max-frequency = <5000000>;
-		reg = <0>;
-		#address-cells = <1>;
-		#size-cells = <1>;
-		mtd@00000000 {
-			label = "U-Boot";
-			reg = <0x0 0xC0000>;
-		};
-
-		mtd@000C0000 {
-			label = "env";
-			reg = <0xC0000 0x2000>;
-		};
-		mtd@000C2000 {
-			label = "splash";
-			reg = <0xC2000 0x13e000>;
-		};
-	};
 };
 
 &fec {
