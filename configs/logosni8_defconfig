@@ -24,7 +24,7 @@ CONFIG_CMD_GPIO=y
 CONFIG_MXC_UART=y
 
 # Enable LTO - enabled for release - removes debug functionality
-#CONFIG_LTO=y
+CONFIG_LTO=y
 
 # Configuration of SPL
 CONFIG_SPL=y
