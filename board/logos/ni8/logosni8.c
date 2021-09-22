@@ -51,7 +51,9 @@
 #include "logosLogo.h"
 
 // Bootcount
+#ifdef CONFIG_BOOTCOUNT_I2C
 #include <bootcount.h>
+#endif //CONFIG_BOOTCOUNT_I2C
 
 #ifdef DEMO_MODE
 #include "bootmelody.h"
@@ -821,11 +823,13 @@ static void setup_spi(void)
 
 
 // Function for increasing Boot Count
+#ifdef CONFIG_BOOTCOUNT_I2C
 static inline void bootcount_inc_logos(void) {
 	unsigned long bootcount = bootcount_load();
 	puts("Increase Bootcount\n");
 	bootcount_store(++bootcount);
 }
+#endif // CONFIG_BOOTCOUNT_I2C
 #ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_DM_ETH
 int board_phy_config(struct phy_device *phydev)
@@ -1256,7 +1260,7 @@ int board_early_init_r(void)
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
 
-#ifdef CONFIG_CMD_I2C
+#ifdef CONFIG_DM_I2C
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif
@@ -1428,6 +1432,15 @@ static const struct boot_mode board_boot_modes[] = {
 #endif // CONFIG_CMD_BMODE
 #endif // CONFIG_SPL_BUILD
 */
+
+// gpio_request_by_name_nodev'
+#ifndef CONFIG_SPL_BUILD
+int gpio_request_by_name_nodev(ofnode node, const char *list_name, int index,
+							   struct gpio_desc *desc, int flags)
+{
+	return 0;
+}
+#endif //CONFIG_SPL_BUILD
 
 // Card detected function for seeing if a card is present
 int board_mmc_getcd(struct mmc *mmc)
@@ -1603,7 +1616,9 @@ int board_init(void)
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
 	// Early setup of I2C
+#ifdef CONFIG_DM_I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
+#endif
 
 	// First setting up the LED2 and LED3 on the Nicore8 for demo purposes
 	setup_iomux_leds();
@@ -1654,7 +1669,9 @@ int board_init(void)
 #endif
 
 	// Early setup of I2C
+#ifdef CONFIG_DM_I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
+#endif //CONFIG_DM_I2C
 #endif
 
 	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID TODO Verify if this is needed
@@ -1705,6 +1722,7 @@ int board_late_init(void)
 	led_logosni8_party_light();
 #endif
 
+#ifdef CONFIG_BOOTCOUNT_I2C
 	// Set i2c bus to 3 - Boot Counter
 	struct udevice *dev;
 	int err;
@@ -1717,6 +1735,7 @@ int board_late_init(void)
 
 	// Increase bootcount Manually
 	bootcount_inc_logos();
+#endif // CONFIG_BOOTCOUNT_I2C
 
 
 	return 0;
@@ -2170,6 +2189,7 @@ void board_init_f(ulong dummy)
 	env_set("falcon_args_file", "Nicore8");
 
 	// Set i2c bus to 3 - Boot Counter
+#ifdef CONFIG_BOOTCOUNT_I2C
 	int err;
 
 	err = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
@@ -2179,6 +2199,7 @@ void board_init_f(ulong dummy)
 
 	// Increase bootcount Manually
 	bootcount_inc_logos();
+#endif //CONFIG_BOOTCOUNT_I2C
 
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);

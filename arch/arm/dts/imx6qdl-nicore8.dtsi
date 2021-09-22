@@ -12,9 +12,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
-#include <dt-bindings/clock/imx6qdl-clock.h>
 #include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/input/input.h>
+//#include <dt-bindings/input/input.h>
 
 / {
 
@@ -22,25 +21,6 @@
 		device_type =
 				"memory";
 				reg = <0x10000000 0x80000000>;
-	};
-/*
-	bootcount {
-		compatible = "u-boot,bootcount-i2c-eeprom";
-		i2c-eeprom = <&bootcount>;
-	};
- */
-
-	aliases {
-		mmc0 = &usdhc1;
-		mmc1 = &usdhc3;
-		mmc2 = &usdhc4;
-		usb0 = &usbotg;
-		usb1 = &usbh1;
-		ethernet0 = &fec;
-	};
-
-	leds: leds {
-		compatible = "gpio-leds";
 	};
 
 
@@ -387,11 +367,6 @@
 	status = "okay";
 };
 
-/* WDOG - 1 */
-&wdog1 {
-	status = "disabled";
-};
-
 /* WDOG - 2 */
 &wdog2 {
 	pinctrl-names = "default";
@@ -400,21 +375,4 @@
 	status = "okay";
 };
 
-/* FRAM set as EEPROM because of Bootcount*/
-/*
-&eeprom {
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
-
-		vpd@0 {
-			reg = <0 800>;
-		};
-			bootcount: bootcount {
-			reg = <1022 2>;
-		};
-	};
-};
- */
 
