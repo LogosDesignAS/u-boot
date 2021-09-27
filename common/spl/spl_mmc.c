@@ -268,6 +268,7 @@ static int spl_mmc_do_fs_boot(struct spl_image_info *spl_image, struct mmc *mmc,
 			      const char *filename)
 {
 	int err = -ENOSYS;
+
 #ifdef CONFIG_SPL_FS_FAT
 	if (!spl_start_uboot()) {
 		err = spl_load_image_fat_os(spl_image, mmc_get_blk_desc(mmc),
@@ -370,6 +371,7 @@ int spl_mmc_load(struct spl_image_info *spl_image,
 	u32 boot_mode;
 	int err = 0;
 	__maybe_unused int part = 0;
+
 	/* Perform peripheral init only once */
 	if (!mmc) {
 		err = spl_mmc_find_device(&mmc, bootdev->boot_device);
@@ -406,6 +408,7 @@ int spl_mmc_load(struct spl_image_info *spl_image,
 		/* Fall through */
 	case MMCSD_MODE_RAW:
 		debug("spl: mmc boot mode: raw\n");
+
 		if (!spl_start_uboot()) {
 			err = mmc_load_image_raw_os(spl_image, mmc);
 			if (!err)
