@@ -43,7 +43,6 @@
 
 #endif /* CONFIG_SPL */
 
-
 #define CONFIG_MXC_UART_BASE							UART4_BASE
 
 /*
@@ -78,7 +77,6 @@
 #define CONFIG_SYS_I2C_SPEED				100000
 #define CONFIG_I2C_EDID
 
-
 /* Bootcount Commands - Use i2C */
 #define BOOTCOUNT_I2C_BUS					3
 #define CONFIG_SYS_I2C_RTC_ADDR				0x51
@@ -94,51 +92,16 @@
 #endif
 
 /* Ethernet config */
+#ifdef CONFIG_DM_ETH
 #define CONFIG_FEC_MXC
 #define CONFIG_FEC_XCV_TYPE					RGMII
 #define IMX_FEC_BASE						ENET_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR				0x04
 #define CONFIG_ETHPRIME						"FEC"
-
-/*
-#ifdef CONFIG_USB_STORAGE
-#define DISTRO_BOOT_DEV_USB(func) func(USB, usb, 0) func(USB, usb, 1)
-#else
-#define DISTRO_BOOT_DEV_USB(func)
-#endif
-
-#ifdef CONFIG_CMD_PXE
-#define DISTRO_BOOT_DEV_PXE(func) func(PXE, pxe, na)
-#else
-#define DISTRO_BOOT_DEV_PXE(func)
-#endif
-
-#ifdef CONFIG_CMD_DHCP
-#define DISTRO_BOOT_DEV_DHCP(func) func(DHCP, dhcp, na)
-#else
-#define DISTRO_BOOT_DEV_DHCP(func)
-#endif
-
-#define CONFIG_USBD_HS
-*/
-
-/* USB Configs */
-/*
-#define CONFIG_USB_MAX_CONTROLLER_COUNT     2
-#define CONFIG_EHCI_HCD_INIT_AFTER_RESET	// For OTG port
-#define CONFIG_MXC_USB_PORTSC	            (PORT_PTS_UTMI | PORT_PTS_PTW)
-#define CONFIG_MXC_USB_FLAGS	            0
-*/
+#endif // CONFIG_DM_ETH
 
 #define BOOT_TARGET_DEVICES(func) \
 	DISTRO_BOOT_DEV_MMC(func)
-    /*
-	DISTRO_BOOT_DEV_USB(func) \
-	DISTRO_BOOT_DEV_PXE(func) \
-	DISTRO_BOOT_DEV_DHCP(func)
-    */
-
-#define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
 
 //for developer mode
 /*

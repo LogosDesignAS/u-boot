@@ -268,9 +268,7 @@ static int spl_mmc_do_fs_boot(struct spl_image_info *spl_image, struct mmc *mmc,
 			      const char *filename)
 {
 	int err = -ENOSYS;
-//puts("spl_mmc_do_fs_boot\n");
 #ifdef CONFIG_SPL_FS_FAT
-//put("about to check spl_start_uboot 1\n");
 	if (!spl_start_uboot()) {
 		err = spl_load_image_fat_os(spl_image, mmc_get_blk_desc(mmc),
 			CONFIG_SYS_MMCSD_FS_BOOT_PARTITION);
@@ -286,7 +284,6 @@ static int spl_mmc_do_fs_boot(struct spl_image_info *spl_image, struct mmc *mmc,
 #endif
 #endif
 #ifdef CONFIG_SPL_FS_EXT4
-//put("about to check spl_start_uboot 2\n");
 	if (!spl_start_uboot()) {
 		err = spl_load_image_ext_os(spl_image, mmc_get_blk_desc(mmc),
 			CONFIG_SYS_MMCSD_FS_BOOT_PARTITION);
@@ -373,7 +370,6 @@ int spl_mmc_load(struct spl_image_info *spl_image,
 	u32 boot_mode;
 	int err = 0;
 	__maybe_unused int part = 0;
-//puts("spl_mmc_load\n");
 	/* Perform peripheral init only once */
 	if (!mmc) {
 		err = spl_mmc_find_device(&mmc, bootdev->boot_device);
@@ -410,7 +406,6 @@ int spl_mmc_load(struct spl_image_info *spl_image,
 		/* Fall through */
 	case MMCSD_MODE_RAW:
 		debug("spl: mmc boot mode: raw\n");
-	//put("about to check spl_start_uboot 3\n");
 		if (!spl_start_uboot()) {
 			err = mmc_load_image_raw_os(spl_image, mmc);
 			if (!err)
