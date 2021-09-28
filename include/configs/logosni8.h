@@ -21,22 +21,31 @@
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
-// Defines for booting the kernel from SPL
-#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"Nicore8.itb"//"uImage2"
-#define		CONFIG_SYS_SPL_ARGS_ADDR					0x27500000
-#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME				"Nicore8.itb"//"uImage2"
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  		0x800   /* 1MB */
-#define 	CONFIG_CMD_SPL_WRITE_SIZE 					0x00100000
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 		(CONFIG_CMD_SPL_WRITE_SIZE / 512)
-#define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR		0x500  /* xxMB */
+// For SPL Benchmarking this Define is used to enable some early printing with a very simple software defined UART usign GPIOs: TODO: Remove this before merging
+#define TEST_TIMING
 
-// For SPL to run the kernel a larger Malloc size is needed
+// Defines for booting the kernel from SPL
+//#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"nicore8br_initrd.itb"
+//#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME					"Nicore8.itb"		//"uImage2"
+#define		CONFIG_SYS_SPL_ARGS_ADDR						0x1ffe5000
+#define		CONFIG_CMD_SPL_WRITE_SIZE						0x10000
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  			0x2000				/* Block offset for Arguments - fdt*/
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 			0x74
+#define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR			0x0					/* 0MB at partition 4 in MMC dev 2  - offset of kernel*/
+#define     CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 	4
+
+// Add possibilities to adjust the Malloc size - which is needed with SPL and large kernels
 #ifdef CONFIG_SYS_SPL_MALLOC_SIZE
 #undef CONFIG_SYS_SPL_MALLOC_SIZE
-#define		CONFIG_SYS_SPL_MALLOC_SIZE					0x1000000	/* 16 MB */
+#define		CONFIG_SYS_SPL_MALLOC_SIZE						0x100000			/* 1 MB */
 #endif
 
 #endif /* CONFIG_SPL */
+
+// Mach Type
+#define CONFIG_MACH_TYPE	3980
+#define CONFIG_SYS_BOOTMAPSZ		0x10000000
+#define CONFIG_BOOTARGS   "console=ttymxc3,115200 printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel"
 
 
 #define CONFIG_MXC_UART_BASE							UART4_BASE
@@ -48,13 +57,13 @@
 #undef CONFIG_DISPLAY_CPUINFO
 #undef CONFIG_DISPLAY_BOARDINFO
 
-#define CONFIG_NR_DRAM_BANKS                1
-#define CONFIG_SYS_MAX_FLASH_BANKS          1
-#define CONFIG_SYS_MALLOC_LEN               (10 * SZ_1M)
-#define PHYS_SDRAM                          MMDC0_ARB_BASE_ADDR
-#define CONFIG_SYS_SDRAM_BASE               PHYS_SDRAM
-#define CONFIG_SYS_INIT_RAM_ADDR            IRAM_BASE_ADDR
-#define CONFIG_SYS_INIT_RAM_SIZE            IRAM_SIZE
+#define CONFIG_NR_DRAM_BANKS				1
+#define CONFIG_SYS_MAX_FLASH_BANKS			1
+#define CONFIG_SYS_MALLOC_LEN				(10 * SZ_1M)
+#define PHYS_SDRAM							MMDC0_ARB_BASE_ADDR
+#define CONFIG_SYS_SDRAM_BASE				PHYS_SDRAM
+#define CONFIG_SYS_INIT_RAM_ADDR			IRAM_BASE_ADDR
+#define CONFIG_SYS_INIT_RAM_SIZE			IRAM_SIZE
 #define CONFIG_SYS_INIT_SP_OFFSET \
   (CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_ADDR \
@@ -79,8 +88,8 @@
 #define CONFIG_SYS_I2C_RTC_ADDR				0x51
 
 /* MMC Configs */
-#define CONFIG_SYS_FSL_ESDHC_ADDR           USDHC4_BASE_ADDR
-#define CONFIG_SYS_FSL_USDHC_NUM            3
+#define CONFIG_SYS_FSL_ESDHC_ADDR			USDHC4_BASE_ADDR
+#define CONFIG_SYS_FSL_USDHC_NUM			3
 
 #ifdef CONFIG_CMD_MMC
 #define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 1) func(MMC, mmc, 2)
@@ -119,10 +128,10 @@
 
 /* USB Configs */
 /*
-#define CONFIG_USB_MAX_CONTROLLER_COUNT     2
+#define CONFIG_USB_MAX_CONTROLLER_COUNT		2
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET	// For OTG port
-#define CONFIG_MXC_USB_PORTSC	            (PORT_PTS_UTMI | PORT_PTS_PTW)
-#define CONFIG_MXC_USB_FLAGS	            0
+#define CONFIG_MXC_USB_PORTSC				(PORT_PTS_UTMI | PORT_PTS_PTW)
+#define CONFIG_MXC_USB_FLAGS				0
 */
 
 #define BOOT_TARGET_DEVICES(func) \
@@ -133,8 +142,13 @@
 	DISTRO_BOOT_DEV_DHCP(func)
     */
 
-#define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
+//#define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
 
-//#define CONFIG_EXTRA_ENV_SETTINGS
-
+#define CONFIG_EXTRA_ENV_SETTINGS \
+	BOOTENV \
+	"bootcmd=run distro_bootcmd; " \
+		"usb start ; " \
+		"setenv stdout serial,vidconsole; " \
+		"setenv stdin serial,usbkbd\0" \
+	"console=ttymxc3\0"
 #endif // __LOGOS_NI8_H__

@@ -265,6 +265,12 @@ static iomux_v3_cfg_t const uart2_pads[] = {
 	IOMUX_PAD_CTRL(EIM_D27__UART2_RX_DATA, UART_PAD_CTRL),
 };
 
+/* Configuration of UART4 GPIO Pins for Logosni8 Testing boot time */
+static iomux_v3_cfg_t const uart4_gpio_pads[] = {
+		IOMUX_PAD_CTRL(CSI0_DAT12__GPIO5_IO30, NO_PAD_CTRL),
+		IOMUX_PAD_CTRL(CSI0_DAT13__GPIO5_IO31, NO_PAD_CTRL),
+};
+
 /* Configuration of UART4 for Logosni8 */
 static iomux_v3_cfg_t const uart4_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT12__UART4_TX_DATA, UART_PAD_CTRL),
@@ -1827,6 +1833,67 @@ void reset_cpu(void)
 {
 }
 
+
+static int spl_mmc_find_device(struct mmc **mmcp, u32 boot_device)
+{
+	int err, mmc_dev;
+
+	mmc_dev = 0;
+	if (mmc_dev < 0)
+		return mmc_dev;
+
+#if CONFIG_IS_ENABLED(DM_MMC)
+	err = mmc_init_device(mmc_dev);
+#else
+	err = mmc_initialize(NULL);
+#endif /* DM_MMC */
+	if (err) {
+#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+		printf("spl: could not initialize mmc. error: %d\n", err);
+#endif
+		return err;
+	}
+	*mmcp = find_mmc_device(mmc_dev);
+	err = *mmcp ? 0 : -ENODEV;
+	if (err) {
+#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+		printf("spl: could not find mmc device %d. error: %d\n",
+		       mmc_dev, err);
+#endif
+		return err;
+	}
+
+	return 0;
+}
+
+void mmc_change_part(int part)
+{
+	static struct mmc *mmc;
+	u32 boot_device = BOOT_DEVICE_MMC1;
+	int err = 0;
+	if (!mmc) {
+		err = spl_mmc_find_device(&mmc, boot_device);
+		if (err)
+			return err;
+
+		err = mmc_init(mmc);
+		if (err) {
+			mmc = NULL;
+#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+			printf("spl: mmc init failed with error: %d\n", err);
+#endif
+			return err;
+		}
+	}
+	err = mmc_switch_part(mmc, part);
+
+		if (err) {
+#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+			puts("spl: mmc partition switch failed\n");
+#endif
+		}
+}
+
 //#define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name | pad_ctrl)
 
 #ifdef CONFIG_SPL_OS_BOOT
@@ -1842,6 +1909,7 @@ int spl_start_uboot(void)
 	if ( gpio_get_value(GP_TEST_SMARC) == 0)
 	{
 		puts("Booting U-Boot\n");
+		mmc_change_part(1);
 		return 1;
 	}
 	else
@@ -1872,6 +1940,20 @@ void spl_board_init(void)
 	default:
 		puts("Unknown boot device\n");
 	}
+
+
+#ifdef CONFIG_SPL_ENV_SUPPORT
+	// Load environment
+	env_init();
+
+	// Load enviroment - initiliase MMC
+	board_mmc_init_dts();
+
+	// Change Paritition
+	mmc_change_part(1);
+
+	env_load();
+#endif // CONFIG_SPL_ENV_SUPPORT
 
 	/* PMIC init */
 	//setup_pmic();
@@ -1930,6 +2012,17 @@ static void ccgr_init(void)
 	writel(0x00FFF300, &ccm->CCGR4);
 	writel(0x0F0000F3, &ccm->CCGR5);
 	writel(0x000003FF, &ccm->CCGR6);
+
+	/*
+	 * Setup CCM_CCOSR register as follows:
+	 *
+	 * cko1_en  = 1	   --> CKO1 enabled
+	 * cko1_div = 111  --> divide by 8
+	 * cko1_sel = 1011 --> ahb_clk_root
+	 *
+	 * This sets CKO1 at ahb_clk_root/8 = 132/8 = 16.5 MHz
+	 */
+	//writel(0x000000FB, &ccm->ccosr);
 }
 #ifdef DRAM_INIT
 static int mx6dl_dcd_table[] = {
@@ -2105,7 +2198,7 @@ int board_fit_config_name_match(const char *name)
 
 int board_early_init_f(void)
 {
-	
+
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();//this is also int boar_early_init_f()
 
@@ -2137,11 +2230,57 @@ int gpio_request_by_name_nodev(ofnode node, const char *list_name, int index,
 	return 0;
 }
 
+#ifdef TEST_TIMING
+// Setup UART as GPIOs
+void setup_early_uart(void)
+{
+	// Request UART TX - Ser0 CSIO_DAT12 for
+	SETUP_IOMUX_PADS(uart4_gpio_pads);
+
+	// Set as Output
+	gpio_request( IMX_GPIO_NR(5, 30), 			"UART4_TX_DATA,");
+	gpio_request( IMX_GPIO_NR(5, 31), 			"UART4_RX_DATA,");
+
+	// Declare Direction
+	gpio_direction_output(IMX_GPIO_NR(5, 30), 	0);
+	gpio_direction_input(IMX_GPIO_NR(5, 31) );
+}
+
+// This implements a very simple software defined UART for sending a single character - this prints very early in the bootup
+void print_timing_character(int baudrate_delay)
+{
+	//udelay(baudrate_delay);
+	gpio_set_value(IMX_GPIO_NR(5, 30), 0);
+	udelay(baudrate_delay);
+
+	// Send data bit 0
+	gpio_set_value(IMX_GPIO_NR(5, 30), 0); udelay(baudrate_delay);
+	// Send data bit 1
+	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
+	// Send data bit 2
+	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
+	// Send data bit 3
+	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
+	// Send data bit 4
+	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
+	// Send data bit 5
+	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
+	// Send data bit 6
+	gpio_set_value(IMX_GPIO_NR(5, 30), 0); udelay(baudrate_delay);
+	// Send data bit 7
+	gpio_set_value(IMX_GPIO_NR(5, 30), 0); udelay(baudrate_delay);
+
+
+	// Send stop bit
+	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
+}
+
+
+
+#endif // TEST_TIMING
+
 void board_init_f(ulong dummy)
 {
-	/* DDR initialization */
-	//spl_dram_init(); //outcommented, uses DCD tabe to initilze ram
-
 	/* setup AIPS and disable watchdog */
 	arch_cpu_init();
 
@@ -2154,41 +2293,59 @@ void board_init_f(ulong dummy)
 	/* iomux */
 	board_early_init_f();
 
-	/* Enable device tree and early DM support*/
-	spl_early_init();
-
-	/* UART clocks enabled and gd valid - init serial console */
-#ifdef CONFIG_SPL_SERIAL_SUPPORT
-	preloader_console_init();
-#endif /*	CONFIG_SPL_SERIAL_SUPPORT	*/
-
-	// Run our code
-	// Add a GPIO request for the two LEDS
-	gpio_request(GPIO_LED_2, "GPIO_LED_2");
-	gpio_request(GPIO_LED_3, "GPIO_LED_3");
-
-	// Setup the LEDS and the corresponding padding
-	SETUP_IOMUX_PADS(ni8_led_pads);
-
 	// Setup the LEDs as Output
-	gpio_direction_output(GPIO_LED_2, 1);			// LED2
-	gpio_direction_output(GPIO_LED_3, 0);			// LED3
-
-	// Setup of GPIOs
-	setup_iomux_gpio();
+	gpio_direction_output(GPIO_LED_2, 0);			// LED2
+	gpio_direction_output(GPIO_LED_3, 1);			// LED3
 
 	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
 	setup_iomux_afb_gpio();
 
-	// Set Boot Configs as GPIOs - such that they can be validated with u-boot
-	setup_iomux_boot_config();
+	// Setup GPIOs
+	setup_iomux_gpio();
 
 	/* Clear the BSS. */ 
 	memset(__bss_start, 0, __bss_end - __bss_start);
-	//comment out clearing of BSS should be done bi crt0
 
-	// Set environment variable for OS Boot
-	env_set("falcon_args_file", "Nicore8");
+	/* UART clocks enabled and gd valid - init serial console */
+#ifdef CONFIG_SPL_SERIAL_SUPPORT
+	preloader_console_init();
+#else
+#ifdef TEST_TIMING
+	// Setup the early UART - only for timing metrics
+	setup_early_uart();
+
+	// Print Timing Character (the timings with GPIOs are not accurate.) - TODO: Remove this before setting tag and merging
+	print_timing_character(3);
+	print_timing_character(3);
+	print_timing_character(3);
+	print_timing_character(3);
+
+	print_timing_character(4);
+	print_timing_character(4);
+	print_timing_character(4);
+	print_timing_character(4);
+
+	print_timing_character(5);
+	print_timing_character(5);
+	print_timing_character(5);
+	print_timing_character(5);
+
+	print_timing_character(6);
+	print_timing_character(6);
+	print_timing_character(6);
+	print_timing_character(6);
+
+	print_timing_character(7);
+	print_timing_character(7);
+	print_timing_character(7);
+	print_timing_character(7);
+
+	print_timing_character(8);
+	print_timing_character(8);
+	print_timing_character(8);
+	print_timing_character(8);
+#endif /*		TEST_TIMING			*/
+#endif /*	CONFIG_SPL_SERIAL_SUPPORT	*/
 
 	// Set i2c bus to 3 - Boot Counter
 	int err;
@@ -2203,9 +2360,6 @@ void board_init_f(ulong dummy)
 
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
-
-	gpio_direction_output(GPIO_LED_2, 1);			// LED2
-	gpio_direction_output(GPIO_LED_3, 1);			// LED3
 }
 #endif
 
