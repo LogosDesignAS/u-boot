@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Image manipulator for Marvell SoCs
- *  supports Kirkwood, Dove, Armada 370, Armada XP, and Armada 38x
+ *  supports Kirkwood, Dove, Armada 370, Armada XP, Armada 375, Armada 38x and
+ *  Armada 39x
  *
  * (C) Copyright 2013 Thomas Petazzoni
  * <thomas.petazzoni@free-electrons.com>
@@ -280,14 +281,6 @@ static uint8_t image_checksum8(void *start, uint32_t len)
 	return csum;
 }
 
-size_t kwbimage_header_size(unsigned char *ptr)
-{
-	if (image_version((void *)ptr) == 0)
-		return sizeof(struct main_hdr_v0);
-	else
-		return KWBHEADER_V1_SIZE((struct main_hdr_v1 *)ptr);
-}
-
 /*
  * Verify checksum over a complete header that includes the checksum field.
  * Return 1 when OK, otherwise 0.
@@ -298,7 +291,7 @@ static int main_hdr_checksum_ok(void *hdr)
 	struct main_hdr_v0 *main_hdr = (struct main_hdr_v0 *)hdr;
 	uint8_t checksum;
 
-	checksum = image_checksum8(hdr, kwbimage_header_size(hdr));
+	checksum = image_checksum8(hdr, kwbheader_size_for_csum(hdr));
 	/* Calculated checksum includes the header checksum field. Compensate
 	 * for that.
 	 */
@@ -542,7 +535,7 @@ static int kwb_export_pubkey(RSA *key, struct pubkey_der_v1 *dst, FILE *hashf,
 	}
 
 	if (4 + size_seq > sizeof(dst->key)) {
-		fprintf(stderr, "export pk failed: seq too large (%d, %lu)\n",
+		fprintf(stderr, "export pk failed: seq too large (%d, %zu)\n",
 			4 + size_seq, sizeof(dst->key));
 		fprintf(stderr, errmsg, keyname);
 		return -ENOBUFS;
@@ -939,6 +932,12 @@ static size_t image_headersz_v1(int *hasext)
 	 */
 	headersz = sizeof(struct main_hdr_v1);
 
+	if (image_get_csk_index() >= 0) {
+		headersz += sizeof(struct secure_hdr_v1);
+		if (hasext)
+			*hasext = 1;
+	}
+
 	count = image_count_options(IMAGE_CFG_DATA);
 	if (count > 0)
 		headersz += sizeof(struct register_set_hdr_v1) + 8 * count + 4;
@@ -970,15 +969,10 @@ static size_t image_headersz_v1(int *hasext)
 			return 0;
 		}
 
-		headersz += sizeof(struct opt_hdr_v1) +
-			ALIGN(s.st_size, 4) +
-			(binarye->binary.nargs + 2) * sizeof(uint32_t);
-		if (hasext)
-			*hasext = 1;
-	}
-
-	if (image_get_csk_index() >= 0) {
-		headersz += sizeof(struct secure_hdr_v1);
+		headersz += sizeof(struct opt_hdr_v1) + sizeof(uint32_t) +
+			(binarye->binary.nargs) * sizeof(uint32_t);
+		headersz = ALIGN(headersz, 16);
+		headersz += ALIGN(s.st_size, 4) + sizeof(uint32_t);
 		if (hasext)
 			*hasext = 1;
 	}
@@ -991,9 +985,12 @@ static size_t image_headersz_v1(int *hasext)
 }
 
 int add_binary_header_v1(uint8_t **cur, uint8_t **next_ext,
-			 struct image_cfg_element *binarye)
+			 struct image_cfg_element *binarye,
+			 struct main_hdr_v1 *main_hdr)
 {
 	struct opt_hdr_v1 *hdr = (struct opt_hdr_v1 *)*cur;
+	uint32_t add_args;
+	uint32_t offset;
 	uint32_t *args;
 	size_t binhdrsz;
 	struct stat s;
@@ -1016,12 +1013,6 @@ int add_binary_header_v1(uint8_t **cur, uint8_t **next_ext,
 		goto err_close;
 	}
 
-	binhdrsz = sizeof(struct opt_hdr_v1) +
-		(binarye->binary.nargs + 2) * sizeof(uint32_t) +
-		ALIGN(s.st_size, 4);
-	hdr->headersz_lsb = cpu_to_le16(binhdrsz & 0xFFFF);
-	hdr->headersz_msb = (binhdrsz & 0xFFFF0000) >> 16;
-
 	*cur += sizeof(struct opt_hdr_v1);
 
 	args = (uint32_t *)*cur;
@@ -1031,6 +1022,19 @@ int add_binary_header_v1(uint8_t **cur, uint8_t **next_ext,
 		args[argi] = cpu_to_le32(binarye->binary.args[argi]);
 
 	*cur += (binarye->binary.nargs + 1) * sizeof(uint32_t);
+
+	/*
+	 * ARM executable code inside the BIN header on some mvebu platforms
+	 * (e.g. A370, AXP) must always be aligned with the 128-bit boundary.
+	 * This requirement can be met by inserting dummy arguments into
+	 * BIN header, if needed.
+	 */
+	offset = *cur - (uint8_t *)main_hdr;
+	add_args = ((16 - offset % 16) % 16) / sizeof(uint32_t);
+	if (add_args) {
+		*(args - 1) = cpu_to_le32(binarye->binary.nargs + add_args);
+		*cur += add_args * sizeof(uint32_t);
+	}
 
 	ret = fread(*cur, s.st_size, 1, bin);
 	if (ret != 1) {
@@ -1049,6 +1053,12 @@ int add_binary_header_v1(uint8_t **cur, uint8_t **next_ext,
 	*next_ext = *cur;
 
 	*cur += sizeof(uint32_t);
+
+	binhdrsz = sizeof(struct opt_hdr_v1) +
+		(binarye->binary.nargs + add_args + 2) * sizeof(uint32_t) +
+		ALIGN(s.st_size, 4);
+	hdr->headersz_lsb = cpu_to_le16(binhdrsz & 0xFFFF);
+	hdr->headersz_msb = (binhdrsz & 0xFFFF0000) >> 16;
 
 	return 0;
 
@@ -1221,6 +1231,9 @@ static void *image_create_v1(size_t *imagesz, struct image_tool_params *params,
 	e = image_find_option(IMAGE_CFG_NAND_BLKSZ);
 	if (e)
 		main_hdr->nandblocksize = e->nandblksz / (64 * 1024);
+	e = image_find_option(IMAGE_CFG_NAND_PAGESZ);
+	if (e)
+		main_hdr->nandpagesize = cpu_to_le16(e->nandpagesz);
 	e = image_find_option(IMAGE_CFG_NAND_BADBLK_LOCATION);
 	if (e)
 		main_hdr->nandbadblklocation = e->nandbadblklocation;
@@ -1306,7 +1319,7 @@ static void *image_create_v1(size_t *imagesz, struct image_tool_params *params,
 		if (e->type != IMAGE_CFG_BINARY)
 			continue;
 
-		if (add_binary_header_v1(&cur, &next_ext, e))
+		if (add_binary_header_v1(&cur, &next_ext, e, main_hdr))
 			return NULL;
 	}
 
@@ -1618,34 +1631,20 @@ static void kwbimage_set_header(void *ptr, struct stat *sbuf, int ifd,
 static void kwbimage_print_header(const void *ptr)
 {
 	struct main_hdr_v0 *mhdr = (struct main_hdr_v0 *)ptr;
+	struct opt_hdr_v1 *ohdr;
 
 	printf("Image Type:   MVEBU Boot from %s Image\n",
 	       image_boot_mode_name(mhdr->blockid));
-	printf("Image version:%d\n", image_version((void *)ptr));
-	if (image_version((void *)ptr) == 1) {
-		struct main_hdr_v1 *mhdr = (struct main_hdr_v1 *)ptr;
+	printf("Image version:%d\n", kwbimage_version(ptr));
 
-		if (mhdr->ext & 0x1) {
-			struct opt_hdr_v1 *ohdr = (struct opt_hdr_v1 *)
-						  ((uint8_t *)ptr +
-						   sizeof(*mhdr));
-
-			while (1) {
-				uint32_t ohdr_size;
-
-				ohdr_size = (ohdr->headersz_msb << 16) |
-					    le16_to_cpu(ohdr->headersz_lsb);
-				if (ohdr->headertype == OPT_HDR_V1_BINARY_TYPE) {
-					printf("BIN Hdr Size: ");
-					genimg_print_size(ohdr_size - 12 - 4 * ohdr->data[0]);
-				}
-				if (!(*((uint8_t *)ohdr + ohdr_size - 4) & 0x1))
-					break;
-				ohdr = (struct opt_hdr_v1 *)((uint8_t *)ohdr +
-							     ohdr_size);
-			}
+	for_each_opt_hdr_v1 (ohdr, mhdr) {
+		if (ohdr->headertype == OPT_HDR_V1_BINARY_TYPE) {
+			printf("BIN Hdr Size: ");
+			genimg_print_size(opt_hdr_v1_size(ohdr) - 12 -
+					  4 * ohdr->data[0]);
 		}
 	}
+
 	printf("Data Size:    ");
 	genimg_print_size(mhdr->blocksize - sizeof(uint32_t));
 	printf("Load Address: %08x\n", mhdr->destaddr);
@@ -1663,8 +1662,8 @@ static int kwbimage_check_image_types(uint8_t type)
 static int kwbimage_verify_header(unsigned char *ptr, int image_size,
 				  struct image_tool_params *params)
 {
-	uint8_t checksum;
-	size_t header_size = kwbimage_header_size(ptr);
+	size_t header_size = kwbheader_size(ptr);
+	uint8_t csum;
 
 	if (header_size > image_size)
 		return -FDT_ERR_BADSTRUCTURE;
@@ -1673,52 +1672,27 @@ static int kwbimage_verify_header(unsigned char *ptr, int image_size,
 		return -FDT_ERR_BADSTRUCTURE;
 
 	/* Only version 0 extended header has checksum */
-	if (image_version((void *)ptr) == 0) {
+	if (kwbimage_version(ptr) == 0) {
 		struct main_hdr_v0 *mhdr = (struct main_hdr_v0 *)ptr;
 
 		if (mhdr->ext & 0x1) {
-			struct ext_hdr_v0 *ext_hdr;
+			struct ext_hdr_v0 *ext_hdr = (void *)(mhdr + 1);
 
-			if (header_size + sizeof(*ext_hdr) > image_size)
-				return -FDT_ERR_BADSTRUCTURE;
-
-			ext_hdr = (struct ext_hdr_v0 *)
-				(ptr + sizeof(struct main_hdr_v0));
-			checksum = image_checksum8(ext_hdr,
-						   sizeof(struct ext_hdr_v0)
-						   - sizeof(uint8_t));
-			if (checksum != ext_hdr->checksum)
+			csum = image_checksum8(ext_hdr, sizeof(*ext_hdr) - 1);
+			if (csum != ext_hdr->checksum)
 				return -FDT_ERR_BADSTRUCTURE;
 		}
-	} else if (image_version((void *)ptr) == 1) {
+	} else if (kwbimage_version(ptr) == 1) {
 		struct main_hdr_v1 *mhdr = (struct main_hdr_v1 *)ptr;
+		const uint8_t *mhdr_end;
+		struct opt_hdr_v1 *ohdr;
 		uint32_t offset;
 		uint32_t size;
 
-		if (mhdr->ext & 0x1) {
-			uint32_t ohdr_size;
-			struct opt_hdr_v1 *ohdr = (struct opt_hdr_v1 *)
-						  (ptr + sizeof(*mhdr));
-
-			while (1) {
-				if ((uint8_t *)ohdr + sizeof(*ohdr) >
-				    (uint8_t *)mhdr + header_size)
-					return -FDT_ERR_BADSTRUCTURE;
-
-				ohdr_size = (ohdr->headersz_msb << 16) |
-					    le16_to_cpu(ohdr->headersz_lsb);
-
-				if (ohdr_size < 8 ||
-				    (uint8_t *)ohdr + ohdr_size >
-				    (uint8_t *)mhdr + header_size)
-					return -FDT_ERR_BADSTRUCTURE;
-
-				if (!(*((uint8_t *)ohdr + ohdr_size - 4) & 0x1))
-					break;
-				ohdr = (struct opt_hdr_v1 *)((uint8_t *)ohdr +
-							     ohdr_size);
-			}
-		}
+		mhdr_end = (uint8_t *)mhdr + header_size;
+		for_each_opt_hdr_v1 (ohdr, ptr)
+			if (!opt_hdr_v1_valid_size(ohdr, mhdr_end))
+				return -FDT_ERR_BADSTRUCTURE;
 
 		offset = le32_to_cpu(mhdr->srcaddr);
 
@@ -1864,37 +1838,25 @@ static int kwbimage_generate(struct image_tool_params *params,
 static int kwbimage_extract_subimage(void *ptr, struct image_tool_params *params)
 {
 	struct main_hdr_v1 *mhdr = (struct main_hdr_v1 *)ptr;
-	size_t header_size = kwbimage_header_size(ptr);
+	size_t header_size = kwbheader_size(ptr);
+	struct opt_hdr_v1 *ohdr;
 	int idx = params->pflag;
 	int cur_idx = 0;
 	uint32_t offset;
 	ulong image;
 	ulong size;
 
-	if (image_version((void *)ptr) == 1 && (mhdr->ext & 0x1)) {
-		struct opt_hdr_v1 *ohdr = (struct opt_hdr_v1 *)
-					  ((uint8_t *)ptr +
-					   sizeof(*mhdr));
+	for_each_opt_hdr_v1 (ohdr, ptr) {
+		if (ohdr->headertype != OPT_HDR_V1_BINARY_TYPE)
+			continue;
 
-		while (1) {
-			uint32_t ohdr_size = (ohdr->headersz_msb << 16) |
-					     le16_to_cpu(ohdr->headersz_lsb);
-
-			if (ohdr->headertype == OPT_HDR_V1_BINARY_TYPE) {
-				if (idx == cur_idx) {
-					image = (ulong)&ohdr->data[4 +
-					         4 * ohdr->data[0]];
-					size = ohdr_size - 12 -
-					       4 * ohdr->data[0];
-					goto extract;
-				}
-				++cur_idx;
-			}
-			if (!(*((uint8_t *)ohdr + ohdr_size - 4) & 0x1))
-				break;
-			ohdr = (struct opt_hdr_v1 *)((uint8_t *)ohdr +
-						     ohdr_size);
+		if (idx == cur_idx) {
+			image = (ulong)&ohdr->data[4 + 4 * ohdr->data[0]];
+			size = opt_hdr_v1_size(ohdr) - 12 - 4 * ohdr->data[0];
+			goto extract;
 		}
+
+		++cur_idx;
 	}
 
 	if (idx != cur_idx) {

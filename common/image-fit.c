@@ -25,6 +25,10 @@
 #include <asm/io.h>
 #include <malloc.h>
 #include <asm/global_data.h>
+#ifdef CONFIG_DM_HASH
+#include <dm.h>
+#include <u-boot/hash.h>
+#endif
 DECLARE_GLOBAL_DATA_PTR;
 #endif /* !USE_HOSTCC*/
 
@@ -166,7 +170,6 @@ int fit_get_subimage_count(const void *fit, int images_noffset)
 	return count;
 }
 
-#if CONFIG_IS_ENABLED(FIT_PRINT) || CONFIG_IS_ENABLED(SPL_FIT_PRINT)
 /**
  * fit_image_print_data() - prints out the hash node details
  * @fit: pointer to the FIT format image header
@@ -376,6 +379,9 @@ void fit_print_contents(const void *fit)
 	const char *p;
 	time_t timestamp;
 
+	if (!CONFIG_IS_ENABLED(FIT_PRINT))
+		return;
+
 	/* Indent string is defined in header image.h */
 	p = IMAGE_INDENT_STRING;
 
@@ -478,6 +484,9 @@ void fit_image_print(const void *fit, int image_noffset, const char *p)
 	int ndepth;
 	int ret;
 
+	if (!CONFIG_IS_ENABLED(FIT_PRINT))
+		return;
+
 	/* Mandatory properties */
 	ret = fit_get_desc(fit, image_noffset, &desc);
 	printf("%s  Description:  ", p);
@@ -505,7 +514,7 @@ void fit_image_print(const void *fit, int image_noffset, const char *p)
 
 	ret = fit_image_get_data_and_size(fit, image_noffset, &data, &size);
 
-	if (!host_build()) {
+	if (!tools_build()) {
 		printf("%s  Data Start:   ", p);
 		if (ret) {
 			printf("unavailable\n");
@@ -571,10 +580,6 @@ void fit_image_print(const void *fit, int image_noffset, const char *p)
 		}
 	}
 }
-#else
-void fit_print_contents(const void *fit) { }
-void fit_image_print(const void *fit, int image_noffset, const char *p) { }
-#endif /* CONFIG_IS_ENABLED(FIR_PRINT) || CONFIG_IS_ENABLED(SPL_FIT_PRINT) */
 
 /**
  * fit_get_desc - get node description property
@@ -1211,37 +1216,47 @@ int fit_set_timestamp(void *fit, int noffset, time_t timestamp)
  *     0, on success
  *    -1, when algo is unsupported
  */
-int calculate_hash(const void *data, int data_len, const char *algo,
+int calculate_hash(const void *data, int data_len, const char *name,
 			uint8_t *value, int *value_len)
 {
-	if (IMAGE_ENABLE_CRC32 && strcmp(algo, "crc32") == 0) {
-		*((uint32_t *)value) = crc32_wd(0, data, data_len,
-							CHUNKSZ_CRC32);
-		*((uint32_t *)value) = cpu_to_uimage(*((uint32_t *)value));
-		*value_len = 4;
-	} else if (CONFIG_IS_ENABLED(SHA1) && strcmp(algo, "sha1") == 0) {
-		sha1_csum_wd((unsigned char *)data, data_len,
-			     (unsigned char *)value, CHUNKSZ_SHA1);
-		*value_len = 20;
-	} else if (CONFIG_IS_ENABLED(SHA256) && strcmp(algo, "sha256") == 0) {
-		sha256_csum_wd((unsigned char *)data, data_len,
-			       (unsigned char *)value, CHUNKSZ_SHA256);
-		*value_len = SHA256_SUM_LEN;
-	} else if (CONFIG_IS_ENABLED(SHA384) && strcmp(algo, "sha384") == 0) {
-		sha384_csum_wd((unsigned char *)data, data_len,
-			       (unsigned char *)value, CHUNKSZ_SHA384);
-		*value_len = SHA384_SUM_LEN;
-	} else if (CONFIG_IS_ENABLED(SHA512) && strcmp(algo, "sha512") == 0) {
-		sha512_csum_wd((unsigned char *)data, data_len,
-			       (unsigned char *)value, CHUNKSZ_SHA512);
-		*value_len = SHA512_SUM_LEN;
-	} else if (IMAGE_ENABLE_MD5 && strcmp(algo, "md5") == 0) {
-		md5_wd((unsigned char *)data, data_len, value, CHUNKSZ_MD5);
-		*value_len = 16;
-	} else {
+#if !defined(USE_HOSTCC) && defined(CONFIG_DM_HASH)
+	int rc;
+	enum HASH_ALGO hash_algo;
+	struct udevice *dev;
+
+	rc = uclass_get_device(UCLASS_HASH, 0, &dev);
+	if (rc) {
+		debug("failed to get hash device, rc=%d\n", rc);
+		return -1;
+	}
+
+	hash_algo = hash_algo_lookup_by_name(algo);
+	if (hash_algo == HASH_ALGO_INVALID) {
+		debug("Unsupported hash algorithm\n");
+		return -1;
+	};
+
+	rc = hash_digest_wd(dev, hash_algo, data, data_len, value, CHUNKSZ);
+	if (rc) {
+		debug("failed to get hash value, rc=%d\n", rc);
+		return -1;
+	}
+
+	*value_len = hash_algo_digest_size(hash_algo);
+#else
+	struct hash_algo *algo;
+	int ret;
+
+	ret = hash_lookup_algo(name, &algo);
+	if (ret < 0) {
 		debug("Unsupported hash alogrithm\n");
 		return -1;
 	}
+
+	algo->hash_func_ws(data, data_len, value, algo->chunk_size);
+	*value_len = algo->digest_size;
+#endif
+
 	return 0;
 }
 
@@ -1263,7 +1278,7 @@ static int fit_image_check_hash(const void *fit, int noffset, const void *data,
 	}
 	printf("%s", algo);
 
-	if (IMAGE_ENABLE_IGNORE) {
+	if (!tools_build()) {
 		fit_image_hash_get_ignore(fit, noffset, &ignore);
 		if (ignore) {
 			printf("-skipped ");
@@ -1831,7 +1846,7 @@ int fit_conf_get_node(const void *fit, const char *conf_uname)
 	if (conf_uname == NULL) {
 		/* get configuration unit name from the default property */
 		debug("No configuration specified, trying default...\n");
-		if (!host_build() && IS_ENABLED(CONFIG_MULTI_DTB_FIT)) {
+		if (!tools_build() && IS_ENABLED(CONFIG_MULTI_DTB_FIT)) {
 			noffset = fit_find_config_node(fit);
 			if (noffset < 0)
 				return noffset;
@@ -1994,9 +2009,6 @@ int fit_image_load(bootm_headers_t *images, ulong addr,
 	int type_ok, os_ok;
 	ulong load, load_end, data, len;
 	uint8_t os, comp;
-#ifndef USE_HOSTCC
-	uint8_t os_arch;
-#endif
 	const char *prop_name;
 	int ret;
 
@@ -2079,7 +2091,7 @@ int fit_image_load(bootm_headers_t *images, ulong addr,
 	}
 
 	bootstage_mark(bootstage_id + BOOTSTAGE_SUB_CHECK_ARCH);
-	if (!host_build() && IS_ENABLED(CONFIG_SANDBOX)) {
+	if (!tools_build() && IS_ENABLED(CONFIG_SANDBOX)) {
 		if (!fit_image_check_target_arch(fit, noffset)) {
 			puts("Unsupported Architecture\n");
 			bootstage_error(bootstage_id + BOOTSTAGE_SUB_CHECK_ARCH);
@@ -2088,8 +2100,12 @@ int fit_image_load(bootm_headers_t *images, ulong addr,
 	}
 
 #ifndef USE_HOSTCC
+	{
+	uint8_t os_arch;
+
 	fit_image_get_arch(fit, noffset, &os_arch);
 	images->os.arch = os_arch;
+	}
 #endif
 
 	bootstage_mark(bootstage_id + BOOTSTAGE_SUB_CHECK_ALL);
@@ -2144,7 +2160,7 @@ int fit_image_load(bootm_headers_t *images, ulong addr,
 	}
 
 	/* perform any post-processing on the image data */
-	if (!host_build() && IS_ENABLED(CONFIG_FIT_IMAGE_POST_PROCESS))
+	if (!tools_build() && IS_ENABLED(CONFIG_FIT_IMAGE_POST_PROCESS))
 		board_fit_image_post_process(fit, noffset, &buf, &size);
 
 	len = (ulong)size;

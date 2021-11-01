@@ -10,6 +10,7 @@
  */
 
 #include <common.h>
+#include <flash.h>
 #include <log.h>
 #include <watchdog.h>
 #include <dm.h>
@@ -26,6 +27,7 @@
 
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/spi-nor.h>
+#include <mtd/cfi_flash.h>
 #include <spi-mem.h>
 #include <spi.h>
 
@@ -906,30 +908,40 @@ static int spi_nor_erase_sector(struct spi_nor *nor, u32 addr)
 static int spi_nor_erase(struct mtd_info *mtd, struct erase_info *instr)
 {
 	struct spi_nor *nor = mtd_to_spi_nor(mtd);
+	bool addr_known = false;
 	u32 addr, len, rem;
-	int ret;
+	int ret, err;
 
 	dev_dbg(nor->dev, "at 0x%llx, len %lld\n", (long long)instr->addr,
 		(long long)instr->len);
 
-	if (!instr->len)
-		return 0;
-
 	div_u64_rem(instr->len, mtd->erasesize, &rem);
-	if (rem)
-		return -EINVAL;
+	if (rem) {
+		ret = -EINVAL;
+		goto err;
+	}
 
 	addr = instr->addr;
 	len = instr->len;
 
+	instr->state = MTD_ERASING;
+	addr_known = true;
+
 	while (len) {
 		WATCHDOG_RESET();
+		if (ctrlc()) {
+			addr_known = false;
+			ret = -EINTR;
+			goto erase_err;
+		}
 #ifdef CONFIG_SPI_FLASH_BAR
 		ret = write_bar(nor, addr);
 		if (ret < 0)
-			return ret;
+			goto erase_err;
 #endif
-		write_enable(nor);
+		ret = write_enable(nor);
+		if (ret < 0)
+			goto erase_err;
 
 		ret = spi_nor_erase_sector(nor, addr);
 		if (ret < 0)
@@ -943,11 +955,24 @@ static int spi_nor_erase(struct mtd_info *mtd, struct erase_info *instr)
 			goto erase_err;
 	}
 
+	addr_known = false;
 erase_err:
 #ifdef CONFIG_SPI_FLASH_BAR
-	ret = clean_bar(nor);
+	err = clean_bar(nor);
+	if (!ret)
+		ret = err;
 #endif
-	write_disable(nor);
+	err = write_disable(nor);
+	if (!ret)
+		ret = err;
+
+err:
+	if (ret) {
+		instr->fail_addr = addr_known ? addr : MTD_FAIL_ADDR_UNKNOWN;
+		instr->state = MTD_ERASE_FAILED;
+	} else {
+		instr->state = MTD_ERASE_DONE;
+	}
 
 	return ret;
 }
@@ -1662,9 +1687,6 @@ static int spi_nor_write(struct mtd_info *mtd, loff_t to, size_t len,
 #endif
 
 	dev_dbg(nor->dev, "to 0x%08x, len %zd\n", (u32)to, len);
-
-	if (!len)
-		return 0;
 
 	for (i = 0; i < len; ) {
 		ssize_t written;
@@ -3222,6 +3244,21 @@ static struct spi_nor_fixups s25hx_t_fixups = {
 	.post_bfpt = s25hx_t_post_bfpt_fixup,
 	.post_sfdp = s25hx_t_post_sfdp_fixup,
 };
+
+static int s25fl256l_setup(struct spi_nor *nor, const struct flash_info *info,
+			   const struct spi_nor_flash_parameter *params)
+{
+	return -ENOTSUPP; /* Bank Address Register is not supported */
+}
+
+static void s25fl256l_default_init(struct spi_nor *nor)
+{
+	nor->setup = s25fl256l_setup;
+}
+
+static struct spi_nor_fixups s25fl256l_fixups = {
+	.default_init = s25fl256l_default_init,
+};
 #endif
 
 #ifdef CONFIG_SPI_FLASH_S28HS512T
@@ -3644,6 +3681,10 @@ void spi_nor_set_fixups(struct spi_nor *nor)
 			break;
 		}
 	}
+
+	if (CONFIG_IS_ENABLED(SPI_FLASH_BAR) &&
+	    !strcmp(nor->info->name, "s25fl256l"))
+		nor->fixups = &s25fl256l_fixups;
 #endif
 
 #ifdef CONFIG_SPI_FLASH_S28HS512T
@@ -3664,6 +3705,11 @@ int spi_nor_scan(struct spi_nor *nor)
 	struct mtd_info *mtd = &nor->mtd;
 	struct spi_slave *spi = nor->spi;
 	int ret;
+	int cfi_mtd_nb = 0;
+
+#ifdef CONFIG_SYS_MAX_FLASH_BANKS
+	cfi_mtd_nb = CONFIG_SYS_MAX_FLASH_BANKS;
+#endif
 
 	/* Reset SPI protocol for all commands. */
 	nor->reg_proto = SNOR_PROTO_1_1_1;
@@ -3715,8 +3761,12 @@ int spi_nor_scan(struct spi_nor *nor)
 	if (ret)
 		return ret;
 
-	if (!mtd->name)
-		mtd->name = info->name;
+	if (!mtd->name) {
+		sprintf(nor->mtd_name, "%s%d",
+			MTD_DEV_TYPE(MTD_DEV_TYPE_NOR),
+			cfi_mtd_nb + dev_seq(nor->dev));
+		mtd->name = nor->mtd_name;
+	}
 	mtd->dev = nor->dev;
 	mtd->priv = nor;
 	mtd->type = MTD_NORFLASH;
@@ -3821,7 +3871,7 @@ int spi_nor_scan(struct spi_nor *nor)
 
 	nor->rdsr_dummy = params.rdsr_dummy;
 	nor->rdsr_addr_nbytes = params.rdsr_addr_nbytes;
-	nor->name = mtd->name;
+	nor->name = info->name;
 	nor->size = mtd->size;
 	nor->erase_size = mtd->erasesize;
 	nor->sector_size = mtd->erasesize;

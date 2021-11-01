@@ -6,6 +6,7 @@
  *   Anup Patel <anup.patel@wdc.com>
  */
 
+#include <cpu_func.h>
 #include <dm.h>
 #include <env.h>
 #include <init.h>
@@ -15,7 +16,6 @@
 #include <linux/delay.h>
 #include <misc.h>
 #include <spl.h>
-#include <asm/arch/cache.h>
 #include <asm/sections.h>
 
 /*
@@ -114,26 +114,21 @@ int misc_init_r(void)
 
 #endif
 
-void *board_fdt_blob_setup(void)
+void *board_fdt_blob_setup(int *err)
 {
+	*err = 0;
 	if (IS_ENABLED(CONFIG_OF_SEPARATE)) {
 		if (gd->arch.firmware_fdt_addr)
-			return (ulong *)gd->arch.firmware_fdt_addr;
-		else
-			return (ulong *)&_end;
+			return (ulong *)(uintptr_t)gd->arch.firmware_fdt_addr;
 	}
+
+	return (ulong *)&_end;
 }
 
 int board_init(void)
 {
-	int ret;
-
 	/* enable all cache ways */
-	ret = cache_enable_ways();
-	if (ret) {
-		debug("%s: could not enable cache ways\n", __func__);
-		return ret;
-	}
+	enable_caches();
 
 	return 0;
 }

@@ -28,6 +28,8 @@
 #define EFI_TCG2_EXTEND_ONLY 0x0000000000000001
 #define PE_COFF_IMAGE 0x0000000000000010
 
+#define EFI_TCG2_MAX_PCR_INDEX 23
+
 /* Algorithm Registry */
 #define EFI_TCG2_BOOT_HASH_ALG_SHA1    0x00000001
 #define EFI_TCG2_BOOT_HASH_ALG_SHA256  0x00000002
@@ -127,8 +129,8 @@ struct efi_tcg2_boot_service_capability {
 	efi_tcg_event_algorithm_bitmap active_pcr_banks;
 };
 
-#define boot_service_capability_min \
-	sizeof(struct efi_tcg2_boot_service_capability) - \
+/* up to and including the vendor ID (manufacturer_id) field */
+#define BOOT_SERVICE_CAPABILITY_MIN \
 	offsetof(struct efi_tcg2_boot_service_capability, number_of_pcr_banks)
 
 #define TCG_EFI_SPEC_ID_EVENT_SIGNATURE_03 "Spec ID Event03"
@@ -163,8 +165,6 @@ struct tcg_efi_spec_id_event_algorithm_size {
  * @digest_sizes:		array of number_of_algorithms pairs
  *				1st member defines the algorithm id
  *				2nd member defines the algorithm size
- * @vendor_info_size:		size in bytes for vendor specific info
- * @vendor_info:		vendor specific info
  */
 struct tcg_efi_spec_id_event {
 	u8 signature[16];
@@ -174,10 +174,7 @@ struct tcg_efi_spec_id_event {
 	u8 spec_errata;
 	u8 uintn_size;
 	u32 number_of_algorithms;
-	struct tcg_efi_spec_id_event_algorithm_size digest_sizes[TPM2_NUM_PCR_BANKS];
-	u8 vendor_info_size;
-	/* U-Boot does not provide any vendor info */
-	u8 vendor_info[];
+	struct tcg_efi_spec_id_event_algorithm_size digest_sizes[];
 } __packed;
 
 /**
@@ -212,6 +209,33 @@ struct efi_tcg2_uefi_variable_data {
 	u16 unicode_name[1];
 	u8 variable_data[1];
 };
+
+/**
+ * struct tdUEFI_HANDOFF_TABLE_POINTERS2 - event log structure of SMBOIS tables
+ * @table_description_size:	size of table description
+ * @table_description:		table description
+ * @number_of_tables:		number of uefi configuration table
+ * @table_entry:		uefi configuration table entry
+ */
+#define SMBIOS_HANDOFF_TABLE_DESC  "SmbiosTable"
+struct smbios_handoff_table_pointers2 {
+	u8 table_description_size;
+	u8 table_description[sizeof(SMBIOS_HANDOFF_TABLE_DESC)];
+	u64 number_of_tables;
+	struct efi_configuration_table table_entry[];
+} __packed;
+
+/**
+ * struct tdUEFI_GPT_DATA - event log structure of industry standard tables
+ * @uefi_partition_header:	gpt partition header
+ * @number_of_partitions:	the number of partition
+ * @partitions:			partition entries
+ */
+struct efi_gpt_data {
+	gpt_header uefi_partition_header;
+	u64 number_of_partitions;
+	gpt_entry partitions[];
+} __packed;
 
 struct efi_tcg2_protocol {
 	efi_status_t (EFIAPI * get_capability)(struct efi_tcg2_protocol *this,

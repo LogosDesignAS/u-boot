@@ -15,12 +15,11 @@
 #include <mmc.h>
 #include <clk.h>
 #include <reset.h>
+#include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/cpu.h>
-#include <asm/arch/gpio.h>
 #include <asm/arch/mmc.h>
-#include <asm-generic/gpio.h>
 #include <linux/delay.h>
 
 #ifndef CCM_MMC_CTRL_MODE_SEL_NEW
@@ -73,10 +72,12 @@ static int mmc_resource_init(int sdc_no)
 		priv->reg = (struct sunxi_mmc *)SUNXI_MMC1_BASE;
 		priv->mclkreg = &ccm->sd1_clk_cfg;
 		break;
+#ifdef SUNXI_MMC2_BASE
 	case 2:
 		priv->reg = (struct sunxi_mmc *)SUNXI_MMC2_BASE;
 		priv->mclkreg = &ccm->sd2_clk_cfg;
 		break;
+#endif
 #ifdef SUNXI_MMC3_BASE
 	case 3:
 		priv->reg = (struct sunxi_mmc *)SUNXI_MMC3_BASE;
@@ -349,10 +350,14 @@ static int mmc_trans_data_by_cpu(struct sunxi_mmc_priv *priv, struct mmc *mmc,
 		 * register without checking the status register after every
 		 * read. That saves half of the costly MMIO reads, effectively
 		 * doubling the read performance.
+		 * Some SoCs (A20) report a level of 0 if the FIFO is
+		 * completely full (value masked out?). Use a safe minimal
+		 * FIFO size in this case.
 		 */
-		for (in_fifo = SUNXI_MMC_STATUS_FIFO_LEVEL(status);
-		     in_fifo > 0;
-		     in_fifo--)
+		in_fifo = SUNXI_MMC_STATUS_FIFO_LEVEL(status);
+		if (in_fifo == 0 && (status & SUNXI_MMC_STATUS_FIFO_FULL))
+			in_fifo = 32;
+		for (; in_fifo > 0; in_fifo--)
 			buff[i++] = readl_relaxed(&priv->reg->fifo);
 		dmb();
 	}

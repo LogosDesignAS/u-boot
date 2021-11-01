@@ -28,17 +28,6 @@
 #define CONFIG_SYS_CBSIZE			SZ_1K
 
 /*
- * default load address used for command tftp,  bootm , loadb, ...
- */
-#define CONFIG_LOADADDR			0xc2000000
-#define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
-
-/* ATAGs */
-#define CONFIG_CMDLINE_TAG
-#define CONFIG_SETUP_MEMORY_TAGS
-#define CONFIG_INITRD_TAG
-
-/*
  * For booting Linux, use the first 256 MB of memory, since this is
  * the maximum mapped by the Linux kernel during initialization.
  */
@@ -63,7 +52,6 @@
 #define CONFIG_SYS_MMC_MAX_DEVICE	3
 
 /* NAND support */
-#define CONFIG_SYS_NAND_ONFI_DETECTION
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 
 /* Ethernet need */
@@ -120,7 +108,7 @@
  * for serial/usb: execute the stm32prog command
  * for mmc boot (eMMC, SD card), boot only on the same device
  * for nand or spi-nand boot, boot with on ubifs partition on UBI partition
- * for nor boot, use SD card = mmc0
+ * for nor boot, use the default order
  */
 #define STM32MP_BOOTCMD "bootcmd_stm32mp=" \
 	"echo \"Boot over ${boot_device}${boot_instance}!\";" \
@@ -133,8 +121,6 @@
 		"if test ${boot_device} = nand ||" \
 		  " test ${boot_device} = spi-nand ;" \
 		"then env set boot_targets ubifs0; fi;" \
-		"if test ${boot_device} = nor;" \
-		"then env set boot_targets mmc0; fi;" \
 		"run distro_bootcmd;" \
 	"fi;\0"
 

@@ -108,6 +108,15 @@ L:	uboot-snps-arc@synopsys.com
 F:	doc/device-tree-bindings/mmc/snps,dw-mmc.txt
 F:	drivers/mmc/snps_dw_mmc.c
 
+APPLE M1 SOC SUPPORT
+M:	Mark Kettenis <kettenis@openbsd.org>
+S:	Maintained
+F:	arch/arm/include/asm/arch-m1/
+F:	arch/arm/mach-apple/
+F:	configs/apple_m1_defconfig
+F:	drivers/iommu/apple_dart.c
+F:	include/configs/apple.h
+
 ARM
 M:	Tom Rini <trini@konsulko.com>
 S:	Maintained
@@ -312,6 +321,7 @@ F:	arch/arm/mach-at91/
 F:	board/atmel/
 F:	drivers/cpu/at91_cpu.c
 F:	drivers/misc/microchip_flexcom.c
+F:	include/dt-bindings/mfd/atmel-flexcom.h
 F:	drivers/timer/mchp-pit64b-timer.c
 
 ARM NEXELL S5P4418
@@ -390,7 +400,9 @@ F:	drivers/gpio/msm_gpio.c
 F:	drivers/mmc/msm_sdhci.c
 F:	drivers/phy/msm8916-usbh-phy.c
 F:	drivers/serial/serial_msm.c
+F:	drivers/serial/serial_msm_geni.c
 F:	drivers/smem/msm_smem.c
+F:	drivers/spmi/spmi-msm.c
 F:	drivers/usb/host/ehci-msm.c
 
 ARM STI
@@ -411,13 +423,6 @@ F:	include/dwc3-sti-glue.h
 F:	include/dt-bindings/clock/stih407-clks.h
 F:	include/dt-bindings/clock/stih410-clks.h
 F:	include/dt-bindings/reset/stih407-resets.h
-
-ARM STM SPEAR
-#M:	Vipin Kumar <vipin.kumar@st.com>
-S:	Orphaned (Since 2016-02)
-T:	git https://source.denx.de/u-boot/custodians/u-boot-stm.git
-F:	arch/arm/cpu/arm926ejs/spear/
-F:	arch/arm/include/asm/arch-spear/
 
 ARM STM STM32MP
 M:	Patrick Delaunay <patrick.delaunay@foss.st.com>
@@ -490,7 +495,7 @@ F:	arch/arm/mach-tegra/
 F:	arch/arm/include/asm/arch-tegra*/
 
 ARM TI
-M:	Lokesh Vutla <lokeshvutla@ti.com>
+M:	Tom Rini <trini@konsulko.com>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-ti.git
 F:	arch/arm/mach-davinci/
@@ -532,7 +537,12 @@ R:	Linus Walleij <linus.walleij@linaro.org>
 S:	Maintained
 F:	arch/arm/dts/ste-*
 F:	arch/arm/mach-u8500/
+F:	drivers/gpio/nmk_gpio.c
+F:	drivers/phy/phy-ab8500-usb.c
+F:	drivers/power/pmic/ab8500.c
 F:	drivers/timer/nomadik-mtu-timer.c
+F:	drivers/usb/musb-new/ux500.c
+F:	drivers/video/mcde_simple.c
 
 ARM UNIPHIER
 S:	Orphan (Since 2020-09)
@@ -694,6 +704,13 @@ F:	drivers/core/
 F:	include/dm/
 F:	test/dm/
 
+EFI APP
+M:	Simon Glass <sjg@chromium.org>
+M:	Heinrich Schuchardt <xypron.glpk@gmx.de>
+S:	Maintained
+W:	https://u-boot.readthedocs.io/en/latest/develop/uefi/u-boot_on_efi.html
+F:	lib/efi/efi_app.c
+
 EFI PAYLOAD
 M:	Heinrich Schuchardt <xypron.glpk@gmx.de>
 R:	Alexander Graf <agraf@csgraf.de>
@@ -757,6 +774,7 @@ F:	include/fdt*
 F:	include/linux/libfdt*
 F:	cmd/fdt.c
 F:	common/fdt_support.c
+F:	scripts/dtc-version.sh
 
 FREEBSD
 M:	Rafal Jaworowski <raj@semihalf.com>
@@ -775,6 +793,16 @@ M:	Heiko Schocher <hs@denx.de>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-i2c.git
 F:	drivers/i2c/
+
+KWBIMAGE / KWBOOT TOOLS
+M:	Pali Rohár <pali@kernel.org>
+M:	Marek Behún <marek.behun@nic.cz>
+M:	Stefan Roese <sr@denx.de>
+S:	Maintained
+T:	git https://source.denx.de/u-boot/custodians/u-boot-marvell.git
+F:	doc/README.kwbimage
+F:	doc/kwboot.1
+F:	tools/kwb*
 
 LOGGING
 M:	Simon Glass <sjg@chromium.org>
@@ -980,7 +1008,7 @@ S:	Maintained
 F:	arch/powerpc/
 
 POWERPC MPC8XX
-M:	Christophe Leroy <christophe.leroy@c-s.fr>
+M:	Christophe Leroy <christophe.leroy@csgroup.eu>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-mpc8xx.git
 F:	arch/powerpc/cpu/mpc8xx/
@@ -1017,6 +1045,7 @@ T:	git https://source.denx.de/u-boot/custodians/u-boot-riscv.git
 F:	arch/riscv/
 F:	cmd/riscv/
 F:	doc/usage/sbi.rst
+F:	drivers/sysreset/sysreset_sbi.c
 F:	drivers/timer/andes_plmt_timer.c
 F:	drivers/timer/sifive_clint_timer.c
 F:	tools/prelink-riscv.c

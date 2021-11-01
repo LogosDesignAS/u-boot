@@ -9,6 +9,7 @@
 #include <asm/global_data.h>
 DECLARE_GLOBAL_DATA_PTR;
 #include <image.h>
+#include <relocate.h>
 #include <u-boot/ecdsa.h>
 #include <u-boot/rsa.h>
 #include <u-boot/hash-checksum.h>
@@ -51,35 +52,24 @@ struct checksum_algo checksum_algos[] = {
 
 };
 
-struct padding_algo padding_algos[] = {
-	{
-		.name = "pkcs-1.5",
-		.verify = padding_pkcs_15_verify,
-	},
-#ifdef CONFIG_FIT_RSASSA_PSS
-	{
-		.name = "pss",
-		.verify = padding_pss_verify,
-	}
-#endif /* CONFIG_FIT_RSASSA_PSS */
-};
-
 struct checksum_algo *image_get_checksum_algo(const char *full_name)
 {
 	int i;
 	const char *name;
 
-#if defined(CONFIG_NEEDS_MANUAL_RELOC)
-	static bool done;
+	if (IS_ENABLED(CONFIG_NEEDS_MANUAL_RELOC)) {
+		static bool done;
 
-	if (!done) {
-		done = true;
-		for (i = 0; i < ARRAY_SIZE(checksum_algos); i++) {
-			checksum_algos[i].name += gd->reloc_off;
-			checksum_algos[i].calculate += gd->reloc_off;
+		if (!done) {
+			done = true;
+			for (i = 0; i < ARRAY_SIZE(checksum_algos); i++) {
+				struct checksum_algo *algo = &checksum_algos[i];
+
+				MANUAL_RELOC(algo->name);
+				MANUAL_RELOC(algo->calculate);
+			}
 		}
 	}
-#endif
 
 	for (i = 0; i < ARRAY_SIZE(checksum_algos); i++) {
 		name = checksum_algos[i].name;
@@ -97,18 +87,19 @@ struct crypto_algo *image_get_crypto_algo(const char *full_name)
 	struct crypto_algo *crypto, *end;
 	const char *name;
 
-#if defined(CONFIG_NEEDS_MANUAL_RELOC)
-	static bool done;
+	if (IS_ENABLED(CONFIG_NEEDS_MANUAL_RELOC)) {
+		static bool done;
 
-	if (!done) {
-		crypto = ll_entry_start(struct crypto_algo, cryptos);
-		end = ll_entry_end(struct crypto_algo, cryptos);
-		for (; crypto < end; crypto++) {
-			crypto->name += gd->reloc_off;
-			crypto->verify += gd->reloc_off;
+		if (!done) {
+			done = true;
+			crypto = ll_entry_start(struct crypto_algo, cryptos);
+			end = ll_entry_end(struct crypto_algo, cryptos);
+			for (; crypto < end; crypto++) {
+				MANUAL_RELOC(crypto->name);
+				MANUAL_RELOC(crypto->verify);
+			}
 		}
 	}
-#endif
 
 	/* Move name to after the comma */
 	name = strchr(full_name, ',');
@@ -129,14 +120,16 @@ struct crypto_algo *image_get_crypto_algo(const char *full_name)
 
 struct padding_algo *image_get_padding_algo(const char *name)
 {
-	int i;
+	struct padding_algo *padding, *end;
 
 	if (!name)
 		return NULL;
 
-	for (i = 0; i < ARRAY_SIZE(padding_algos); i++) {
-		if (!strcmp(padding_algos[i].name, name))
-			return &padding_algos[i];
+	padding = ll_entry_start(struct padding_algo, paddings);
+	end = ll_entry_end(struct padding_algo, paddings);
+	for (; padding < end; padding++) {
+		if (!strcmp(padding->name, name))
+			return padding;
 	}
 
 	return NULL;

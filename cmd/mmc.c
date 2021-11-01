@@ -120,7 +120,9 @@ static void print_mmcinfo(struct mmc *mmc)
 		}
 	}
 }
-static struct mmc *init_mmc_device(int dev, bool force_init)
+
+static struct mmc *__init_mmc_device(int dev, bool force_init,
+				     enum bus_mode speed_mode)
 {
 	struct mmc *mmc;
 	mmc = find_mmc_device(dev);
@@ -134,6 +136,10 @@ static struct mmc *init_mmc_device(int dev, bool force_init)
 
 	if (force_init)
 		mmc->has_init = 0;
+
+	if (IS_ENABLED(CONFIG_MMC_SPEED_MODE_SET))
+		mmc->user_speed_mode = speed_mode;
+
 	if (mmc_init(mmc))
 		return NULL;
 
@@ -143,6 +149,11 @@ static struct mmc *init_mmc_device(int dev, bool force_init)
 #endif
 
 	return mmc;
+}
+
+static struct mmc *init_mmc_device(int dev, bool force_init)
+{
+	return __init_mmc_device(dev, force_init, MMC_MODES_END);
 }
 
 static int do_mmcinfo(struct cmd_tbl *cmdtp, int flag, int argc,
@@ -482,8 +493,17 @@ static int do_mmc_rescan(struct cmd_tbl *cmdtp, int flag,
 			 int argc, char *const argv[])
 {
 	struct mmc *mmc;
+	enum bus_mode speed_mode = MMC_MODES_END;
 
-	mmc = init_mmc_device(curr_device, true);
+	if (argc == 1) {
+		mmc = init_mmc_device(curr_device, true);
+	} else if (argc == 2) {
+		speed_mode = (int)dectoul(argv[1], NULL);
+		mmc = __init_mmc_device(curr_device, true, speed_mode);
+	} else {
+		return CMD_RET_USAGE;
+	}
+
 	if (!mmc)
 		return CMD_RET_FAILURE;
 
@@ -515,11 +535,14 @@ static int do_mmc_dev(struct cmd_tbl *cmdtp, int flag,
 {
 	int dev, part = 0, ret;
 	struct mmc *mmc;
+	enum bus_mode speed_mode = MMC_MODES_END;
 
 	if (argc == 1) {
 		dev = curr_device;
+		mmc = init_mmc_device(dev, true);
 	} else if (argc == 2) {
-		dev = dectoul(argv[1], NULL);
+		dev = (int)dectoul(argv[1], NULL);
+		mmc = init_mmc_device(dev, true);
 	} else if (argc == 3) {
 		dev = (int)dectoul(argv[1], NULL);
 		part = (int)dectoul(argv[2], NULL);
@@ -528,11 +551,21 @@ static int do_mmc_dev(struct cmd_tbl *cmdtp, int flag,
 			       PART_ACCESS_MASK);
 			return CMD_RET_FAILURE;
 		}
+		mmc = init_mmc_device(dev, true);
+	} else if (argc == 4) {
+		dev = (int)dectoul(argv[1], NULL);
+		part = (int)dectoul(argv[2], NULL);
+		if (part > PART_ACCESS_MASK) {
+			printf("#part_num shouldn't be larger than %d\n",
+			       PART_ACCESS_MASK);
+			return CMD_RET_FAILURE;
+		}
+		speed_mode = (int)dectoul(argv[3], NULL);
+		mmc = __init_mmc_device(dev, true, speed_mode);
 	} else {
 		return CMD_RET_USAGE;
 	}
 
-	mmc = init_mmc_device(dev, true);
 	if (!mmc)
 		return CMD_RET_FAILURE;
 
@@ -560,7 +593,33 @@ static int do_mmc_list(struct cmd_tbl *cmdtp, int flag,
 }
 
 #if CONFIG_IS_ENABLED(MMC_HW_PARTITIONING)
-static int parse_hwpart_user(struct mmc_hwpart_conf *pconf,
+static void parse_hwpart_user_enh_size(struct mmc *mmc,
+				       struct mmc_hwpart_conf *pconf,
+				       char *argv)
+{
+	int ret;
+
+	pconf->user.enh_size = 0;
+
+	if (!strcmp(argv, "-"))	{ /* The rest of eMMC */
+		ALLOC_CACHE_ALIGN_BUFFER(u8, ext_csd, MMC_MAX_BLOCK_LEN);
+		ret = mmc_send_ext_csd(mmc, ext_csd);
+		if (ret)
+			return;
+		/* This value is in 512B block units */
+		pconf->user.enh_size =
+			((ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT + 2] << 16) +
+			(ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT + 1] << 8) +
+			ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT]) * 1024 *
+			ext_csd[EXT_CSD_HC_ERASE_GRP_SIZE] *
+			ext_csd[EXT_CSD_HC_WP_GRP_SIZE];
+		pconf->user.enh_size -= pconf->user.enh_start;
+	} else {
+		pconf->user.enh_size = dectoul(argv, NULL);
+	}
+}
+
+static int parse_hwpart_user(struct mmc *mmc, struct mmc_hwpart_conf *pconf,
 			     int argc, char *const argv[])
 {
 	int i = 0;
@@ -573,8 +632,7 @@ static int parse_hwpart_user(struct mmc_hwpart_conf *pconf,
 				return -1;
 			pconf->user.enh_start =
 				dectoul(argv[i + 1], NULL);
-			pconf->user.enh_size =
-				dectoul(argv[i + 2], NULL);
+			parse_hwpart_user_enh_size(mmc, pconf, argv[i + 2]);
 			i += 3;
 		} else if (!strcmp(argv[i], "wrrel")) {
 			if (i + 1 >= argc)
@@ -640,13 +698,18 @@ static int do_mmc_hwpartition(struct cmd_tbl *cmdtp, int flag,
 	if (!mmc)
 		return CMD_RET_FAILURE;
 
+	if (IS_SD(mmc)) {
+		puts("SD doesn't support partitioning\n");
+		return CMD_RET_FAILURE;
+	}
+
 	if (argc < 1)
 		return CMD_RET_USAGE;
 	i = 1;
 	while (i < argc) {
 		if (!strcmp(argv[i], "user")) {
 			i++;
-			r = parse_hwpart_user(&pconf, argc-i, &argv[i]);
+			r = parse_hwpart_user(mmc, &pconf, argc - i, &argv[i]);
 			if (r < 0)
 				return CMD_RET_USAGE;
 			i += r;
@@ -983,9 +1046,9 @@ static struct cmd_tbl cmd_mmc[] = {
 #if CONFIG_IS_ENABLED(CMD_MMC_SWRITE)
 	U_BOOT_CMD_MKENT(swrite, 3, 0, do_mmc_sparse_write, "", ""),
 #endif
-	U_BOOT_CMD_MKENT(rescan, 1, 1, do_mmc_rescan, "", ""),
+	U_BOOT_CMD_MKENT(rescan, 2, 1, do_mmc_rescan, "", ""),
 	U_BOOT_CMD_MKENT(part, 1, 1, do_mmc_part, "", ""),
-	U_BOOT_CMD_MKENT(dev, 3, 0, do_mmc_dev, "", ""),
+	U_BOOT_CMD_MKENT(dev, 4, 0, do_mmc_dev, "", ""),
 	U_BOOT_CMD_MKENT(list, 1, 1, do_mmc_list, "", ""),
 #if CONFIG_IS_ENABLED(MMC_HW_PARTITIONING)
 	U_BOOT_CMD_MKENT(hwpartition, 28, 0, do_mmc_hwpartition, "", ""),
@@ -1042,9 +1105,12 @@ U_BOOT_CMD(
 	"mmc swrite addr blk#\n"
 #endif
 	"mmc erase blk# cnt\n"
-	"mmc rescan\n"
+	"mmc rescan [mode]\n"
 	"mmc part - lists available partition on current mmc device\n"
-	"mmc dev [dev] [part] - show or set current mmc device [partition]\n"
+	"mmc dev [dev] [part] [mode] - show or set current mmc device [partition] and set mode\n"
+	"  - the required speed mode is passed as the index from the following list\n"
+	"    [MMC_LEGACY, MMC_HS, SD_HS, MMC_HS_52, MMC_DDR_52, UHS_SDR12, UHS_SDR25,\n"
+	"    UHS_SDR50, UHS_DDR50, UHS_SDR104, MMC_HS_200, MMC_HS_400, MMC_HS_400_ES]\n"
 	"mmc list - lists available devices\n"
 	"mmc wp - power on write protect boot partitions\n"
 #if CONFIG_IS_ENABLED(MMC_HW_PARTITIONING)

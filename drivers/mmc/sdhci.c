@@ -258,8 +258,7 @@ static int sdhci_send_command(struct mmc *mmc, struct mmc_cmd *cmd,
 		flags = SDHCI_CMD_RESP_LONG;
 	else if (cmd->resp_type & MMC_RSP_BUSY) {
 		flags = SDHCI_CMD_RESP_SHORT_BUSY;
-		if (data)
-			mask |= SDHCI_INT_DATA_END;
+		mask |= SDHCI_INT_DATA_END;
 	} else
 		flags = SDHCI_CMD_RESP_SHORT;
 
@@ -781,6 +780,25 @@ static int sdhci_get_cd(struct udevice *dev)
 		return value;
 }
 
+static int sdhci_wait_dat0(struct udevice *dev, int state,
+			   int timeout_us)
+{
+	int tmp;
+	struct mmc *mmc = mmc_get_mmc_dev(dev);
+	struct sdhci_host *host = mmc->priv;
+	unsigned long timeout = timer_get_us() + timeout_us;
+
+	// readx_poll_timeout is unsuitable because sdhci_readl accepts
+	// two arguments
+	do {
+		tmp = sdhci_readl(host, SDHCI_PRESENT_STATE);
+		if (!!(tmp & SDHCI_DATA_0_LVL_MASK) == !!state)
+			return 0;
+	} while (!timeout_us || !time_after(timer_get_us(), timeout));
+
+	return -ETIMEDOUT;
+}
+
 const struct dm_mmc_ops sdhci_ops = {
 	.send_cmd	= sdhci_send_command,
 	.set_ios	= sdhci_set_ios,
@@ -789,6 +807,7 @@ const struct dm_mmc_ops sdhci_ops = {
 #ifdef MMC_SUPPORTS_TUNING
 	.execute_tuning	= sdhci_execute_tuning,
 #endif
+	.wait_dat0	= sdhci_wait_dat0,
 };
 #else
 static const struct mmc_ops sdhci_ops = {
