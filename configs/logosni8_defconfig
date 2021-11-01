@@ -63,6 +63,7 @@ CONFIG_SPL_SEPARATE_BSS=y
 
 # Test these
 CONFIG_SPL_I2C=y
+CONFIG_SPL_SYS_I2C_LEGACY=y
 #CONFIG_SPL_WATCHDOG=y
 
 # Kernel
@@ -109,7 +110,7 @@ CONFIG_SPL_BOOTCOUNT_LIMIT=y
 CONFIG_MISC_INIT_R=y
 
 # Additional Options
-CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/ni8/logosni8.cfg,DDR_MB=512"
+CONFIG_SYS_EXTRA_OPTIONS="DDR_MB=512"
 
 # This define is used to suppress the output on the UART - "IN: serial, Out: serial, ERR: serial"
 CONFIG_SYS_CONSOLE_INFO_QUIET=y
@@ -233,6 +234,9 @@ CONFIG_FIT=y
 
 # Set default Device Tree
 CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
+
+# CONFIG FILE
+CONFIG_IMX_CONFIG="board/logos/ni8/logosni8.cfg"
 
 # Lib for passing the device tree to the Kernel
 #CONFIG_OF_LIBFDT_OVERLAY=y

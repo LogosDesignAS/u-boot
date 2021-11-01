@@ -28,17 +28,19 @@
 //#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"nicore8br_initrd.itb"
 //#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME					"Nicore8.itb"		//"uImage2"
 #define		CONFIG_SYS_SPL_ARGS_ADDR						0x1ffe5000
-#define		CONFIG_CMD_SPL_WRITE_SIZE						0x10000
+//#define		CONFIG_CMD_SPL_WRITE_SIZE						0x10000
 #define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  			0x2000				/* Block offset for Arguments - fdt*/
 #define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 			0x74
 #define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR			0x0					/* 0MB at partition 4 in MMC dev 2  - offset of kernel*/
 #define     CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 	4
 
 // Add possibilities to adjust the Malloc size - which is needed with SPL and large kernels
+/*
 #ifdef CONFIG_SYS_SPL_MALLOC_SIZE
 #undef CONFIG_SYS_SPL_MALLOC_SIZE
-#define		CONFIG_SYS_SPL_MALLOC_SIZE						0x100000			/* 1 MB */
+#define		CONFIG_SYS_SPL_MALLOC_SIZE						0x100000			// 1 MB
 #endif
+*/
 
 #endif /* CONFIG_SPL */
 
@@ -59,7 +61,7 @@
 
 #define CONFIG_NR_DRAM_BANKS				1
 #define CONFIG_SYS_MAX_FLASH_BANKS			1
-#define CONFIG_SYS_MALLOC_LEN				(10 * SZ_1M)
+//#define CONFIG_SYS_MALLOC_LEN				(10 * SZ_1M)
 #define PHYS_SDRAM							MMDC0_ARB_BASE_ADDR
 #define CONFIG_SYS_SDRAM_BASE				PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR			IRAM_BASE_ADDR
@@ -70,10 +72,7 @@
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* I2C Configs */
-#ifdef CONFIG_SPL_BUILD
-// For SPL use Legacy I2C Settings
-#define CONFIG_SYS_I2C_LEGACY
-#endif /* CONFIG_SPL_BUILD */
+#ifndef CONFIG_SPL_BUILD
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
 #define CONFIG_SYS_I2C_MXC_I2C2				// enable I2C bus 2
@@ -81,6 +80,7 @@
 #define CONFIG_SYS_I2C_MXC_I2C4				// enable I2C bus 4
 #define CONFIG_SYS_I2C_SPEED				100000
 #define CONFIG_I2C_EDID
+#endif /* CONFIG_SPL_BUILD */
 
 
 /* Bootcount Commands - Use i2C */
