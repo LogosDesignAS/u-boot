@@ -144,6 +144,7 @@ Directory Hierarchy:
   /xtensa		Files generic to Xtensa architecture
 /api			Machine/arch-independent API for external apps
 /board			Board-dependent files
+/boot			Support for images and booting
 /cmd			U-Boot commands functions
 /common			Misc architecture-independent functions
 /configs		Board default configuration files
@@ -605,10 +606,6 @@ The following options need to be configured:
 					controller register space
 
 - Serial Ports:
-		CONFIG_PL011_SERIAL
-
-		Define this if you want support for Amba PrimeCell PL011 UARTs.
-
 		CONFIG_PL011_CLOCK
 
 		If you have Amba PrimeCell PL011 UARTs, set this variable to
@@ -672,13 +669,6 @@ The following options need to be configured:
 
 		U-Boot needs to get its device tree from somewhere. This can
 		be done using one of the three options below:
-
-		CONFIG_OF_EMBED
-		If this variable is defined, U-Boot will embed a device tree
-		binary in its image. This device tree file should be in the
-		board directory and called <soc>-<board>.dts. The binary file
-		is then picked up in board_init_f() and made available through
-		the global data structure as gd->fdt_blob.
 
 		CONFIG_OF_SEPARATE
 		If this variable is defined, U-Boot will build a device tree
@@ -831,17 +821,10 @@ The following options need to be configured:
 		SCSI devices found during the last scan.
 
 - NETWORK Support (PCI):
-		CONFIG_E1000
-		Support for Intel 8254x/8257x gigabit chips.
-
 		CONFIG_E1000_SPI
 		Utility code for direct access to the SPI bus on Intel 8257x.
 		This does not do anything useful unless you set at least one
 		of CONFIG_CMD_E1000 or CONFIG_E1000_SPI_GENERIC.
-
-		CONFIG_E1000_SPI_GENERIC
-		Allow generic access to the SPI bus on the Intel 8257x, for
-		example with the "sspi" command.
 
 		CONFIG_NATSEMI
 		Support for National dp83815 chips.
@@ -990,10 +973,6 @@ The following options need to be configured:
 			also needs to be defined by the driver to dynamically poll
 			whether the enumeration has succeded at high speed or full
 			speed.
-
-			CONFIG_SYS_CONSOLE_IS_IN_ENV
-			Define this if you want stdin, stdout &/or stderr to
-			be set to usbtty.
 
 		If you have a USB-IF assigned VendorID then you may wish to
 		define your own vendor specific values either in BoardName.h
@@ -1205,11 +1184,6 @@ The following options need to be configured:
 		CONFIG_LCD_BMP_RLE8
 
 		Support drawing of RLE8-compressed bitmaps on the LCD.
-
-		CONFIG_I2C_EDID
-
-		Enables an 'i2c edid' command which can read EDID
-		information over I2C from an attached LCD display.
 
 - MII/PHY support:
 		CONFIG_PHY_CLOCK_FREQ (ppc4xx)
@@ -1948,9 +1922,6 @@ The following options need to be configured:
 		CONFIG_SPL
 		Enable building of SPL globally.
 
-		CONFIG_SPL_LDSCRIPT
-		LDSCRIPT for linking the SPL binary.
-
 		CONFIG_SPL_MAX_FOOTPRINT
 		Maximum size in memory allocated to the SPL, BSS included.
 		When defined, the linker checks that the actual memory
@@ -2004,10 +1975,6 @@ The following options need to be configured:
 
 		CONFIG_SYS_SPL_MALLOC_SIZE
 		The size of the malloc pool used in SPL.
-
-		CONFIG_SPL_OS_BOOT
-		Enable booting directly to an OS from SPL.
-		See also: doc/README.falcon
 
 		CONFIG_SPL_DISPLAY_PRINT
 		For ARM, enable an optional function to print more information

@@ -73,10 +73,8 @@
  * Ethernet on SOC (FEC)
  */
 #ifdef CONFIG_CMD_NET
-#define CONFIG_FEC_MXC
 #define IMX_FEC_BASE			FEC_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR		0x0
-#define CONFIG_MII
 #define CONFIG_DISCOVER_PHY
 #define CONFIG_FEC_XCV_TYPE		RMII
 #define CONFIG_ETHPRIME			"FEC0"

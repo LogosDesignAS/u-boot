@@ -27,10 +27,6 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/mach-imx/gpio.h>
 
-#ifndef CONFIG_MX6
-#define CONFIG_MX6
-#endif
-
 #define CONFIG_SYS_FSL_CLK
 
 /* Miscellaneous configurable options */
@@ -38,9 +34,5 @@
 #define CONFIG_SYS_MAXARGS	32
 
 /* MMC */
-
-#ifdef CONFIG_SPL_BUILD
-#define CONFIG_SPL_DRIVERS_MISC
-#endif
 
 #endif

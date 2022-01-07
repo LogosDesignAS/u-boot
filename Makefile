@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0+
 
-VERSION = 2021
-PATCHLEVEL = 10
+VERSION = 2022
+PATCHLEVEL = 01
 SUBLEVEL =
-EXTRAVERSION =
+EXTRAVERSION = -rc4
 NAME =
 
 # *DOCUMENTATION*
@@ -808,6 +808,7 @@ HAVE_VENDOR_COMMON_LIB = $(if $(wildcard $(srctree)/board/$(VENDOR)/common/Makef
 
 libs-$(CONFIG_API) += api/
 libs-$(HAVE_VENDOR_COMMON_LIB) += board/$(VENDOR)/common/
+libs-y += boot/
 libs-y += cmd/
 libs-y += common/
 libs-$(CONFIG_OF_EMBED) += dts/
@@ -1094,7 +1095,7 @@ endif
 ifeq ($(CONFIG_DEPRECATED),y)
 	$(warning "You have deprecated configuration options enabled in your .config! Please check your configuration.")
 endif
-ifeq ($(CONFIG_OF_EMBED),y)
+ifeq ($(CONFIG_OF_EMBED)$(CONFIG_EFI_APP),y)
 	@echo >&2 "===================== WARNING ======================"
 	@echo >&2 "CONFIG_OF_EMBED is enabled. This option should only"
 	@echo >&2 "be used for debugging purposes. Please use"
@@ -1245,7 +1246,7 @@ binary_size_check: u-boot-nodtb.bin FORCE
 			echo "u-boot.map shows a binary size of $$map_size" >&2 ; \
 			echo "  but u-boot-nodtb.bin shows $$file_size" >&2 ; \
 			exit 1; \
-		fi \
+		fi; \
 	fi
 
 ifeq ($(CONFIG_INIT_SP_RELATIVE)$(CONFIG_OF_SEPARATE),yy)
@@ -1313,7 +1314,7 @@ cmd_binman = $(srctree)/tools/binman/binman $(if $(BINMAN_DEBUG),-D) \
 		-a spl-bss-pad=$(if $(CONFIG_SPL_SEPARATE_BSS),,1) \
 		-a tpl-bss-pad=$(if $(CONFIG_TPL_SEPARATE_BSS),,1) \
 		-a spl-dtb=$(CONFIG_SPL_OF_REAL) \
-		-a tpl-dtb=$(CONFIG_SPL_OF_REAL) \
+		-a tpl-dtb=$(CONFIG_TPL_OF_REAL) \
 		$(BINMAN_$(@F))
 
 OBJCOPYFLAGS_u-boot.ldr.hex := -I binary -O ihex
@@ -1756,12 +1757,16 @@ quiet_cmd_u-boot__ ?= LTO     $@
 		-Wl,-Map,u-boot.map;						\
 		$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
 else
+# Note: Linking efi-x86_app64 causes a segfault in the linker at present
+# when using x86_64-linux-gnu-ld.bfd
+# For now, disable --whole-archive which makes things link, although not
+# correctly
 quiet_cmd_u-boot__ ?= LD      $@
       cmd_u-boot__ ?= $(LD) $(KBUILD_LDFLAGS) $(LDFLAGS_u-boot) -o $@		\
 		-T u-boot.lds $(u-boot-init)					\
-		--whole-archive							\
+		$(if $(CONFIG_EFI_APP_64BIT),,--whole-archive)			\
 			$(u-boot-main)						\
-		--no-whole-archive						\
+		$(if $(CONFIG_EFI_APP_64BIT),,--no-whole-archive)		\
 		$(PLATFORM_LIBS) -Map u-boot.map;				\
 		$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
 endif
@@ -2100,7 +2105,7 @@ CLEAN_DIRS  += $(MODVERDIR) \
 			$(filter-out include, $(shell ls -1 $d 2>/dev/null))))
 
 CLEAN_FILES += include/bmp_logo.h include/bmp_logo_data.h tools/version.h \
-	       boot* u-boot* MLO* SPL System.map fit-dtb.blob* \
+	       u-boot* MLO* SPL System.map fit-dtb.blob* \
 	       u-boot-ivt.img.log u-boot-dtb.imx.log SPL.log u-boot.imx.log \
 	       lpc32xx-* bl31.c bl31.elf bl31_*.bin image.map tispl.bin* \
 	       idbloader.img flash.bin flash.log defconfig keep-syms-lto.c

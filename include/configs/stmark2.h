@@ -10,7 +10,6 @@
 
 #define CONFIG_HOSTNAME			"stmark2"
 
-#define CONFIG_MCFUART
 #define CONFIG_SYS_UART_PORT		0
 
 #define LDS_BOARD_TEXT						\
@@ -122,10 +121,6 @@
 /* Configuration for environment
  * Environment is embedded in u-boot in the second sector of the flash
  */
-
-#if defined(CONFIG_CF_SBF)
-#define CONFIG_ENV_IS_IN_SPI_FLASH	1
-#endif
 
 /* Cache Configuration */
 #define ICACHE_STATUS			(CONFIG_SYS_INIT_RAM_ADDR + \

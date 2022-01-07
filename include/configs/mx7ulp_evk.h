@@ -26,7 +26,6 @@
 #define LPUART_BASE			LPUART4_RBASE
 
 /* Miscellaneous configurable options */
-#define CONFIG_SYS_PROMPT		"=> "
 #define CONFIG_SYS_CBSIZE		512
 
 #define CONFIG_SYS_MAXARGS		256
@@ -111,8 +110,6 @@
 			   "fi; " \
 		   "fi; " \
 	   "fi"
-
-#define CONFIG_SYS_HZ			1000
 
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	SZ_256K

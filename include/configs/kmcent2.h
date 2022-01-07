@@ -335,7 +335,6 @@
 #define CONFIG_SYS_CS2_FTIM2	SYS_QRIO_FTIM2
 #define CONFIG_SYS_CS2_FTIM3	SYS_QRIO_FTIM3
 
-#define CONFIG_MISC_INIT_F
 #define CONFIG_HWCONFIG
 
 /* define to use L1 as initial stack */
@@ -411,10 +410,6 @@ int get_scl(void);
 #define CONFIG_SYS_DPAA_FMAN
 #define CONFIG_SYS_DPAA_PME
 
-/* Default address of microcode for the Linux Fman driver */
-#define CONFIG_SYS_FMAN_FW_ADDR		0xE8020000
-#define CONFIG_SYS_QE_FW_ADDR		0xE8040000
-#define CONFIG_SYS_QE_FMAN_FW_LENGTH	0x10000
 #define CONFIG_SYS_FDT_PAD		(0x3000 + CONFIG_SYS_QE_FMAN_FW_LENGTH)
 
 /* Qman / Bman */

@@ -72,22 +72,11 @@
 /* Not used: not need IRQ/FIQ stuff */
 #undef  CONFIG_USE_IRQ
 /* decrementer freq: 1ms ticks */
-#define CONFIG_SYS_HZ			1000
 
 /*-----------------------------------------------------------------------
  *  System initialize options (board_init_f)
  */
 /* board_init_f->init_sequence, call arch_cpu_init */
-#define CONFIG_ARCH_CPU_INIT
-
-/*-----------------------------------------------------------------------
- * Miscellaneous configurable options
- */
-#ifdef CONFIG_SYS_PROMPT
-#undef CONFIG_SYS_PROMPT
-/* Monitor Command Prompt */
-#define CONFIG_SYS_PROMPT		"nanopi2# "
-#endif
 
 /* Console I/O Buffer Size */
 #define CONFIG_SYS_CBSIZE		1024

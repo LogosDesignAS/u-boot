@@ -6,7 +6,6 @@
 #define __CONFIG_H
 
 /* Timers for fasp(TIMCLK) */
-#define CONFIG_SYS_HZ			1000		/* 1 msec */
 #define CONFIG_SYS_TIMERBASE		0x31080000	/* AP Timer 1 (ARM-SP804) */
 
 /*
@@ -34,12 +33,8 @@
 
 /* Serial (pl011)       */
 #define UART_CLK			(62500000)
-#define CONFIG_SERIAL_MULTI
-#define CONFIG_PL011_SERIAL
 #define CONFIG_PL011_CLOCK		UART_CLK
 #define CONFIG_PL01x_PORTS		{(void *)(0x2a400000)}
-
-#define CONFIG_ENV_OVERWRITE		/* ethaddr can be reprogrammed */
 
 /* Support MTD */
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
@@ -57,7 +52,7 @@
 /* #define CONFIG_SYS_PCI_64BIT		1 */
 
 #define DEFAULT_DFU_ALT_INFO "dfu_alt_info="				\
-			"mtd mx66u51235f=u-boot.bin raw 200000 100000;"	\
+			"mtd nor1=u-boot.bin raw 200000 100000;"	\
 			"fip.bin raw 180000 78000;"			\
 			"optee.bin raw 500000 100000\0"
 

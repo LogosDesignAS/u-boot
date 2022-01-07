@@ -13,10 +13,6 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/mach-imx/gpio.h>
 
-#ifndef CONFIG_MX7
-#define CONFIG_MX7
-#endif
-
 /* Timer settings */
 #define CONFIG_MXC_GPT_HCLK
 #define CONFIG_SC_TIMER_CLK 8000000 /* 8Mhz */
@@ -37,10 +33,6 @@
 /* MMC */
 
 #define CONFIG_ARMV7_SECURE_BASE	0x00900000
-
-#ifdef CONFIG_SPL_BUILD
-#define CONFIG_SPL_DRIVERS_MISC
-#endif
 
 /*
  * If we have defined the OPTEE ram size and not OPTEE it means that we were

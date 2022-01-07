@@ -10,7 +10,6 @@
 #define __CONFIG_CI20_H__
 
 /* Ingenic JZ4780 clock configuration. */
-#define CONFIG_SYS_HZ			1000
 #define CONFIG_SYS_MHZ			1200
 #define CONFIG_SYS_MIPS_TIMER_FREQ	(CONFIG_SYS_MHZ * 1000000)
 
@@ -25,7 +24,6 @@
 
 /* NS16550-ish UARTs */
 #define CONFIG_SYS_NS16550_CLK		48000000
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 
 /* Ethernet: davicom DM9000 */
 #define CONFIG_DRIVER_DM9000		1

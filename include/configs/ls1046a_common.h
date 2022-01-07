@@ -95,14 +95,7 @@
 /* NAND SPL */
 #ifdef CONFIG_NAND_BOOT
 #define CONFIG_SPL_PBL_PAD
-#define CONFIG_SPL_LIBCOMMON_SUPPORT
-#define CONFIG_SPL_LIBGENERIC_SUPPORT
-#define CONFIG_SPL_ENV_SUPPORT
-#define CONFIG_SPL_WATCHDOG
-#define CONFIG_SPL_I2C
 
-#define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_DRIVERS_MISC
 #define CONFIG_SPL_MAX_SIZE		0x17000		/* 90 KiB */
 #define CONFIG_SPL_STACK		0x1001f000
 #define CONFIG_SYS_NAND_U_BOOT_DST	CONFIG_SYS_TEXT_BASE
@@ -152,26 +145,6 @@
 #ifdef CONFIG_SYS_DPAA_FMAN
 #define CONFIG_SYS_FM_MURAM_SIZE	0x60000
 #endif
-
-#ifdef CONFIG_TFABOOT
-#define CONFIG_SYS_FMAN_FW_ADDR		0x900000
-#else
-#ifdef CONFIG_SD_BOOT
-/*
- * PBL SD boot image should stored at 0x1000(8 blocks), the size of the image is
- * about 1MB (2048 blocks), Env is stored after the image, and the env size is
- * 0x2000 (16 blocks), 8 + 2048 + 16 = 2072, enlarge it to 18432(0x4800).
- */
-#define CONFIG_SYS_FMAN_FW_ADDR		(512 * 0x4800)
-#elif defined(CONFIG_QSPI_BOOT)
-#define CONFIG_SYS_FMAN_FW_ADDR		0x40900000
-#elif defined(CONFIG_NAND_BOOT)
-#define CONFIG_SYS_FMAN_FW_ADDR		(36 * (256 * 1024))
-#else
-#define CONFIG_SYS_FMAN_FW_ADDR		0x60900000
-#endif
-#endif
-#define CONFIG_SYS_QE_FMAN_FW_LENGTH	0x10000
 #define CONFIG_SYS_FDT_PAD		(0x3000 + CONFIG_SYS_QE_FMAN_FW_LENGTH)
 #endif
 

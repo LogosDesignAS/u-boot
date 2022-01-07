@@ -71,6 +71,9 @@ const efi_guid_t efi_guid_driver_binding_protocol =
 /* event group ExitBootServices() invoked */
 const efi_guid_t efi_guid_event_group_exit_boot_services =
 			EFI_EVENT_GROUP_EXIT_BOOT_SERVICES;
+/* event group before ExitBootServices() invoked */
+const efi_guid_t efi_guid_event_group_before_exit_boot_services =
+			EFI_EVENT_GROUP_BEFORE_EXIT_BOOT_SERVICES;
 /* event group SetVirtualAddressMap() invoked */
 const efi_guid_t efi_guid_event_group_virtual_address_change =
 			EFI_EVENT_GROUP_VIRTUAL_ADDRESS_CHANGE;
@@ -2123,6 +2126,16 @@ static efi_status_t EFIAPI efi_exit_boot_services(efi_handle_t image_handle,
 	if (!systab.boottime)
 		goto out;
 
+	/* Notify EFI_EVENT_GROUP_BEFORE_EXIT_BOOT_SERVICES event group. */
+	list_for_each_entry(evt, &efi_events, link) {
+		if (evt->group &&
+		    !guidcmp(evt->group,
+			     &efi_guid_event_group_before_exit_boot_services)) {
+			efi_signal_event(evt);
+			break;
+		}
+	}
+
 	/* Stop all timer related activities */
 	timers_enabled = false;
 
@@ -2154,6 +2167,7 @@ static efi_status_t EFIAPI efi_exit_boot_services(efi_handle_t image_handle,
 	}
 
 	if (!efi_st_keep_devices) {
+		bootm_disable_interrupts();
 		if (IS_ENABLED(CONFIG_USB_DEVICE))
 			udc_disconnect();
 		board_quiesce_devices();
@@ -2165,9 +2179,6 @@ static efi_status_t EFIAPI efi_exit_boot_services(efi_handle_t image_handle,
 
 	/* Fix up caches for EFI payloads if necessary */
 	efi_exit_caches();
-
-	/* This stops all lingering devices */
-	bootm_disable_interrupts();
 
 	/* Disable boot time services */
 	systab.con_in_handle = NULL;
@@ -3005,9 +3016,12 @@ efi_status_t EFIAPI efi_start_image(efi_handle_t image_handle,
 	if (IS_ENABLED(CONFIG_EFI_TCG2_PROTOCOL)) {
 		if (image_obj->image_type == IMAGE_SUBSYSTEM_EFI_APPLICATION) {
 			ret = efi_tcg2_measure_efi_app_invocation(image_obj);
-			if (ret != EFI_SUCCESS) {
-				log_warning("tcg2 measurement fails(0x%lx)\n",
-					    ret);
+			if (ret == EFI_SECURITY_VIOLATION) {
+				/*
+				 * TCG2 Protocol is installed but no TPM device found,
+				 * this is not expected.
+				 */
+				return EFI_EXIT(EFI_SECURITY_VIOLATION);
 			}
 		}
 	}

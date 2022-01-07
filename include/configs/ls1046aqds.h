@@ -27,13 +27,6 @@ unsigned long get_board_sys_clk(void);
 #define CONFIG_MEM_INIT_VALUE           0xdeadbeef
 #endif
 
-/* DSPI */
-#ifdef CONFIG_FSL_DSPI
-#define CONFIG_SPI_FLASH_STMICRO	/* cs0 */
-#define CONFIG_SPI_FLASH_SST		/* cs1 */
-#define CONFIG_SPI_FLASH_EON		/* cs2 */
-#endif
-
 #ifdef CONFIG_SYS_DPAA_FMAN
 #define RGMII_PHY1_ADDR		0x1
 #define RGMII_PHY2_ADDR		0x2
@@ -359,8 +352,6 @@ unsigned long get_board_sys_clk(void);
 /*
  * Miscellaneous configurable options
  */
-
-#define CONFIG_SYS_HZ			1000
 
 #define CONFIG_SYS_INIT_SP_OFFSET \
 	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
