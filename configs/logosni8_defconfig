@@ -55,7 +55,6 @@ CONFIG_SPL_MMC_BOOT=y
 
 # Further SPL defines for MMC Boot
 CONFIG_SPL_MMC=y
-CONFIG_MMC=y
 
 #block Devices
 CONFIG_BLK=y
