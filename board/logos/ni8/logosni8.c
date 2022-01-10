@@ -1695,7 +1695,7 @@ int board_late_init(void)
 {
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
 	print_Logos_Logo();
-	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_NUM, env_get("serial#"));
+	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", env_get("ver"), env_get("serial#"));
 
 #ifdef CONFIG_IMX_THERMAL
 	struct udevice *thermal_dev;
