@@ -26,7 +26,7 @@ CONFIG_MXC_UART=y
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
 
-#Enable Falcon Boot
+# Enable Falcon Boot
 CONFIG_CMD_SPL=y
 
 # Configuration of SPL
@@ -64,12 +64,11 @@ CONFIG_SPL_MMC_SUPPORT=y
 CONFIG_SPL_GPIO=y
 CONFIG_SPL_SEPARATE_BSS=y
 
-# Test these
+# I2C support on SPL
 CONFIG_SPL_I2C=y
 CONFIG_SPL_SYS_I2C_LEGACY=y
-#CONFIG_SPL_WATCHDOG=y
 
-# Kernel
+# Kernel support in SPL
 CONFIG_SPL_OS_BOOT=y
 CONFIG_SPL_ALLOC_BD=y
 CONFIG_SYS_SPL_MALLOC_START=y
@@ -94,17 +93,19 @@ CONFIG_SYS_SPL_MALLOC_START=y
 CONFIG_ENV_IS_IN_MMC=y
 CONFIG_SYS_MMC_ENV_DEV=2
 CONFIG_SYS_MMC_ENV_PART=1
-#CONFIG_SYS_REDUNDAND_ENVIRONMENT=y
+CONFIG_SYS_REDUNDAND_ENVIRONMENT=y
 # Last 64 KB off first eMMC boot partition is for user environment variables.
 # Two 32 KB areas for redundancy.
 CONFIG_ENV_SIZE=0x8000
-# Negative value means backwards from the end. - SPL doesnt expect this forma, but can only read from the begining
-CONFIG_ENV_OFFSET=0x1F0000
-#CONFIG_ENV_OFFSET=0xFFFF0000
-#CONFIG_ENV_OFFSET_REDUND=0x1F8000
+# Negative value means backwards from the end.
+CONFIG_ENV_OFFSET=0xFFFF0000
+CONFIG_ENV_OFFSET_REDUND=0x1F8000
 CONFIG_SYS_RELOC_GD_ENV_ADDR=y
 CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
+
+# Add this to enable SPL Environment Support - but outcomment the above addresses
 #CONFIG_SPL_ENV_SUPPORT=y
+#CONFIG_ENV_OFFSET=0x1F0000
 
 # Boot Count for SPL
 CONFIG_SPL_BOOTCOUNT_LIMIT=y
@@ -168,10 +169,8 @@ CONFIG_BOOTCOUNT_ALEN=2
 CONFIG_BOOTCOUNT_LIMIT=y
 CONFIG_BOOTCOUNT_BOOTLIMIT=3
 CONFIG_BOOTCOUNT_I2C=y
-# Bootcount DM i2c
-#CONFIG_DM_BOOTCOUNT_I2C_EEPROM=y
-#CONFIG_DM_BOOTCOUNT=y
 
+# Enable Boot Count Command
 CONFIG_CMD_BOOTCOUNT=y
 
 # HAB - High Assurance Boot
@@ -258,25 +257,15 @@ CONFIG_DM_I2C=y
 # DM Watchdog support
 CONFIG_WDT=y
 
-# Enable LZO compression
-CONFIG_LZO=y
-
 # Commands
 # Enable Caches for optimised bootup speed
 CONFIG_CMD_CACHE=y
-
 CONFIG_CMD_EEPROM=y
 CONFIG_CMD_I2C=y
 CONFIG_CMD_MMC=y
 CONFIG_CMD_SPI=y
-
 CONFIG_CMD_SF=y
-CONFIG_CMD_SF_TEST=y
-
 CONFIG_CMD_HDMIDETECT=y
-
-CONFIG_CMD_BMP=y
-
 CONFIG_CMD_BMODE=y
 
 # Read and display information about the partition table on various media.
@@ -288,7 +277,9 @@ CONFIG_CMD_EXT4_WRITE=y
 CONFIG_CMD_FAT=y
 CONFIG_CMD_FAT_WRITE=y
 
+# Compression
 CONFIG_CMD_UNZIP=y
+CONFIG_LZO=y
 
 # Power Command for getting regulator voltages
 CONFIG_CMD_REGULATOR=y
