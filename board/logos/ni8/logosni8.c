@@ -398,7 +398,7 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
-#endif /* CONFIG_SPL_BUILD */
+
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
@@ -418,6 +418,7 @@ static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA14__GPIO3_IO14, NO_PAD_CTRL),
 	IOMUX_PAD_CTRL(EIM_DA15__GPIO3_IO15, NO_PAD_CTRL),
 };
+#endif /* CONFIG_SPL_BUILD */
 
 /* LED2 and LED3 pads on logosni8 */
 static iomux_v3_cfg_t const ni8_led_pads[] = {
@@ -672,7 +673,7 @@ static void setup_iomux_leds(void)
 	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 };
-#endif /* CONFIG_SPL_BUILD */
+
 
 static void setup_iomux_boot_config(void)
 {
@@ -715,7 +716,7 @@ static void setup_iomux_boot_config(void)
 	gpio_direction_input(GPIO_EIM_DA14);
 	gpio_direction_input(GPIO_EIM_DA15);
 };
-#ifndef CONFIG_SPL_BUILD
+
 static void setup_iomux_enet(void)
 {
 	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
@@ -1863,7 +1864,7 @@ static int spl_mmc_find_device(struct mmc **mmcp, u32 boot_device)
 	return 0;
 }
 
-void mmc_change_part(int part)
+int mmc_change_part(int part)
 {
 	static struct mmc *mmc;
 	u32 boot_device = BOOT_DEVICE_MMC1;
@@ -1888,7 +1889,9 @@ void mmc_change_part(int part)
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
 			puts("spl: mmc partition switch failed\n");
 #endif
+			return err;
 		}
+	return 0;
 }
 
 //#define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name | pad_ctrl)
