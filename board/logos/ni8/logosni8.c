@@ -264,10 +264,12 @@ static iomux_v3_cfg_t const uart2_pads[] = {
 
 /* Configuration of UART4 GPIO Pins for Logosni8 Testing boot time */
 #ifdef CONFIG_SPL_BUILD
+#ifdef TEST_TIMING
 static iomux_v3_cfg_t const uart4_gpio_pads[] = {
 		IOMUX_PAD_CTRL(CSI0_DAT12__GPIO5_IO30, NO_PAD_CTRL),
 		IOMUX_PAD_CTRL(CSI0_DAT13__GPIO5_IO31, NO_PAD_CTRL),
 };
+#endif //TEST_TIMING
 #endif // CONFIG_SPL_BUILD
 
 /* Configuration of UART4 for Logosni8 */
