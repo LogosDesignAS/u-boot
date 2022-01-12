@@ -21,23 +21,22 @@
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
-// For SPL Benchmarking this Define is used to enable some early printing with a very simple software defined UART usign GPIOs: TODO: Remove this before merging
-#define TEST_TIMING
+// For SPL Benchmarking this Define is used to enable some early printing with a very simple software defined UART using GPIOs: TODO: Remove this before merging
+//#define TEST_TIMING
 
 // Defines for booting the kernel from SPL
 //#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"nicore8br_initrd.itb"
 //#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME					"Nicore8.itb"		//"uImage2"
 #define		CONFIG_SYS_SPL_ARGS_ADDR						0x1ffe5000
-#define		CONFIG_CMD_SPL_WRITE_SIZE						0x10000
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  			0x2000				/* Block offset for Arguments - fdt*/
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 			0x74
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  			0x6000				/* Block offset for Arguments - fdt*/
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 			0x76
 #define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR			0x0					/* 0MB at partition 4 in MMC dev 2  - offset of kernel*/
 #define     CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 	4
 
 // Add possibilities to adjust the Malloc size - which is needed with SPL and large kernels
 #ifdef CONFIG_SYS_SPL_MALLOC_SIZE
 #undef CONFIG_SYS_SPL_MALLOC_SIZE
-#define		CONFIG_SYS_SPL_MALLOC_SIZE						0x100000			/* 1 MB */
+#define		CONFIG_SYS_SPL_MALLOC_SIZE						0x1000000			// 16 MB
 #endif
 
 #endif /* CONFIG_SPL */
