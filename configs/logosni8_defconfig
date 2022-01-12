@@ -38,6 +38,7 @@ CONFIG_SPL_TEXT_BASE=0x00908000
 # Support fit image
 CONFIG_SPL_LOAD_FIT=y
 CONFIG_SPL_FIT=y
+CONFIG_SPL_FIT_PRINT=y
 CONFIG_SPL_LEGACY_IMAGE_SUPPORT=y
 
 # SPL Board Init
@@ -174,7 +175,7 @@ CONFIG_BOOTCOUNT_I2C=y
 CONFIG_CMD_BOOTCOUNT=y
 
 # HAB - High Assurance Boot
-CONFIG_IMX_HAB=y
+CONFIG_IMX_HAB=n
 CONFIG_SECURE_BOOT=y
 
 # Enable the hush shell, if, then, else logic in scripts
@@ -298,6 +299,11 @@ CONFIG_CMD_LINK_LOCAL=y
 CONFIG_CMD_TIME=y
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_BOOTZ=y
+
+# SPL Serial Support - TODO: Remove before release
+CONFIG_SPL_SERIAL=y
+
+
 
 # Comment following in later, for speed optimization
 # CONFIG_UBI_SILENCE_MSG

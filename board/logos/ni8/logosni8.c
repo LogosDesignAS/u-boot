@@ -2309,7 +2309,7 @@ void board_init_f(ulong dummy)
 	memset(__bss_start, 0, __bss_end - __bss_start);
 
 	/* UART clocks enabled and gd valid - init serial console */
-#ifdef CONFIG_SPL_SERIAL_SUPPORT
+#ifdef CONFIG_SPL_SERIAL
 	preloader_console_init();
 #else
 #ifdef TEST_TIMING
