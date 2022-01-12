@@ -303,7 +303,8 @@ CONFIG_CMD_BOOTZ=y
 # SPL Serial Support - TODO: Remove before release
 CONFIG_SPL_SERIAL=y
 
-
+# SPL Falcon Boot Mode support
+CONFIG_CMD_SPL_WRITE_SIZE=0x100000
 
 # Comment following in later, for speed optimization
 # CONFIG_UBI_SILENCE_MSG
