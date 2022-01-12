@@ -301,6 +301,14 @@ CONFIG_CMD_TIME=y
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_BOOTZ=y
 
+# SPL Serial Support
+CONFIG_SPL_SERIAL_SUPPORT=y
+
+# SPL Verify Fit Signature
+CONFIG_SPL_FIT_SIGNATURE=y
+CONFIG_FIT_SIGNATURE=y
+
+
 # Comment following in later, for speed optimization
 # CONFIG_UBI_SILENCE_MSG
 # TODO: Measure with or without L2 cache enabled and choose best option for our platform and SPL.
