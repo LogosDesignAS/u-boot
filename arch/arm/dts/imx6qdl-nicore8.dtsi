@@ -31,9 +31,9 @@
  */
 
 	aliases {
-		mmc0 = &usdhc1;
-		mmc1 = &usdhc3;
-		mmc2 = &usdhc4;
+		mmc0 = &usdhc4;
+		mmc1 = &usdhc1;
+		mmc2 = &usdhc3;
 		usb0 = &usbotg;
 		usb1 = &usbh1;
 		ethernet0 = &fec;
