@@ -322,9 +322,9 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
-		{USDHC4_BASE_ADDR}, /* eMMC on Nicore8 */
-		{USDHC1_BASE_ADDR}, /* SD Card Slot */
-		{USDHC3_BASE_ADDR}, /* eMMC on Test Carrier */
+		{USDHC4_BASE_ADDR}, /* SD Card Slot */
+		{USDHC1_BASE_ADDR}, /* eMMC on Test Carrier */
+		{USDHC3_BASE_ADDR}, /* eMMC on Nicore8 */
 };
 
 //Logosni8 - Map the SD CARD on the Test Carrier Board
