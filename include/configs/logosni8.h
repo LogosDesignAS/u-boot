@@ -8,10 +8,10 @@
 #ifndef __LOGOS_NI8_H__
 #define __LOGOS_NI8_H__
 
-#include <config_distro_bootcmd.h>
-#include <linux/stringify.h>
-
 #include"mx6_common.h"
+
+//#include <config_distro_bootcmd.h>
+//#include <linux/stringify.h>
 
 // Watchdog defines
 #define TIMEOUT_MAX	128000
@@ -21,33 +21,30 @@
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
-// For SPL Benchmarking this Define is used to enable some early printing with a very simple software defined UART using GPIOs: TODO: Remove this before merging
-//#define TEST_TIMING
+// Parameters below is for SPL loading FIT image from FS on partition.
+/*
+#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				  "nicore8br_initrd.itb"
+#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME				  "Nicore8.itb"
+*/
 
-// Defines for booting the kernel from SPL
-//#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				"nicore8br_initrd.itb"
-//#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME					"Nicore8.itb"		//"uImage2"
-#define		CONFIG_SYS_SPL_ARGS_ADDR						0x1ffe5000
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  			0x6000				/* Block offset for Arguments - fdt*/
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS 			0x76
-#define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR			0x0					/* 0MB at partition 4 in MMC dev 2  - offset of kernel*/
-#define     CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 	4
+//Parameters below is for SPL loading FIT image from raw partition.
+#define		CONFIG_SYS_SPL_ARGS_ADDR                      0x1ffe5000
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR         0x6000// Block offset for Arguments - fdt
+#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS        0x76
+#define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR	      0x0 // 0MB at partition 4 in MMC dev 2 - offset of kernel
+#define     CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 4
 
 // Add possibilities to adjust the Malloc size - which is needed with SPL and large kernels
-
 #ifdef CONFIG_SYS_SPL_MALLOC_SIZE
 #undef CONFIG_SYS_SPL_MALLOC_SIZE
-#define		CONFIG_SYS_SPL_MALLOC_SIZE						0x1000000			// 16 MB
+#define	CONFIG_SYS_SPL_MALLOC_SIZE						  0x1000000 // 16 MB
 #endif
-
 
 #endif /* CONFIG_SPL */
 
 // Mach Type
-#define CONFIG_MACH_TYPE	3980
-#define CONFIG_SYS_BOOTMAPSZ		0x10000000
-#define CONFIG_BOOTARGS   "console=ttymxc3,115200 printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel"
-
+// 'MACH_TYPE_NITROGEN6X 4296' from arch/arm/include/asm/mach-types.h
+#define CONFIG_MACH_TYPE 4296
 
 #define CONFIG_MXC_UART_BASE							UART4_BASE
 
@@ -60,7 +57,6 @@
 
 #define CONFIG_NR_DRAM_BANKS				1
 #define CONFIG_SYS_MAX_FLASH_BANKS			1
-//#define CONFIG_SYS_MALLOC_LEN				(10 * SZ_1M)
 #define PHYS_SDRAM							MMDC0_ARB_BASE_ADDR
 #define CONFIG_SYS_SDRAM_BASE				PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR			IRAM_BASE_ADDR
@@ -98,7 +94,6 @@
 #define CONFIG_I2C_EDID
 #endif /* CONFIG_SPL_BUILD */
 
-
 /* Bootcount Commands - Use i2C */
 #define BOOTCOUNT_I2C_BUS					3
 #define CONFIG_SYS_I2C_RTC_ADDR				0x51
@@ -107,12 +102,6 @@
 #define CONFIG_SYS_FSL_ESDHC_ADDR			USDHC4_BASE_ADDR
 #define CONFIG_SYS_FSL_USDHC_NUM			3
 
-#ifdef CONFIG_CMD_MMC
-#define DISTRO_BOOT_DEV_MMC(func) func(MMC, mmc, 0) func(MMC, mmc, 1) func(MMC, mmc, 2)
-#else
-#define DISTRO_BOOT_DEV_MMC(func)
-#endif
-
 /* Ethernet config */
 #define CONFIG_FEC_MXC
 #define CONFIG_FEC_XCV_TYPE					RGMII
@@ -120,51 +109,23 @@
 #define CONFIG_FEC_MXC_PHYADDR				0x04
 #define CONFIG_ETHPRIME						"FEC"
 
-/*
-#ifdef CONFIG_USB_STORAGE
-#define DISTRO_BOOT_DEV_USB(func) func(USB, usb, 0) func(USB, usb, 1)
-#else
-#define DISTRO_BOOT_DEV_USB(func)
-#endif
-
-#ifdef CONFIG_CMD_PXE
-#define DISTRO_BOOT_DEV_PXE(func) func(PXE, pxe, na)
-#else
-#define DISTRO_BOOT_DEV_PXE(func)
-#endif
-
-#ifdef CONFIG_CMD_DHCP
-#define DISTRO_BOOT_DEV_DHCP(func) func(DHCP, dhcp, na)
-#else
-#define DISTRO_BOOT_DEV_DHCP(func)
-#endif
-
-#define CONFIG_USBD_HS
-*/
-
-/* USB Configs */
-/*
-#define CONFIG_USB_MAX_CONTROLLER_COUNT		2
-#define CONFIG_EHCI_HCD_INIT_AFTER_RESET	// For OTG port
-#define CONFIG_MXC_USB_PORTSC				(PORT_PTS_UTMI | PORT_PTS_PTW)
-#define CONFIG_MXC_USB_FLAGS				0
-*/
-
-#define BOOT_TARGET_DEVICES(func) \
-	DISTRO_BOOT_DEV_MMC(func)
-    /*
-	DISTRO_BOOT_DEV_USB(func) \
-	DISTRO_BOOT_DEV_PXE(func) \
-	DISTRO_BOOT_DEV_DHCP(func)
-    */
-
-//#define FDTFILE "fdtfile=imx6dl-nicore8.dtb\0"
+/* Environment variables below can't be changed */
+#define CONFIG_BOOTCOMMAND "run mmc_boot"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	BOOTENV \
-	"bootcmd=run distro_bootcmd; " \
-		"usb start ; " \
-		"setenv stdout serial,vidconsole; " \
-		"setenv stdin serial,usbkbd\0" \
-	"console=ttymxc3\0"
+  "devtype=mmc\0" \
+  "devnum=2\0" \
+  "bootpart_a=4\0" \
+  "bootpart_b=5\0"\
+  "fitimage=image.itb\0" \
+  "loadaddr=0x12000000\0" \
+  "bootcmd_fit="\
+    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
+      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
+      "bootm ${loadaddr}; " \
+    "else; " \
+      "echo fisk; " \
+    "fi;\0" \
+  "bootcmd=run bootcmd_fit;\0"
+
 #endif // __LOGOS_NI8_H__
