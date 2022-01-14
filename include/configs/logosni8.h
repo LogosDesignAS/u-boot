@@ -95,7 +95,7 @@
 #define CONFIG_FEC_MXC_PHYADDR				0x04
 #define CONFIG_ETHPRIME						"FEC"
 
-/* Environment variables below can't be changed */
+/* Environment variables */
 #define CONFIG_BOOTCOMMAND "run mmc_boot"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -103,14 +103,14 @@
   "devnum=2\0" \
   "bootpart_a=4\0" \
   "bootpart_b=5\0"\
-  "fitimage=image.itb\0" \
+  "default_fitimage=image.itb\0" \
   "loadaddr=0x12000000\0" \
   "bootcmd_fit="\
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "bootm ${loadaddr}; " \
+      "bootm ${loadaddr}; reset; " \
     "else; " \
-      "echo fisk; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
     "fi;\0" \
   "bootcmd=run bootcmd_fit;\0"
 
