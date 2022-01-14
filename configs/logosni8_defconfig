@@ -227,7 +227,7 @@ CONFIG_NET_RANDOM_ETHADDR=y
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
 CONFIG_OF_CONTROL=y
 
-# Only during development, to be removed
+# Only during development, TODO: Remove before release
 CONFIG_OF_EMBED=y
 
 # Enable Flattened Image Tree support
@@ -299,22 +299,33 @@ CONFIG_CMD_BOOTZ=y
 CONFIG_SPL_SERIAL_SUPPORT=y
 
 # SPL Verify Fit Signature
-#CONFIG_SPL_FIT_SIGNATURE=y
+CONFIG_SPL_FIT_SIGNATURE=n
 CONFIG_FIT_SIGNATURE=y
 
 # Support Fit Hashes
-CONFIG_SPL_MD5=y
+CONFIG_SPL_MD5=n
 CONFIG_SPL_FIT_SHA1=y
 CONFIG_SPL_FIT_SHA256=y
 CONFIG_SPL_FIT_FULL_CHECK=y
+CONFIG_CRYPTO=y
 CONFIG_SPL_CRYPTO=y
 CONFIG_SPL_HASH_SUPPORT=y
+
+CONFIG_SPL_CACHE_SUPPORT=y
 
 # SPL Compression Support
 CONFIG_SPL_GZIP=y
 CONFIG_SPL_LZO=y
 CONFIG_LZO=y
 
+# Enable DM to support hash verification
+CONFIG_SPL_DM=y
+CONFIG_SPL_DM_GPIO=n
+CONFIG_SPL_DM_MMC=n
+CONFIG_SPL_DM_ETH=n
+CONFIG_SPL_DM_SPI=n
+CONFIG_SPL_DM_SERIAL=n
+CONFIG_SPL_DM_I2C=n
 
 # RSA Support
 CONFIG_SPL_RSA_VERIFY=y
