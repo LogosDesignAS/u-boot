@@ -1833,6 +1833,8 @@ void reset_cpu(void)
 #include <linux/libfdt.h>
 #include "asm/arch/crm_regs.h"
 #include "asm/arch/mx6dl-ddr.h"
+#include <asm/mach-imx/mxc_i2c.h>
+#include <i2c.h>
 
 void reset_cpu(void)
 {
