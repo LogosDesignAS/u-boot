@@ -1836,6 +1836,7 @@ void reset_cpu(void)
 #include <asm/mach-imx/mxc_i2c.h>
 #include <i2c.h>
 
+
 void reset_cpu(void)
 {
 }
@@ -2356,16 +2357,15 @@ void board_init_f(ulong dummy)
 #endif /*		TEST_TIMING			*/
 #endif /*	CONFIG_SPL_SERIAL_SUPPORT	*/
 
-	// Set i2c bus to 3 - Boot Counter
-	int err;
-
-	err = i2c_set_bus_num(BOOTCOUNT_I2C_BUS);
-	if (err) {
-		puts("Error switching I2C bus\n");
-	}
-
 	// Increase bootcount Manually
 	bootcount_inc_logos();
+
+	/*
+#ifdef CONFIG_FSL_CAAM
+	if (sec_init() < 0)
+		puts("Countn't Initiate Security on Imx6\n");
+#endif
+	 */
 
 	/* load/boot image from boot device */
 	board_init_r(NULL, 0);
