@@ -228,7 +228,7 @@ CONFIG_NET_RANDOM_ETHADDR=y
 CONFIG_OF_CONTROL=y
 
 # Only during development, TODO: Remove before release
-CONFIG_OF_EMBED=y
+CONFIG_OF_EMBED=n
 
 # Enable Flattened Image Tree support
 CONFIG_FIT=y
