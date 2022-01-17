@@ -57,6 +57,7 @@
 
 #define CONFIG_NR_DRAM_BANKS				1
 #define CONFIG_SYS_MAX_FLASH_BANKS			1
+#define CONFIG_SYS_MALLOC_LEN				(10 * SZ_1M)
 #define PHYS_SDRAM							MMDC0_ARB_BASE_ADDR
 #define CONFIG_SYS_SDRAM_BASE				PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR			IRAM_BASE_ADDR
@@ -79,6 +80,9 @@
 #define CONFIG_SYS_I2C_MXC_I2C4				// enable I2C bus 4
 #define CONFIG_SYS_I2C_SPEED				100000
 #define CONFIG_I2C_EDID
+
+// Set the I2C EEPROM Address
+#define CONFIG_SYS_I2C_EEPROM_ADDR_LEN		1
 
 /* Bootcount Commands - Use i2C */
 #define BOOTCOUNT_I2C_BUS					3
