@@ -464,17 +464,13 @@ config TARGET_NPI_IMX6ULL
 	select DM_THERMAL
 	select SUPPORT_SPL
 
-config TARGET_LOGOSNI8
-	bool "logosni8"
-	depends on MX6DL || MX6Q || MX6QDL || MX6S
-	select SUPPORT_SPL
-	imply USB_ETHER_ASIX
-	imply USB_ETHER_MCS7830
-	imply USB_ETHER_SMSC95XX
-	imply USB_HOST_ETHER
-	source "board/logos/ni8/Kconfig"
+config TARGET_LOGOSNICORE8
+	bool "Logos NiCore8"
+	depends on MX6S
 
-
+config TARGET_LOGOSNICORE8DEV
+	bool "Logos NiCore8 dev"
+	depends on MX6S
 
 config TARGET_OPOS6ULDEV
 	bool "Armadeus OPOS6ULDev board"
@@ -694,6 +690,6 @@ source "board/wandboard/Kconfig"
 source "board/warp/Kconfig"
 source "board/BuR/brppt2/Kconfig"
 source "board/out4/o4-imx6ull-nano/Kconfig"
-source "board/logos/ni8/Kconfig"
+source "board/logos/nicore8/Kconfig"
 
 endif
