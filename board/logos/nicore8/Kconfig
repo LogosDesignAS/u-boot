@@ -1,0 +1,25 @@
+if TARGET_LOGOSNICORE8
+
+config SYS_BOARD
+	default "nicore8"
+
+config SYS_VENDOR
+	default "logos"
+
+config SYS_CONFIG_NAME
+	default "logosnicore8"
+
+endif
+
+if TARGET_LOGOSNICORE8DEV
+
+config SYS_BOARD
+	default "nicore8"
+
+config SYS_VENDOR
+	default "logos"
+
+config SYS_CONFIG_NAME
+	default "logosnicore8"
+
+endif
