@@ -72,6 +72,7 @@
 #ifdef CONFIG_SPL_BUILD
 // For SPL use Legacy I2C Settings
 #define CONFIG_SYS_I2C_LEGACY
+#define CONFIG_SYS_SPL_MALLOC_START 0x18300000
 #endif /* CONFIG_SPL_BUILD */
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
