@@ -17,76 +17,21 @@ CONFIG_BOARD_EARLY_INIT_R=y
 # enable board late init
 CONFIG_BOARD_LATE_INIT=y
 
-# GPIO Config
-CONFIG_CMD_GPIO=y
-
 # UART Config
 CONFIG_MXC_UART=y
 
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
 
-# Enable Falcon Boot
-CONFIG_CMD_SPL=y
-
-# Configuration of SPL
-CONFIG_SPL=n
-CONFIG_SPL_LIBCOMMON_SUPPORT=y
-CONFIG_SPL_LIBGENERIC_SUPPORT=y
-CONFIG_SPL_TEXT_BASE=0x00908000
-
 # Support fit image
-CONFIG_LOAD_FIT=y
-CONFIG_SPL_LOAD_FIT=y
-CONFIG_SPL_FIT=y
-CONFIG_SPL_LEGACY_IMAGE_SUPPORT=y
-CONFIG_LEGACY_IMAGE_FORMAT=y
+##CONFIG_LOAD_FIT=y
+##CONFIG_LEGACY_IMAGE_FORMAT=y
 
-# SPL Board Init
-CONFIG_SPL_BOARD_INIT=y
-
-# Boot from SD Card
-#CONFIG_SPL_FS_FAT=y
-#CONFIG_SPL_FS_EXT4=y
+# Boot from eMMC Card
 CONFIG_SUPPORT_EMMC_BOOT=y
-CONFIG_SPL_MMC_BOOT=y
 
-# Further SPL defines for MMC Boot
-CONFIG_SPL_MMC=y
-
-#block Devices
+# Block Devices
 CONFIG_BLK=y
-CONFIG_SPL_BLK=n
-CONFIG_SPL_MMC_SUPPORT=y
-
-CONFIG_SPL_GPIO_SUPPORT=y
-CONFIG_SPL_SEPARATE_BSS=y
-
-# I2C support on SPL
-CONFIG_SPL_I2C_SUPPORT=y
-#CONFIG_SPL_WATCHDOG=y
-CONFIG_SPL_SYS_I2C_LEGACY=y
-
-
-# Kernel support in SPL
-CONFIG_SPL_OS_BOOT=y
-CONFIG_SPL_ALLOC_BD=y
-
-# We need a lean mean booting machine - we are happy, when it's snappy.
-# Disable stuff we don't need. Add lines below later, and clean-up in SPL stuff above.
-# And remember to remove this stupid comment.
-#CONFIG_SPL_MUSB_NEW_SUPPORT=n
-#CONFIG_SPL_EXT_SUPPORT=n
-#CONFIG_SPL_FAT_SUPPORT=n
-#CONFIG_SPL_ETH_SUPPORT=n
-#CONFIG_SPL_LIBDISK_SUPPORT=n
-#CONFIG_DRIVER_TI_CPSW=n
-#CONFIG_SPL_USBETH_SUPPORT=n
-#CONFIG_SPL_MUSB_NEW_SUPPORT=n
-#CONFIG_SPL_YMODEM_SUPPORT=n
-#CONFIG_SPL_EFI_PARTITION=n
-#CONFIG_SPL_DOS_PARTITION=n
-#CONFIG_SPL_ENV_SUPPORT=n
 
 # Environment Support
 CONFIG_ENV_IS_IN_MMC=y
@@ -102,13 +47,6 @@ CONFIG_ENV_OFFSET_REDUND=0x1F8000
 CONFIG_SYS_RELOC_GD_ENV_ADDR=y
 CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 
-# Add this to enable SPL Environment Support - but outcomment the above addresses
-#CONFIG_SPL_ENV_SUPPORT=y
-#CONFIG_ENV_OFFSET=0x1F0000
-
-# Boot Count for SPL
-CONFIG_SPL_BOOTCOUNT_LIMIT=y
-
 # Add startup scripts before boot in misc_init_r()
 CONFIG_MISC_INIT_R=y
 
@@ -118,9 +56,6 @@ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/nicore8/nicore8.cfg,DDR_MB=512"
 # This define is used to suppress the output on the UART - "IN: serial, Out: serial, ERR: serial"
 CONFIG_SYS_CONSOLE_INFO_QUIET=y
 
-# Configure Memory Technology Devices
-CONFIG_MTD=y
-
 # Enable Thermal Measurement
 CONFIG_IMX_THERMAL=y
 CONFIG_DM_THERMAL=y
@@ -128,34 +63,21 @@ CONFIG_DM_THERMAL=y
 # Enable Voltage Measurement
 CONFIG_IMX_TMU=y
 
-# SPI Configs
-#CONFIG_SPI=y
-#CONFIG_MXC_SPI=y
-# Winbond W25Q32JW Serial NOR SPI flash (SPI1/CS0)
-#CONFIG_SPI_FLASH_WINBOND=y
-#CONFIG_SF_DEFAULT_BUS=0
-#CONFIG_SF_DEFAULT_CS=0
-# IMX6 max 52 MHz / QSPI flash max 133 MHz
-#CONFIG_SF_DEFAULT_SPEED=52000000
-
 # Config eMMC
 CONFIG_MMC=y
 
-# I2C EEPROM Support
-CONFIG_I2C_EEPROM=y
+# I2C multi bus support
 CONFIG_I2C_MULTI_BUS=y
 
 # Boot Configs
-CONFIG_SUPPORT_RAW_INITRD=y
-CONFIG_USE_PREBOOT=y
+##CONFIG_SUPPORT_RAW_INITRD=y
 
-# Lower bootdelay to 0 and comment CONFIG_ZERO_BOOTDELAY_CHECK
-CONFIG_BOOTDELAY=10
-#CONFIG_ZERO_BOOTDELAY_CHECK=y
+# Lower bootdelay to negative value means disable
+CONFIG_BOOTDELAY=-2
 
 # Watchdog Configs
-# This config changes reset time - after calling reset it will wait 30s
-CONFIG_WATCHDOG_TIMEOUT_MSECS=5000
+# This config changes reset time - after calling reset it will wait until timeout
+CONFIG_WATCHDOG_TIMEOUT_MSECS=10
 CONFIG_IMX_WATCHDOG=y
 CONFIG_SYSRESET_WATCHDOG=y
 CONFIG_WDT_CDNS=y
@@ -169,9 +91,6 @@ CONFIG_BOOTCOUNT_LIMIT=y
 CONFIG_BOOTCOUNT_BOOTLIMIT=3
 CONFIG_BOOTCOUNT_I2C=y
 
-# Enable Boot Count Command
-CONFIG_CMD_BOOTCOUNT=y
-
 # HAB - High Assurance Boot
 CONFIG_IMX_HAB=y
 CONFIG_SECURE_BOOT=y
@@ -183,52 +102,8 @@ CONFIG_HUSH_PARSER=y
 CONFIG_FSL_USDHC=y
 CONFIG_FSL_ESDHC_IMX=y
 
-# USB Configs TODO Propably remove after verification os USB
-#CONFIG_SYS_USB_EVENT_POLL_VIA_CONTROL_EP=y
-#CONFIG_USB_FUNCTION_FASTBOOT=y
-#CONFIG_USB_KEYBOARD=y
-#CONFIG_USB_ETH_CDC=y
-#CONFIG_USB_ETHER=y
-
-#CONFIG_USB_EHCI_HCD=y
-#CONFIG_USB_EHCI_MX6=y
-#CONFIG_USB_UHCI_HCD=y
-#CONFIG_USB_OHCI_HCD=y
-
-#CONFIG_CMD_USB=y
-#CONFIG_USB=y
-#CONFIG_USB_UHCI=y
-#CONFIG_USB_STORAGE
-#CONFIG_CMD_USB_MASS_STORAGE=y
-#CONFIG_USB_MASS_STORAGE=y
-
-# Usb gadgets
-#CONFIG_USB_GADGET_MANUFACTURER="Logos"
-#CONFIG_USB_GADGET_PRODUCT_NUM=<some id>
-#CONFIG_USB_GADGET_VENDOR_NUM=<some id>
-#CONFIG_USB_GADGET=y
-#CONFIG_USB_GADGET_DOWNLOAD=n
-
-# The Device Firmware Upgrade (DFU) allows to download and upload firmware to/from U-Boot connected over USB.
-CONFIG_CI_UDC=y
-
-# Ethernet PHY
-CONFIG_PHYLIB=y
-CONFIG_PHY_ATHEROS=y
-# Allows 802.3(clause 22) MII Management functions interface access
-CONFIG_CMD_MII=y
-# Enable support of the Media-Independent Interface (MII)
-# Enable the support of the Reduced Gigabit Media-Independent
-CONFIG_RGMII=y
-CONFIG_MII=y
-# Random MAC ADDR - to be removed
-CONFIG_NET_RANDOM_ETHADDR=y
-
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
 CONFIG_OF_CONTROL=y
-
-# Only during development, TODO: Remove before release
-CONFIG_OF_EMBED=n
 
 # Enable Flattened Image Tree support
 CONFIG_FIT=y
@@ -236,104 +111,24 @@ CONFIG_FIT=y
 # Set default Device Tree
 CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 
-# Lib for passing the device tree to the Kernel
-#CONFIG_OF_LIBFDT_OVERLAY=y
-
 # Driver models - (DM)'s
 CONFIG_DM=y
 CONFIG_DM_GPIO=y
 CONFIG_DM_VIDEO=y
-CONFIG_DM_USB=y
 CONFIG_DM_MMC=y
-CONFIG_DM_ETH=y
-CONFIG_DM_SPI=y
-CONFIG_DM_SPI_FLASH=y
 CONFIG_DM_SERIAL=y
 CONFIG_DM_I2C=y
 # DM Watchdog support
 CONFIG_WDT=y
 
 # Commands
-# Enable Caches for optimised bootup speed
-CONFIG_CMD_CACHE=y
 CONFIG_CMD_EEPROM=y
 CONFIG_CMD_I2C=y
 CONFIG_CMD_MMC=y
-CONFIG_CMD_SPI=y
-CONFIG_CMD_SF=y
-CONFIG_CMD_HDMIDETECT=y
-CONFIG_CMD_BMODE=y
 
 # Read and display information about the partition table on various media.
 CONFIG_CMD_PART=y
 CONFIG_CMD_FS_GENERIC=y
-CONFIG_CMD_EXT2=y
-CONFIG_CMD_EXT4=y
-CONFIG_CMD_EXT4_WRITE=y
 CONFIG_CMD_FAT=y
-CONFIG_CMD_FAT_WRITE=y
 
-# Compression
-CONFIG_CMD_UNZIP=y
-CONFIG_LZO=y
-
-# Power Command for getting regulator voltages
-CONFIG_CMD_REGULATOR=y
-
-# Device tree support for the PMIC
-CONFIG_DM_REGULATOR=y
-CONFIG_DM_REGULATOR_PFUZE100=y
-CONFIG_DM_REGULATOR_FIXED=y
-
-# Network Commands
-CONFIG_CMD_DHCP=y
-CONFIG_CMD_PING=y
-CONFIG_CMD_DNS=y
-CONFIG_CMD_LINK_LOCAL=y
-
-CONFIG_CMD_TIME=y
 CONFIG_CMD_ECHO=y
-CONFIG_CMD_BOOTZ=y
-
-# SPL Serial Support
-CONFIG_SPL_SERIAL_SUPPORT=y
-
-# SPL Verify Fit Signature - Disabled for now
-CONFIG_SPL_FIT_SIGNATURE=n
-CONFIG_FIT_SIGNATURE=n
-
-# Support Fit Hashes
-CONFIG_SPL_SHA256_SUPPORT=y
-CONFIG_FIT_ENABLE_SHA256_SUPPORT=y
-CONFIG_SPL_SHA1_SUPPORT=y
-CONFIG_FIT_ENABLE_SHA1_SUPPORT=y
-CONFIG_SPL_FIT_FULL_CHECK=y
-CONFIG_CRYPTO=y
-CONFIG_SPL_CRYPTO_SUPPORT=y
-CONFIG_SPL_HASH_SUPPORT=y
-
-# SPL RSA Support
-CONFIG_SPL_RSA=y
-
-# SPL Compression Support
-CONFIG_SPL_GZIP=n
-CONFIG_SPL_LZO=n
-CONFIG_LZO=n
-
-# Enable DM to support hash verification
-CONFIG_SPL_DM=y
-CONFIG_SPL_DM_GPIO=n
-CONFIG_SPL_DM_MMC=n
-CONFIG_SPL_DM_ETH=n
-CONFIG_SPL_DM_SPI=n
-CONFIG_SPL_DM_SERIAL=n
-CONFIG_SPL_DM_I2C=y
-
-# SPL Falcon Boot Mode support
-CONFIG_CMD_SPL_WRITE_SIZE=0x100000
-
-
-# Comment following in later, for speed optimization
-# CONFIG_UBI_SILENCE_MSG
-# TODO: Measure with or without L2 cache enabled and choose best option for our platform and SPL.
-# TODO: Make sure all display support is disabled (DCU) for SPL.
