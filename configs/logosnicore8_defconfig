@@ -17,13 +17,8 @@ CONFIG_BOARD_EARLY_INIT_R=y
 # enable board late init
 CONFIG_BOARD_LATE_INIT=y
 
-# UART Config
-CONFIG_MXC_UART=y
-
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
-
-CONFIG_OF_EMBED=y
 
 # Support fit image
 ##CONFIG_LOAD_FIT=y
@@ -54,9 +49,6 @@ CONFIG_MISC_INIT_R=y
 
 # Additional Options
 CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/nicore8/nicore8.cfg,DDR_MB=512"
-
-# This define is used to suppress the output on the UART - "IN: serial, Out: serial, ERR: serial"
-CONFIG_SYS_CONSOLE_INFO_QUIET=y
 
 # Enable Thermal Measurement
 CONFIG_IMX_THERMAL=y
@@ -116,15 +108,13 @@ CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 # Driver models - (DM)'s
 CONFIG_DM=y
 CONFIG_DM_GPIO=y
-CONFIG_DM_VIDEO=y
 CONFIG_DM_MMC=y
-CONFIG_DM_SERIAL=y
 CONFIG_DM_I2C=y
+CONFIG_DM_SERIAL=y
 # DM Watchdog support
 CONFIG_WDT=y
 
 # Commands
-CONFIG_CMD_EEPROM=y
 CONFIG_CMD_I2C=y
 CONFIG_CMD_MMC=y
 
@@ -132,8 +122,17 @@ CONFIG_CMD_MMC=y
 CONFIG_CMD_PART=y
 CONFIG_CMD_FS_GENERIC=y
 CONFIG_CMD_FAT=y
-
+CONFIG_CMD_BMODE=y
 CONFIG_CMD_ECHO=y
+
+# Serial Available
+CONFIG_SERIAL_PRESENT=y
+CONFIG_MXC_UART=y
+
+# Silience the Console
+CONFIG_SILENT_CONSOLE=y
+CONFIG_SILENT_U_BOOT_ONLY=y
+CONFIG_SILENT_CONSOLE_UPDATE_ON_SET=y
 
 ###############################################################################################
 ## -------------------- Undefine unneeded Settings in this section --------------------------##
@@ -188,3 +187,32 @@ CONFIG_VIDEO_ANSI=n
 CONFIG_CONSOLE_NORMAL=n
 CONFIG_PANEL=n
 CONFIG_SIMPLE_PANEL=n
+
+# Disable EEPROM
+CONFIG_CMD_EEPROM=n
+
+# Disable Console
+CONFIG_REQUIRE_SERIAL_CONSOLE=n
+CONFIG_SPECIFY_CONSOLE_INDEX=n
+CONFIG_SYS_CONSOLE_INFO_QUIET=n
+CONFIG_DISPLAY_CPUINFO=n
+CONFIG_DISPLAY_BOARDINFO=n
+
+# Disable CMD
+CONFIG_CMDLINE_EDITING=n
+CONFIG_AUTO_COMPLETE=n
+CONFIG_SYS_LONGHELP=n
+CONFIG_SYS_XTRACE=n
+CONFIG_CMD_DEKBLOB=n
+
+
+# Disable the Hash CMD
+CONFIG_CMD_HASH=n
+
+# Disable Compression Support
+CONFIG_GZIP=n
+CONFIG_ZLIB=n
+
+# Disable Printf
+CONFIG_PRINTF=n
+CONFIG_SPRINTF=n

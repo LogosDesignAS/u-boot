@@ -32,11 +32,11 @@
 #include <linux/errno.h>
 #include <malloc.h>
 
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #include <miiphy.h>
 #include <net.h>
 #include <netdev.h>
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 #include <usb/ehci-ci.h>
 #include <version.h>
@@ -262,7 +262,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V		0x000C0000
 
 /* Defines above, declarations below */
-
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 /* Configuration of UART2 for Logosni8 */
 static iomux_v3_cfg_t const uart2_pads[] = {
 	IOMUX_PAD_CTRL(EIM_D26__UART2_TX_DATA, UART_PAD_CTRL),
@@ -296,6 +296,7 @@ static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT18__UART5_RTS_B, UART_PAD_CTRL),
 	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_MXC_SPI
 static iomux_v3_cfg_t const ecspi1_pads[] = {
@@ -364,7 +365,7 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 };
 
 #ifndef CONFIG_SPL_BUILD
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static iomux_v3_cfg_t const enet_pads1[] = {
 	/* MDIO */
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
@@ -410,7 +411,7 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
@@ -728,7 +729,7 @@ static void setup_iomux_boot_config(void)
 	gpio_direction_input(GPIO_EIM_DA14);
 	gpio_direction_input(GPIO_EIM_DA15);
 };
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static void setup_iomux_enet(void)
 {
 	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
@@ -764,7 +765,7 @@ static void setup_iomux_enet(void)
 	SETUP_IOMUX_PADS(enet_pads2);
 	mdelay(10);	// Wait 5000 us before using mii interface - and pull the reset pin low
 }
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -776,12 +777,14 @@ static iomux_v3_cfg_t const usb_pads[] = {
 };
 #endif
 
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static void setup_iomux_uart(void)
 {
 	SETUP_IOMUX_PADS(uart2_pads);
 	SETUP_IOMUX_PADS(uart4_pads);
 	SETUP_IOMUX_PADS(uart5_pads);
 }
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 #ifdef CONFIG_USB_EHCI_MX6
 int board_ehci_hcd_init(int port)
@@ -841,11 +844,13 @@ static void setup_spi(void)
 static inline void bootcount_inc_logos(void) {
 	unsigned long bootcount = bootcount_load();
 
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	puts("Increase Bootcount\n");
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 	bootcount_store(++bootcount);
 }
 #ifndef CONFIG_SPL_BUILD
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
@@ -863,7 +868,7 @@ int board_eth_init(struct bd_info *bis)
 	setup_iomux_enet();
 	return cpu_eth_init(bis);
 }
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_VIDEO_IPUV3
@@ -1246,7 +1251,7 @@ static void led_logosni8_party_light(void)
 #endif
 
 #ifndef CONFIG_SPL_BUILD
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static int setup_fec(void)
 {
 	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1266,19 +1271,21 @@ static int setup_fec(void)
 
 	return 0;
 }
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #endif /* CONFIG_SPL_BUILD */
 
 // TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_r(void)
 {
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	// Config environment variables
 	env_set("ethact", "FEC");
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 #ifdef CONFIG_CMD_I2C
 	// Early setup of I2C
@@ -1301,6 +1308,7 @@ int board_early_init_r(void)
  * Use always serial for U-Boot console
  */
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 int overwrite_console(void)
 {
 	return 1;
@@ -1315,6 +1323,7 @@ int print_Logos_Logo(void)
 	}
 	return 0;
 }
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #endif /* CONFIG_SPL_BUILD */
 
 #ifdef DEMO_MODE
@@ -1673,9 +1682,9 @@ int board_init(void)
 
 
 	// ETH init
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	setup_iomux_enet();
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
@@ -1697,11 +1706,6 @@ int board_init(void)
 
 int misc_init_r(void)
 {
-
-#ifdef CONFIG_PREBOOT
-	//preboot_keys();
-#endif
-
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif
@@ -1717,6 +1721,7 @@ int misc_init_r(void)
 #ifndef CONFIG_SPL_BUILD
 int board_late_init(void)
 {
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	// The test carrier board is now powered up and the UART is ready - make a startup screen
 	print_Logos_Logo();
 	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
@@ -1745,7 +1750,8 @@ int board_late_init(void)
 	// This function creates a short demo of LED2 and LED3 on the Ni8 board - No udelay in board_early_init - use cpurelax()
 
 	led_logosni8_party_light();
-#endif
+#endif // DEMO_MODE
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 	// Set i2c bus to 3 - Boot Counter
 	struct udevice *dev;
@@ -1759,6 +1765,10 @@ int board_late_init(void)
 
 	// Increase bootcount Manually
 	bootcount_inc_logos();
+
+	// Turn on the LEDS on the Core Board to verify that the Production Image Works and have finished all initialsation
+	gpio_set_value(GPIO_LED_2, 0);
+	gpio_set_value(GPIO_LED_3, 0);
 
 	return 0;
 
