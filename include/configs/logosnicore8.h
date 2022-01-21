@@ -93,11 +93,13 @@
 #define CONFIG_SYS_FSL_USDHC_NUM			3
 
 /* Ethernet config */
+#ifdef CONFIG_NET
 #define CONFIG_FEC_MXC
 #define CONFIG_FEC_XCV_TYPE					RGMII
 #define IMX_FEC_BASE						ENET_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR				0x04
 #define CONFIG_ETHPRIME						"FEC"
+#endif // CONFIG_NET
 
 /* Environment variables */
 #define CONFIG_BOOTCOMMAND "run mmc_boot"

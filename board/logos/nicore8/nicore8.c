@@ -31,9 +31,13 @@
 #include <linux/delay.h>
 #include <linux/errno.h>
 #include <malloc.h>
+
+#ifdef CONFIG_NET
 #include <miiphy.h>
 #include <net.h>
 #include <netdev.h>
+#endif // CONFIG_NET
+
 #include <usb/ehci-ci.h>
 #include <version.h>
 
@@ -360,6 +364,7 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 };
 
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_NET
 static iomux_v3_cfg_t const enet_pads1[] = {
 	/* MDIO */
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
@@ -405,7 +410,7 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
-
+#endif // CONFIG_NET
 
 static iomux_v3_cfg_t const ni8_boot_flags[] = {
 	IOMUX_PAD_CTRL(EIM_DA0__GPIO3_IO00, NO_PAD_CTRL),
@@ -723,7 +728,7 @@ static void setup_iomux_boot_config(void)
 	gpio_direction_input(GPIO_EIM_DA14);
 	gpio_direction_input(GPIO_EIM_DA15);
 };
-
+#ifdef CONFIG_NET
 static void setup_iomux_enet(void)
 {
 	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
@@ -759,6 +764,7 @@ static void setup_iomux_enet(void)
 	SETUP_IOMUX_PADS(enet_pads2);
 	mdelay(10);	// Wait 5000 us before using mii interface - and pull the reset pin low
 }
+#endif // CONFIG_NET
 #endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -834,10 +840,12 @@ static void setup_spi(void)
 // Function for increasing Boot Count
 static inline void bootcount_inc_logos(void) {
 	unsigned long bootcount = bootcount_load();
+
 	puts("Increase Bootcount\n");
 	bootcount_store(++bootcount);
 }
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_NET
 int board_phy_config(struct phy_device *phydev)
 {
 	// Setting RGMII_ID makes driver enable RX and TX delays, all other options breaks everything.
@@ -855,6 +863,7 @@ int board_eth_init(struct bd_info *bis)
 	setup_iomux_enet();
 	return cpu_eth_init(bis);
 }
+#endif // CONFIG_NET
 #endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_VIDEO_IPUV3
@@ -1237,6 +1246,7 @@ static void led_logosni8_party_light(void)
 #endif
 
 #ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_NET
 static int setup_fec(void)
 {
 	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1256,6 +1266,7 @@ static int setup_fec(void)
 
 	return 0;
 }
+#endif // CONFIG_NET
 #endif /* CONFIG_SPL_BUILD */
 
 // TODO: Some of the Initialisation needs to be moved to board_init()
@@ -1264,8 +1275,10 @@ int board_early_init_r(void)
 	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
 
-	// Config environment variables TODO Test if this is needed
+#ifdef CONFIG_NET
+	// Config environment variables
 	env_set("ethact", "FEC");
+#endif // CONFIG_NET
 
 #ifdef CONFIG_CMD_I2C
 	// Early setup of I2C
@@ -1295,12 +1308,12 @@ int overwrite_console(void)
 
 int print_Logos_Logo(void)
 {
-    printf("\n");
-    for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
-    {
-        printf("%s\n", logosLogo[h]);
-    }
-    return 0;
+	printf("\n");
+	for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
+	{
+		printf("%s\n", logosLogo[h]);
+	}
+	return 0;
 }
 #endif /* CONFIG_SPL_BUILD */
 
@@ -1658,8 +1671,11 @@ int board_init(void)
 	board_ehci_power(0, 1);
 #endif
 
+
 	// ETH init
+#ifdef CONFIG_NET
 	setup_iomux_enet();
+#endif // CONFIG_NET
 
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
