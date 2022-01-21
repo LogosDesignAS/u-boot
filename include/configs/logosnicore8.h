@@ -10,9 +10,6 @@
 
 #include"mx6_common.h"
 
-//#include <config_distro_bootcmd.h>
-//#include <linux/stringify.h>
-
 // Watchdog defines
 #define TIMEOUT_MAX	128000
 #define TIMEOUT_MIN	500
@@ -46,7 +43,9 @@
 // 'MACH_TYPE_NITROGEN6X 4296' from arch/arm/include/asm/mach-types.h
 #define CONFIG_MACH_TYPE 4296
 
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #define CONFIG_MXC_UART_BASE							UART4_BASE
+#endif // CONFIG_DM_SERIAL
 
 /*
  * Undefine the following defines
@@ -93,13 +92,13 @@
 #define CONFIG_SYS_FSL_USDHC_NUM			3
 
 /* Ethernet config */
-#ifdef CONFIG_NET
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #define CONFIG_FEC_MXC
 #define CONFIG_FEC_XCV_TYPE					RGMII
 #define IMX_FEC_BASE						ENET_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR				0x04
 #define CONFIG_ETHPRIME						"FEC"
-#endif // CONFIG_NET
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
 #define CONFIG_BOOTCOMMAND "run mmc_boot"
