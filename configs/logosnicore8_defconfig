@@ -23,6 +23,8 @@ CONFIG_MXC_UART=y
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
 
+CONFIG_OF_EMBED=y
+
 # Support fit image
 ##CONFIG_LOAD_FIT=y
 ##CONFIG_LEGACY_IMAGE_FORMAT=y
@@ -132,3 +134,57 @@ CONFIG_CMD_FS_GENERIC=y
 CONFIG_CMD_FAT=y
 
 CONFIG_CMD_ECHO=y
+
+###############################################################################################
+## -------------------- Undefine unneeded Settings in this section --------------------------##
+###############################################################################################
+
+## Remove Unneeded Configs
+CONFIG_CMD_BOOTEFI=n
+CONFIG_CMD_BOOTEFI_HELLO_COMPILE=n
+CONFIG_CMD_ELF=n
+CONFIG_CMD_FDT=n
+
+## Unneedded Network Commands
+CONFIG_NET=n
+CONFIG_CMD_NET=n
+CONFIG_NETDEVICES=n
+CONFIG_CMD_BOOTP=n
+CONFIG_BOOTP_BOOTPATH=n
+CONFIG_BOOTP_DNS=n
+CONFIG_BOOTP_GATEWAY=n
+CONFIG_BOOTP_HOSTNAME=n
+CONFIG_BOOTP_SUBNETMASK=n
+CONFIG_CMD_TFTPBOOT=n
+CONFIG_NET_TFTP_VARS=n
+CONFIG_CMD_NFS=n
+CONFIG_CMD_BDI=n
+CONFIG_CMD_CONSOLE=n
+CONFIG_FEC_MXC=n
+
+# Unneeded Boot Commands
+CONFIG_CMD_BOOTD=n
+CONFIG_BOOTM_NETBSD=n
+CONFIG_BOOTM_PLAN9=n
+CONFIG_BOOTM_RTEMS=n
+CONFIG_BOOTM_VXWORKS=n
+CONFIG_CMD_GO=n
+CONFIG_CMD_RUN=n
+CONFIG_CMD_IMI=n
+CONFIG_CMD_XIMG=n
+CONFIG_CMD_RANDOM=n
+CONFIG_CMD_LOADB=n
+CONFIG_CMD_LOADS=n
+CONFIG_CMD_SLEEP=n
+
+# Disable Graphics Support
+CONFIG_DM_VIDEO=n
+CONFIG_BACKLIGHT=n
+CONFIG_CMD_VIDCONSOLE=n
+CONFIG_VIDEO_BPP8=n
+CONFIG_VIDEO_BPP16=n
+CONFIG_VIDEO_BPP32=n
+CONFIG_VIDEO_ANSI=n
+CONFIG_CONSOLE_NORMAL=n
+CONFIG_PANEL=n
+CONFIG_SIMPLE_PANEL=n
