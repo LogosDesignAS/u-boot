@@ -147,11 +147,15 @@ CONFIG_I2C_MULTI_BUS=y
 
 # Boot Configs
 CONFIG_SUPPORT_RAW_INITRD=y
-CONFIG_USE_PREBOOT=y
 
 # Lower bootdelay to 0 and comment CONFIG_ZERO_BOOTDELAY_CHECK
 CONFIG_BOOTDELAY=10
 #CONFIG_ZERO_BOOTDELAY_CHECK=y
+
+# Set Password for entering U-Boot Console
+CONFIG_AUTOBOOT=y
+CONFIG_AUTOBOOT_KEYED=y
+CONFIG_AUTOBOOT_DELAY_STR="logos"
 
 # Watchdog Configs
 # This config changes reset time - after calling reset it will wait 30s
