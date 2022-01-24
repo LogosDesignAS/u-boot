@@ -7,47 +7,40 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/crm_regs.h>
 #include <asm/arch/imx-regs.h>
-#include <asm/arch/iomux.h>
 #include <asm/arch/mx6-pins.h>
-#include <asm/arch/mxc_hdmi.h>
 #include <asm/arch/sys_proto.h>
-#include <asm/global_data.h>
 #include <asm/gpio.h>
-#include <asm/io.h>
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/iomux-v3.h>
 #include <asm/mach-imx/mxc_i2c.h>
-#include <command.h>
 #include <common.h>
 #include <env.h>
 #include <fsl_esdhc_imx.h>
 #include <i2c.h>
-#include <init.h>
-#include <input.h>
 #include <linux/delay.h>
-#include <malloc.h>
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #include <miiphy.h>
 #include <net.h>
 #include <netdev.h>
-#endif // CONFIG_TARGET_LOGOSNICORE8DEV
-
-#include <usb/ehci-ci.h>
 #include <version.h>
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
+#include <usb/ehci-ci.h>
+
 
 // Watchdog
 #include <wdt.h>
 #include <watchdog.h>
 #include <fsl_wdog.h>
 #include <div64.h>
-#include <dm.h>
 
 // Thermal Configs
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #include <imx_thermal.h>
 #include <thermal.h>
 
 #include "logosLogo.h"
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 // Bootcount
 #include <bootcount.h>
