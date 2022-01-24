@@ -14,7 +14,8 @@ CONFIG_NR_DRAM_BANKS=1
 
 # Enabled the board_Early_init function to set up GPIO and UART for early testing
 CONFIG_BOARD_EARLY_INIT_R=y
-# enable board late init
+
+# Enable board late init
 CONFIG_BOARD_LATE_INIT=y
 
 # GPIO Config
@@ -26,67 +27,15 @@ CONFIG_MXC_UART=y
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
 
-# Enable Falcon Boot
-CONFIG_CMD_SPL=y
-
-# Configuration of SPL
-CONFIG_SPL=n
-CONFIG_SPL_LIBCOMMON_SUPPORT=y
-CONFIG_SPL_LIBGENERIC_SUPPORT=y
-CONFIG_SPL_TEXT_BASE=0x00908000
-
 # Support fit image
 CONFIG_LOAD_FIT=y
-CONFIG_SPL_LOAD_FIT=y
-CONFIG_SPL_FIT=y
-CONFIG_SPL_LEGACY_IMAGE_SUPPORT=y
 CONFIG_LEGACY_IMAGE_FORMAT=y
 
-# SPL Board Init
-CONFIG_SPL_BOARD_INIT=y
-
-# Boot from SD Card
-#CONFIG_SPL_FS_FAT=y
-#CONFIG_SPL_FS_EXT4=y
+# Support eMMC Boot
 CONFIG_SUPPORT_EMMC_BOOT=y
-CONFIG_SPL_MMC_BOOT=y
 
-# Further SPL defines for MMC Boot
-CONFIG_SPL_MMC=y
-
-#block Devices
+# Block Device Support for eMMC
 CONFIG_BLK=y
-CONFIG_SPL_BLK=n
-CONFIG_SPL_MMC_SUPPORT=y
-
-CONFIG_SPL_GPIO_SUPPORT=y
-CONFIG_SPL_SEPARATE_BSS=y
-
-# I2C support on SPL
-CONFIG_SPL_I2C_SUPPORT=y
-#CONFIG_SPL_WATCHDOG=y
-CONFIG_SPL_SYS_I2C_LEGACY=y
-
-
-# Kernel support in SPL
-CONFIG_SPL_OS_BOOT=y
-CONFIG_SPL_ALLOC_BD=y
-
-# We need a lean mean booting machine - we are happy, when it's snappy.
-# Disable stuff we don't need. Add lines below later, and clean-up in SPL stuff above.
-# And remember to remove this stupid comment.
-#CONFIG_SPL_MUSB_NEW_SUPPORT=n
-#CONFIG_SPL_EXT_SUPPORT=n
-#CONFIG_SPL_FAT_SUPPORT=n
-#CONFIG_SPL_ETH_SUPPORT=n
-#CONFIG_SPL_LIBDISK_SUPPORT=n
-#CONFIG_DRIVER_TI_CPSW=n
-#CONFIG_SPL_USBETH_SUPPORT=n
-#CONFIG_SPL_MUSB_NEW_SUPPORT=n
-#CONFIG_SPL_YMODEM_SUPPORT=n
-#CONFIG_SPL_EFI_PARTITION=n
-#CONFIG_SPL_DOS_PARTITION=n
-#CONFIG_SPL_ENV_SUPPORT=n
 
 # Environment Support
 CONFIG_ENV_IS_IN_MMC=y
@@ -101,13 +50,6 @@ CONFIG_ENV_OFFSET=0xFFFF0000
 CONFIG_ENV_OFFSET_REDUND=0x1F8000
 CONFIG_SYS_RELOC_GD_ENV_ADDR=y
 CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
-
-# Add this to enable SPL Environment Support - but outcomment the above addresses
-#CONFIG_SPL_ENV_SUPPORT=y
-#CONFIG_ENV_OFFSET=0x1F0000
-
-# Boot Count for SPL
-CONFIG_SPL_BOOTCOUNT_LIMIT=y
 
 # Add startup scripts before boot in misc_init_r()
 CONFIG_MISC_INIT_R=y
@@ -299,43 +241,8 @@ CONFIG_CMD_TIME=y
 CONFIG_CMD_ECHO=y
 CONFIG_CMD_BOOTZ=y
 
-# SPL Serial Support
-CONFIG_SPL_SERIAL_SUPPORT=y
-
-# SPL Verify Fit Signature - Disabled for now
-CONFIG_SPL_FIT_SIGNATURE=n
-CONFIG_FIT_SIGNATURE=n
-
-# Support Fit Hashes
-CONFIG_SPL_SHA256_SUPPORT=y
-CONFIG_FIT_ENABLE_SHA256_SUPPORT=y
-CONFIG_SPL_SHA1_SUPPORT=y
-CONFIG_FIT_ENABLE_SHA1_SUPPORT=y
-CONFIG_SPL_FIT_FULL_CHECK=y
-CONFIG_CRYPTO=y
-CONFIG_SPL_CRYPTO_SUPPORT=y
-CONFIG_SPL_HASH_SUPPORT=y
-
-# SPL RSA Support
-CONFIG_SPL_RSA=y
-
-# SPL Compression Support
-CONFIG_SPL_GZIP=n
-CONFIG_SPL_LZO=n
-CONFIG_LZO=n
-
-# Enable DM to support hash verification
-CONFIG_SPL_DM=y
-CONFIG_SPL_DM_GPIO=n
-CONFIG_SPL_DM_MMC=n
-CONFIG_SPL_DM_ETH=n
-CONFIG_SPL_DM_SPI=n
-CONFIG_SPL_DM_SERIAL=n
-CONFIG_SPL_DM_I2C=y
-
-# SPL Falcon Boot Mode support
-CONFIG_CMD_SPL_WRITE_SIZE=0x100000
-
+# Support FIT Signature
+CONFIG_FIT_SIGNATURE=y
 
 # Comment following in later, for speed optimization
 # CONFIG_UBI_SILENCE_MSG
