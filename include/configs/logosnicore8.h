@@ -66,6 +66,7 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
   (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
+
 /* I2C Configs */
 #ifdef CONFIG_SPL_BUILD
 // For SPL use Legacy I2C Settings
@@ -103,7 +104,9 @@
 /* Environment variables */
 #define CONFIG_BOOTCOMMAND "run mmc_boot"
 
+/* Define Alternative Boot if bootcount is bigger than 3 - TODO: For now set to the same as normal boot */
 #define CONFIG_EXTRA_ENV_SETTINGS \
+  "altbootcmd=run mmc_boot;\0" \
   "devtype=mmc\0" \
   "devnum=2\0" \
   "bootpart_a=4\0" \
