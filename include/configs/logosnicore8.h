@@ -45,7 +45,7 @@
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #define CONFIG_MXC_UART_BASE							UART4_BASE
-#endif // CONFIG_DM_SERIAL
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /*
  * Undefine the following defines
@@ -104,9 +104,11 @@
 /* Environment variables */
 #define CONFIG_BOOTCOMMAND "run mmc_boot"
 
+// Add a different Boot method depending on prod or dev - TODO: This just enables the basic flow
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 /* Define Alternative Boot if bootcount is bigger than 3 - TODO: For now set to the same as normal boot */
 #define CONFIG_EXTRA_ENV_SETTINGS \
-  "altbootcmd=run mmc_boot;\0" \
+  "altbootcmd=run bootcmd_fit;\0" \
   "devtype=mmc\0" \
   "devnum=2\0" \
   "bootpart_a=4\0" \
@@ -121,5 +123,25 @@
       "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
     "fi;\0" \
   "bootcmd=run bootcmd_fit;\0"
+
+#else
+#define CONFIG_EXTRA_ENV_SETTINGS \
+  "altbootcmd=run bootcmd_fit;\0" \
+  "devtype=mmc\0" \
+  "devnum=2\0" \
+  "bootpart_a=4\0" \
+  "bootpart_b=5\0"\
+  "default_fitimage=image.itb\0" \
+  "loadaddr=0x12000000\0" \
+  "bootcmd_fit="\
+    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
+      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
+      "bootm ${loadaddr}; reset; " \
+    "else; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
+    "fi;\0" \
+  "bootcmd=run bootcmd_fit;\0"
+
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 #endif // __LOGOS_NI8_H__
