@@ -17,8 +17,6 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/iomux-v3.h>
 #include <asm/mach-imx/mxc_i2c.h>
-#include <asm/mach-imx/spi.h>
-#include <asm/mach-imx/video.h>
 #include <command.h>
 #include <common.h>
 #include <env.h>
@@ -26,10 +24,7 @@
 #include <i2c.h>
 #include <init.h>
 #include <input.h>
-#include <linux/bitfield.h>
-#include <linux/bitops.h>
 #include <linux/delay.h>
-#include <linux/errno.h>
 #include <malloc.h>
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
