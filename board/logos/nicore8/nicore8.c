@@ -267,15 +267,6 @@ static iomux_v3_cfg_t const uart4_gpio_pads[] = {
 #endif //TEST_TIMING
 #endif // CONFIG_SPL_BUILD
 
-/* Configuration of UART4 for Logosni8 */
-static iomux_v3_cfg_t const uart4_pads[] = {
-	IOMUX_PAD_CTRL(CSI0_DAT12__UART4_TX_DATA, UART_PAD_CTRL),
-	IOMUX_PAD_CTRL(CSI0_DAT13__UART4_RX_DATA, UART_PAD_CTRL),
-	// Configuring CTS and RTSl
-	IOMUX_PAD_CTRL(CSI0_DAT16__UART4_RTS_B, UART_PAD_CTRL),
-	IOMUX_PAD_CTRL(CSI0_DAT17__UART4_CTS_B, UART_PAD_CTRL),
-};
-
 /* Configuration of UART5 for Logosni8 */
 static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT14__UART5_TX_DATA, UART_PAD_CTRL),
@@ -302,6 +293,15 @@ static iomux_v3_cfg_t const hdmi_reset_pads[] = {
 		IOMUX_PAD_CTRL(NANDF_D1__GPIO2_IO01, WEAK_PULLUP),
 };
 #endif /* CONFIG_SPL_BUILD */
+
+/* Configuration of UART4 for Logosni8 */
+static iomux_v3_cfg_t const uart4_pads[] = {
+        IOMUX_PAD_CTRL(CSI0_DAT12__UART4_TX_DATA, UART_PAD_CTRL),
+        IOMUX_PAD_CTRL(CSI0_DAT13__UART4_RX_DATA, UART_PAD_CTRL),
+        // Configuring CTS and RTSl
+        IOMUX_PAD_CTRL(CSI0_DAT16__UART4_RTS_B, UART_PAD_CTRL),
+        IOMUX_PAD_CTRL(CSI0_DAT17__UART4_CTS_B, UART_PAD_CTRL),
+};
 
 // Logosni8 - Map the onboard eMMC
 static iomux_v3_cfg_t const usdhc4_pads[] = {
@@ -765,14 +765,18 @@ static iomux_v3_cfg_t const usb_pads[] = {
 };
 #endif
 
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static void setup_iomux_uart(void)
 {
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	SETUP_IOMUX_PADS(uart2_pads);
-	SETUP_IOMUX_PADS(uart4_pads);
-	SETUP_IOMUX_PADS(uart5_pads);
-}
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
+
+	SETUP_IOMUX_PADS(uart4_pads);
+
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
+	SETUP_IOMUX_PADS(uart5_pads);
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
+}
 
 #ifdef CONFIG_USB_EHCI_MX6
 int board_ehci_hcd_init(int port)
@@ -1262,13 +1266,9 @@ static int setup_fec(void)
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #endif /* CONFIG_SPL_BUILD */
 
-// TODO: Some of the Initialisation needs to be moved to board_init()
 int board_early_init_r(void)
 {
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-	// Setup of UART2, UART4 and UART5
 	setup_iomux_uart();
-#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	// Config environment variables
