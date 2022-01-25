@@ -102,7 +102,7 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#define CONFIG_BOOTCOMMAND "run set_defaults; run bootcmd_fit;"
+#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 #define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
@@ -119,6 +119,10 @@
   "devnum=0; \0"
 
 #else
+
+// CONFIG_ENV_WRITEABLE_LIST is defined in production,
+// we explicitly define (whitelist) the set of mutable variables below.
+#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:iw,fitimage:sw"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "devtype=mmc\0" \
@@ -142,7 +146,15 @@
       "setenv fitimage ${default_fitimage}; " \
       "saveenv;" \
     "fi;\0" \
-  "altbootcmd=run bootcmd_fit;\0"
+  "check_bootpart=" \
+    "if <bootpart> != <bootpart_active> && <bootpart> != <bootpart_passive>; then " \
+      "<bootpart> == <bootpart_active>" \
+    "fi;\0" \
+  "swap_bootpart=" \
+    "if <bootpart> == <bootpart_active>; then " \
+      "<bootpart> = <bootpart_passive>" \
+    "fi;\0" \
+  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
