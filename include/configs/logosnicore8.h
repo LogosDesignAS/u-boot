@@ -102,45 +102,47 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#define CONFIG_BOOTCOMMAND "run mmc_boot"
+#define CONFIG_BOOTCOMMAND "run set_defaults; run bootcmd_fit;"
+
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
+#define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
+  "rootwait ro printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel"
+#else
+#define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
+  "rootwait ro quiet"
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 // Add a different Boot method depending on prod or dev - TODO: This just enables the basic flow
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-/* Define Alternative Boot if bootcount is bigger than 3 - TODO: For now set to the same as normal boot */
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
-  "altbootcmd=run bootcmd_fit;\0" \
-  "devtype=mmc\0" \
-  "devnum=2\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
-  "default_fitimage=image.itb\0" \
-  "loadaddr=0x12000000\0" \
-  "bootcmd_fit="\
-    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
-      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "bootm ${loadaddr}; reset; " \
-    "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
-    "fi;\0" \
-  "bootcmd=run bootcmd_fit;\0"
+  "devnum=0; \0"
 
 #else
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
-  "altbootcmd=run bootcmd_fit;\0" \
   "devtype=mmc\0" \
-  "devnum=2\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
+  "devnum=0\0" \
+  "bootpart_active=4\0" \
+  "bootpart_passive=5\0"\
   "default_fitimage=image.itb\0" \
+  "fitimage=${default_fitimage} \0" \
   "loadaddr=0x12000000\0" \
-  "bootcmd_fit="\
+  "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "bootm ${loadaddr}; reset; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
     "fi;\0" \
-  "bootcmd=run bootcmd_fit;\0"
+  "set_defaults=" \
+    "if test -z \"$bootpart\"; then " \
+      "env default -a -f; " \
+      "setenv bootpart ${bootpart_active}; " \
+      "setenv fitimage ${default_fitimage}; " \
+      "saveenv;" \
+    "fi;\0" \
+  "altbootcmd=run bootcmd_fit;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
