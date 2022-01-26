@@ -122,15 +122,14 @@
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
 // we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:iw,fitimage:sw"
+#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "devtype=mmc\0" \
   "devnum=0\0" \
-  "bootpart_active=4\0" \
-  "bootpart_passive=5\0"\
+  "bootpart_a=4\0" \
+  "bootpart_b=5\0"\
   "default_fitimage=image.itb\0" \
-  "fitimage=${default_fitimage} \0" \
   "loadaddr=0x12000000\0" \
   "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
@@ -141,18 +140,22 @@
     "fi;\0" \
   "set_defaults=" \
     "if test -z \"$bootpart\"; then " \
-      "env default -a -f; " \
-      "setenv bootpart ${bootpart_active}; " \
+      "setenv bootpart ${bootpart_a}; " \
+      "saveenv;" \
+    "fi; " \
+    "if test -z \"$fitimage\"; then " \
       "setenv fitimage ${default_fitimage}; " \
       "saveenv;" \
     "fi;\0" \
   "check_bootpart=" \
-    "if <bootpart> != <bootpart_active> && <bootpart> != <bootpart_passive>; then " \
-      "<bootpart> == <bootpart_active>" \
+    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
+      "setenv bootpart ${bootpart_a}; " \
     "fi;\0" \
   "swap_bootpart=" \
-    "if <bootpart> == <bootpart_active>; then " \
-      "<bootpart> = <bootpart_passive>" \
+    "if test ${bootpart} -eq ${bootpart_a}; then " \
+      "setenv bootpart ${bootpart_b}; " \
+    "else; " \
+      "setenv bootpart ${bootpart_a}; " \
     "fi;\0" \
   "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
 
