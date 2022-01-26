@@ -49,17 +49,13 @@
 #include "bootmelody.h"
 #endif // DEMO_MODE
 
-#ifdef CONFIG_SPL_BUILD
-//#define DRAM_INIT
-#endif /* CONFIG_SPL_BUILD */
-
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
 	GPIO_I2C_BUS_SEL_RESET		= IMX_GPIO_NR(2, 0)
 };
 
 // ENUM for configuring the AR8035 ethernet adapter
-#ifndef CONFIG_SPL_BUILD
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 enum AR8035_CONFIGS {
 	GPIO_RGMII_RX_DV 			= IMX_GPIO_NR(6, 24),
 	GPIO_ENET_RXD0_INT 			= IMX_GPIO_NR(1, 27),
@@ -69,7 +65,7 @@ enum AR8035_CONFIGS {
 	GPIO_RGMII_RX_D3			= IMX_GPIO_NR(6, 29),
 	GPIO_RGMII_RX_CLK 			= IMX_GPIO_NR(6, 30)
 };
-#endif /* CONFIG_SPL_BUILD */
+#endif /* CONFIG_TARGET_LOGOSNICORE8DEV */
 
 // Enum for LEDs on the Logosni8 board - enum idea came from board/beckhoff/mx53cx9020
 enum LED_GPIOS {
@@ -237,16 +233,6 @@ static iomux_v3_cfg_t const uart2_pads[] = {
 	IOMUX_PAD_CTRL(EIM_D27__UART2_RX_DATA, UART_PAD_CTRL),
 };
 
-/* Configuration of UART4 GPIO Pins for Logosni8 Testing boot time */
-#ifdef CONFIG_SPL_BUILD
-#ifdef TEST_TIMING
-static iomux_v3_cfg_t const uart4_gpio_pads[] = {
-		IOMUX_PAD_CTRL(CSI0_DAT12__GPIO5_IO30, NO_PAD_CTRL),
-		IOMUX_PAD_CTRL(CSI0_DAT13__GPIO5_IO31, NO_PAD_CTRL),
-};
-#endif //TEST_TIMING
-#endif // CONFIG_SPL_BUILD
-
 /* Configuration of UART5 for Logosni8 */
 static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT14__UART5_TX_DATA, UART_PAD_CTRL),
@@ -256,7 +242,7 @@ static iomux_v3_cfg_t const uart5_pads[] = {
 	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
 };
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-#ifndef CONFIG_SPL_BUILD
+
 #ifdef CONFIG_MXC_SPI
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	/* SS1 */
@@ -266,7 +252,6 @@ static iomux_v3_cfg_t const ecspi1_pads[] = {
 	IOMUX_PAD_CTRL(EIM_D16__ECSPI1_SCLK, SPI_PAD_CTRL),
 };
 #endif // CONFIG_MXC_SPI
-#endif /* CONFIG_SPL_BUILD */
 
 // I2C MUX Reset Pad Config
 static iomux_v3_cfg_t const hdmi_reset_pads[] = {
@@ -332,7 +317,6 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 		IOMUX_PAD_CTRL(SD3_DAT7__SD3_DATA7, USDHC_PAD_CTRL),
 };
 
-#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static iomux_v3_cfg_t const enet_pads1[] = {
 	/* MDIO */
@@ -381,8 +365,6 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 };
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
-#endif /* CONFIG_SPL_BUILD */
-
 /* LED2 and LED3 pads on logosni8 */
 static iomux_v3_cfg_t const ni8_led_pads[] = {
 		IOMUX_PAD_CTRL(NANDF_CLE__GPIO6_IO07, OUTPUT_40OHM),  // - Configured as output 40Ohms
@@ -416,7 +398,6 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 		// Pin configuration for the Watchdog
 
 		/* Configuration of GPIO_9 to WDOG1_B - Here called WDOG1_B in schematic  - see schematic page 10 */
-		// TODO: Make sure the the watch dog initialisation doesnt reset the device - goes to timeout on TC
 		IOMUX_PAD_CTRL(GPIO_9__WDOG1_B, WDOG_PAD_CTRL),
 };
 
@@ -578,7 +559,6 @@ static void setup_iomux_afb_gpio(void)
 }
 
 /* Setup the LEDS on the Logosni8 board */
-#ifndef CONFIG_SPL_BUILD
 static void setup_iomux_leds(void)
 {
 	// Add a GPIO request for the two LEDS
@@ -630,7 +610,6 @@ static void setup_iomux_enet(void)
 	mdelay(10);	// Wait 5000 us before using mii interface - and pull the reset pin low
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-#endif /* CONFIG_SPL_BUILD */
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
 static iomux_v3_cfg_t const usb_pads[] = {
@@ -699,12 +678,11 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
 	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(2, 30)) : -1;
 }
-#ifndef CONFIG_SPL_BUILD
+
 static void setup_spi(void)
 {
 	SETUP_IOMUX_PADS(ecspi1_pads);
 }
-#endif /* CONFIG_SPL_BUILD */
 #endif // CONFIG_MXC_SPI
 
 
@@ -717,7 +695,7 @@ static inline void bootcount_inc_logos(void) {
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 	bootcount_store(++bootcount);
 }
-#ifndef CONFIG_SPL_BUILD
+
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 int board_phy_config(struct phy_device *phydev)
 {
@@ -737,8 +715,6 @@ int board_eth_init(struct bd_info *bis)
 	return cpu_eth_init(bis);
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-#endif /* CONFIG_SPL_BUILD */
-
 
 #ifdef DEMO_MODE
 static unsigned gpios_led_logosni8[] = {
@@ -770,7 +746,6 @@ static void led_logosni8_party_light(void)
 }
 #endif
 
-#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static int setup_fec(void)
 {
@@ -792,7 +767,6 @@ static int setup_fec(void)
 	return 0;
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-#endif /* CONFIG_SPL_BUILD */
 
 int board_early_init_r(void)
 {
@@ -823,7 +797,6 @@ int board_early_init_r(void)
  * Do not overwrite the console
  * Use always serial for U-Boot console
  */
-#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 int overwrite_console(void)
 {
@@ -840,7 +813,6 @@ int print_Logos_Logo(void)
 	return 0;
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-#endif /* CONFIG_SPL_BUILD */
 
 #ifdef DEMO_MODE
 /*
@@ -962,7 +934,6 @@ int bootup_Song_Star_Wars(void)
 }
 #endif // DEMO_MODE
 
-#ifndef CONFIG_SPL_BUILD
 #ifdef CONFIG_CMD_BMODE // TODO Adapt to our board or remove
 static const struct boot_mode board_boot_modes[] = {
 	/* 8 bit bus width */
@@ -974,7 +945,6 @@ static const struct boot_mode board_boot_modes[] = {
 	{NULL, 0},
 };
 #endif // CONFIG_CMD_BMODE
-#endif /* CONFIG_SPL_BUILD */
 
 // Card detected function for seeing if a card is present
 int board_mmc_getcd(struct mmc *mmc)
@@ -997,7 +967,6 @@ int board_mmc_getcd(struct mmc *mmc)
 }
 
 // I2c Functions for the full u-boot
-#ifndef CONFIG_SPL_BUILD
 int i2c_read(uint8_t chip, unsigned int addr, int alen,
 			 uint8_t *buffer, int len)
 
@@ -1029,9 +998,7 @@ int i2c_write(uint8_t chip, unsigned int addr, int alen,
 	// Write to the I2c Device
 	return dm_i2c_write(dev, 0x00, buffer, alen);
 }
-#endif /* CONFIG_SPL_BUILD */
 
-// These function are not needed by SPL
 int board_mmc_init(struct bd_info *bis) {
 	/*
 	  * Upon reading BOOT_CFG register the following map is done:
@@ -1113,7 +1080,6 @@ int board_mmc_init_dts(void) {
 	return 0;
 }
 
-#ifndef CONFIG_SPL_BUILD
 int board_init(void)
 {
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -1188,13 +1154,11 @@ int misc_init_r(void)
 	env_set_hex("reset_cause", get_imx_reset_cause());
 	return 0;
 }
-#endif /* CONFIG_SPL_BUILD */
 /*
  * The board_late_init function is called late during the bootloader initialisation
  * Therefore, all the functionality needed late during the bootup should be added here - this is e.g. the UART printing
  * Which is first available late in the bootup, because the Test Carrier Board needs to be powered up.
  */
-#ifndef CONFIG_SPL_BUILD
 int board_late_init(void)
 {
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
@@ -1249,12 +1213,8 @@ int board_late_init(void)
 	return 0;
 
 }
-#endif /* CONFIG_SPL_BUILD */
-//#endif /* CONFIG_SPL_BUILD */
 
-
-// Enable watchdog when device tree is enabled for SPL
-#ifndef CONFIG_SPL_BUILD
+// Enable the watchdog
 #ifdef CONFIG_WDT
 #if defined(CONFIG_IMX_WATCHDOG)
 static void imx_watchdog_reset(struct watchdog_regs *wdog)
@@ -1323,554 +1283,3 @@ void reset_cpu(void)
 
 #endif /* CONFIG_IMX_WATCHDOG */
 #endif /* CONFIG_WDT */
-#endif /* CONFIG_SPL_BUILD */
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//----------------------------------------------- SPL Mode Code ------------------------------------------------------//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef CONFIG_SPL_BUILD
-#include <asm/arch/mx6-ddr.h>
-#include <spl.h>
-#include <linux/libfdt.h>
-#include "asm/arch/crm_regs.h"
-#include "asm/arch/mx6dl-ddr.h"
-#include <asm/mach-imx/mxc_i2c.h>
-#include <i2c.h>
-
-
-void reset_cpu(void)
-{
-}
-
-
-static int spl_mmc_find_device(struct mmc **mmcp, u32 boot_device)
-{
-	int err, mmc_dev;
-
-	mmc_dev = 0;
-	if (mmc_dev < 0)
-		return mmc_dev;
-
-#if CONFIG_IS_ENABLED(DM_MMC)
-	err = mmc_init_device(mmc_dev);
-#else
-	err = mmc_initialize(NULL);
-#endif /* DM_MMC */
-	if (err) {
-#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
-		printf("spl: could not initialize mmc. error: %d\n", err);
-#endif
-		return err;
-	}
-	*mmcp = find_mmc_device(mmc_dev);
-	err = *mmcp ? 0 : -ENODEV;
-	if (err) {
-#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
-		printf("spl: could not find mmc device %d. error: %d\n",
-		       mmc_dev, err);
-#endif
-		return err;
-	}
-
-	return 0;
-}
-
-int mmc_change_part(int part)
-{
-	static struct mmc *mmc;
-	u32 boot_device = BOOT_DEVICE_MMC1;
-	int err = 0;
-	if (!mmc) {
-		err = spl_mmc_find_device(&mmc, boot_device);
-		if (err)
-			return err;
-
-		err = mmc_init(mmc);
-		if (err) {
-			mmc = NULL;
-#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
-			printf("spl: mmc init failed with error: %d\n", err);
-#endif
-			return err;
-		}
-	}
-	err = mmc_switch_part(mmc, part);
-
-		if (err) {
-#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
-			puts("spl: mmc partition switch failed\n");
-#endif
-			return err;
-		}
-	return 0;
-}
-
-//#define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name | pad_ctrl)
-
-#ifdef CONFIG_SPL_OS_BOOT
-int spl_start_uboot(void)
-{
-	// Here look at the Test Pin from the DIP switch in order to choose the boot up method for now.
-
-	// If it is low - then boot u-boot
-	gpio_request(GP_TEST_SMARC, "GP_TEST_SMARC");
-	gpio_direction_input(GP_TEST_SMARC);
-
-	/* Only enter in Falcon mode if GP_TEST_SMARC is enabled */
-	if ( gpio_get_value(GP_TEST_SMARC) == 0)
-	{
-		puts("Booting U-Boot\n");
-		mmc_change_part(1);
-		return 1;
-	}
-	else
-	{
-		puts("Booting OS\n");
-		return 0;
-	}
-}
-#endif /* CONFIG_SPL_OS_BOOT */
-
-/* called from board_init_r after gd setup if CONFIG_SPL_BOARD_INIT defined */
-/* its our chance to print info about boot device */
-void spl_board_init(void)
-{
-	/* determine boot device from SRC_SBMR1 (BOOT_CFG[4:1]) or SRC_GPR9 */
-	u32 boot_device = BOOT_DEVICE_MMC1;
-
-	switch (boot_device) {
-	case BOOT_DEVICE_MMC1:
-		puts("Booting from MMC\n");
-		break;
-	case BOOT_DEVICE_NAND:
-		puts("Booting from NAND\n");
-		break;
-	case BOOT_DEVICE_SATA:
-		puts("Booting from SATA\n");
-		break;
-	default:
-		puts("Unknown boot device\n");
-	}
-
-
-#ifdef CONFIG_SPL_ENV_SUPPORT
-	// Load environment
-	env_init();
-
-	// Load enviroment - initiliase MMC
-	board_mmc_init_dts();
-
-	// Change Paritition
-	mmc_change_part(1);
-
-	env_load();
-#endif // CONFIG_SPL_ENV_SUPPORT
-
-	/* PMIC init */
-	//setup_pmic();
-}
-
-
-void board_boot_order(u32 *spl_boot_list)
-{
-	/*
-	* Upon reading BOOT_CFG register the following map is done:
-	 * Bit 11 and 12 of BOOT_CFG register can determine the current
-	 * mmc port
-	 * 0x1                  SD1
-	 * 0x2                  SD3
-	 * 0x3                  SD4
-	 */
-
-	// Map MMC 1
-	SETUP_IOMUX_PADS(sdmmc_pads);
-
-	SETUP_IOMUX_PADS(usdhc3_pads);
-
-	// Map MMC 2
-	SETUP_IOMUX_PADS(usdhc4_pads);
-
-	// Request GPIOs
-	gpio_request(SDIO_PWR_EN, 			"SDIO_PWR_EN,");
-	gpio_request(SDIO_WP, 				"SDIO_WP");
-	gpio_request(SDIO_CD, 				"SDIO_CD");
-
-	// Enable power to SDCARD
-	gpio_direction_output(SDIO_PWR_EN, 	1);
-	gpio_direction_output(SDIO_WP, 		1);
-	gpio_direction_output(SDIO_CD, 		1);
-
-	// Initialise all mmc - Define clocks first
-	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
-	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
-
-	// We need to decide which mmc to boot from - for now we are using the SD card
-	spl_boot_list[0] = BOOT_DEVICE_MMC1;
-	spl_boot_list[1] = BOOT_DEVICE_MMC2_2;
-	spl_boot_list[2] = BOOT_DEVICE_MMC2;
-}
-
-
-static void ccgr_init(void)
-{
-	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-
-	writel(0x00C03F3F, &ccm->CCGR0);
-	writel(0x0030FC03, &ccm->CCGR1);
-	writel(0x0FFFFFF3, &ccm->CCGR2);
-	writel(0x3FF0300F, &ccm->CCGR3);
-	writel(0x00FFF300, &ccm->CCGR4);
-	writel(0x0F0000F3, &ccm->CCGR5);
-	writel(0x000003FF, &ccm->CCGR6);
-
-	/*
-	 * Setup CCM_CCOSR register as follows:
-	 *
-	 * cko1_en  = 1	   --> CKO1 enabled
-	 * cko1_div = 111  --> divide by 8
-	 * cko1_sel = 1011 --> ahb_clk_root
-	 *
-	 * This sets CKO1 at ahb_clk_root/8 = 132/8 = 16.5 MHz
-	 */
-	//writel(0x000000FB, &ccm->ccosr);
-}
-#ifdef DRAM_INIT
-static int mx6dl_dcd_table[] = {
-	/* ddr-setup.cfg */
-
-	/* SDQS */
-	MX6_IOM_DRAM_SDQS0, 0x00000030,
-	MX6_IOM_DRAM_SDQS1, 0x00000030,
-	MX6_IOM_DRAM_SDQS2, 0x00000030,
-	MX6_IOM_DRAM_SDQS3, 0x00000030,
-	MX6_IOM_DRAM_SDQS4, 0x00000030,
-	MX6_IOM_DRAM_SDQS5, 0x00000030,
-	MX6_IOM_DRAM_SDQS6, 0x00000030,
-	MX6_IOM_DRAM_SDQS7, 0x00000030,
-	// BDS
-	MX6_IOM_GRP_B0DS, 0x00000030,
-	MX6_IOM_GRP_B1DS, 0x00000030,
-	MX6_IOM_GRP_B2DS, 0x00000030,
-	MX6_IOM_GRP_B3DS, 0x00000030,
-	MX6_IOM_GRP_B4DS, 0x00000030,
-	MX6_IOM_GRP_B5DS, 0x00000030,
-	MX6_IOM_GRP_B6DS, 0x00000030,
-	MX6_IOM_GRP_B7DS, 0x00000030,
-	// Adds
-	MX6_IOM_GRP_ADDDS, 0x00000030,
-
-	/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
-	MX6_IOM_GRP_CTLDS, 0x00000030,
-
-	// DQM0
-	MX6_IOM_DRAM_DQM0, 0x00020030,
-	MX6_IOM_DRAM_DQM1, 0x00020030,
-	MX6_IOM_DRAM_DQM2, 0x00020030,
-	MX6_IOM_DRAM_DQM3, 0x00020030,
-	MX6_IOM_DRAM_DQM4, 0x00020030,
-	MX6_IOM_DRAM_DQM5, 0x00020030,
-	MX6_IOM_DRAM_DQM6, 0x00020030,
-	MX6_IOM_DRAM_DQM7, 0x00020030,
-
-
-	MX6_IOM_DRAM_CAS, 0x00020030,
-	MX6_IOM_DRAM_RAS, 0x00020030,
-	MX6_IOM_DRAM_SDCLK_0, 0x00020030,
-	MX6_IOM_DRAM_SDCLK_1, 0x00020030,
-
-	// DRAM RESET
-	MX6_IOM_DRAM_RESET, 0x00020030,
-	MX6_IOM_DRAM_SDCKE0, 0x00003000,
-	MX6_IOM_DRAM_SDCKE1, 0x00003000,
-
- 	// Different than for the Colibri MX6
-	MX6_IOM_DRAM_SDODT0, 0x00020030,
-	MX6_IOM_DRAM_SDODT1, 0x00020030,
-
-	/* (differential input) */
-	MX6_IOM_DDRMODE_CTL, 0x00020000,
-	/* (differential input) */
-	MX6_IOM_GRP_DDRMODE, 0x00020000,
-	/* disable ddr pullups */
-	MX6_IOM_GRP_DDRPKE, 0x00000000,
-	MX6_IOM_DRAM_SDBA2, 0x00000000,
-	/* 40 Ohm drive strength for cs0/1,sdba2,cke0/1,sdwe */
-	MX6_IOM_GRP_DDR_TYPE, 0x000C0000,
-
-	/* Read data DQ Byte0-3 delay */
-	MX6_MMDC_P0_MPRDDQBY0DL, 0x33333333,
-	MX6_MMDC_P0_MPRDDQBY1DL, 0x33333333,
-	MX6_MMDC_P0_MPRDDQBY2DL, 0x33333333,
-	MX6_MMDC_P0_MPRDDQBY3DL, 0x33333333,
-	MX6_MMDC_P1_MPRDDQBY0DL, 0x33333333,
-	MX6_MMDC_P1_MPRDDQBY1DL, 0x33333333,
-	MX6_MMDC_P1_MPRDDQBY2DL, 0x33333333,
-	MX6_MMDC_P1_MPRDDQBY3DL, 0x33333333,
-
-	/*
-	 * MDMISC	mirroring	interleaved (row/bank/col)
-	 */
-	MX6_MMDC_P0_MDMISC, 0x00001740,
-
-	/*
-	 * MDSCR	con_req
-	 */
-	MX6_MMDC_P0_MDSCR, 0x00008000,
-	// From U-Boot 800mhz_2x128mx16.cfg
-	MX6_MMDC_P0_MDPDC, 0x0002002D,
-
-	//Not define in Nitrogen lite board 800mhz
-	MX6_MMDC_P0_MDSCR, 0x00008000,
-	MX6_MMDC_P0_MDCFG0, 0x3F435333,
-	MX6_MMDC_P0_MDCFG1, 0xB50D0AA4,
-	MX6_MMDC_P0_MDCFG2, 0x01FF00DB,
-	MX6_MMDC_P0_MDRWD, 0x000026D2,
-	MX6_MMDC_P0_MDOR, 0x00431023,
-	MX6_MMDC_P0_MDOTC, 0x1B444040,
-	MX6_MMDC_P0_MDPDC, 0x0002556D,
-
-	/* CS0 End: 7MSB of ((0x10000000, + 512M) -1) >> 25 */
-	MX6_MMDC_P0_MDASP, 0x00000017,
-	MX6_MMDC_P0_MDCTL, 0x83190000,
-
-	/* Write commands to DDR */
-	/* Load Mode Registers - we have the setting for the extended temperature */
-	MX6_MMDC_P0_MDSCR, 0x04088032,
-	MX6_MMDC_P0_MDSCR, 0x00008033,
-	MX6_MMDC_P0_MDSCR, 0x00048031,
-	MX6_MMDC_P0_MDSCR, 0x15208030,
-
-	/* ZQ calibration */
-	MX6_MMDC_P0_MDSCR, 0x04008040,
-
-	MX6_MMDC_P0_MPZQHWCTRL, 0xA1390003,
-	MX6_MMDC_P1_MPZQHWCTRL, 0xA1390003,
-	MX6_MMDC_P0_MDREF, 0x00005800,
-
-	MX6_MMDC_P0_MPODTCTRL, 0x00011117,
-	MX6_MMDC_P1_MPODTCTRL, 0x00011117,
-
-// Different sequence
-/*
-	MX6_MMDC_P0_MPDGCTRL0, 0x4220021F,
-	0x021b483c, 0x4201020C,
-	0x021b0840, 0x0207017E,
-	0x021b4840, 0x01660172,
-	0x021b0848, 0x4A4D4E4D,
-	0x021b4848, 0x4A4F5049,
-	0x021b0850, 0x3F3C3D31,
-	0x021b4850, 0x3238372B,
- */
-// Colibri Version
-	MX6_MMDC_P0_MPDGCTRL0, 0x4220021F,
-	MX6_MMDC_P0_MPDGCTRL1, 0x0207017E,
-	MX6_MMDC_P1_MPDGCTRL0, 0x4201020C,
-	MX6_MMDC_P1_MPDGCTRL1, 0x01660172,
-	MX6_MMDC_P0_MPRDDLCTL, 0x4A4D4E4D,
-	MX6_MMDC_P1_MPRDDLCTL, 0x3F3C3D31,
-	MX6_MMDC_P0_MPWRDLCTL, 0x4A4F5049,
-	MX6_MMDC_P1_MPWRDLCTL, 0x3238372B,
-
-	MX6_MMDC_P0_MPWLDECTRL0, 0x001F001F,
-	MX6_MMDC_P0_MPWLDECTRL1, 0x001F001F,
-	MX6_MMDC_P1_MPWLDECTRL0, 0x001F001F,
-	MX6_MMDC_P1_MPWLDECTRL1, 0x001F001F,
-
-	MX6_MMDC_P0_MPMUR0, 0x00000800,
-	MX6_MMDC_P1_MPMUR0, 0x00000800,
-	MX6_MMDC_P0_MDSCR, 0x00000000,
-	MX6_MMDC_P0_MAPSR, 0x00011006,
-};
-
-static void ddr_init(int *table, int size)
-{
-	int i;
-
-	for (i = 0; i < size / 2 ; i++)
-		writel(table[2 * i + 1], table[2 * i]);
-}
-
-static void spl_dram_init(void)
-{
-	ddr_init(mx6dl_dcd_table, ARRAY_SIZE(mx6dl_dcd_table));
-}
-#endif /* DRAM_INIT */
-
-/* - This function looks for the name of the U-Boot binary
- * This is not a perfect match. Add the name when building the fit image
- */
-int board_fit_config_name_match(const char *name)
-{	// TODO: Change the Description when building the FIT Image
-	char tmp_name[20] = "Standard Boot\0";
-
-	return strcmp(name, tmp_name);
-}
-
-int board_early_init_f(void)
-{
-
-	// Setup of UART2, UART4 and UART5
-	setup_iomux_uart();//this is also int boar_early_init_f()
-
-	// Setup early value initialisation - power up carrier board - set GPIO_CARRIER_PWR_ON high
-	gpio_direction_output(IMX_GPIO_NR(6, 31), 1); // Doesnt set the Pin high early enough
-
-	// Add a GPIO request for the two LEDS
-	gpio_request(GPIO_LED_2, "GPIO_LED_2");
-	gpio_request(GPIO_LED_3, "GPIO_LED_3");
-
-	// Setup the LEDS and the corresponding padding
-	SETUP_IOMUX_PADS(ni8_led_pads);
-
-	// Setup the LEDs as Output
-	gpio_direction_output(GPIO_LED_2, 0);			// LED2
-	gpio_direction_output(GPIO_LED_3, 0);			// LED3
-
-	// Early setup of I2C
-	SETUP_IOMUX_PADS(conf_i2c_pads);
-
-	return 0;
-}
-
-// Dummy function for I2C support
-int gpio_request_by_name_nodev(ofnode node, const char *list_name, int index,
-			struct gpio_desc *desc, int flags)
-{
-
-	return 0;
-}
-
-#ifdef TEST_TIMING
-// Setup UART as GPIOs
-void setup_early_uart(void)
-{
-	// Request UART TX - Ser0 CSIO_DAT12 for
-	SETUP_IOMUX_PADS(uart4_gpio_pads);
-
-	// Set as Output
-	gpio_request( IMX_GPIO_NR(5, 30), 			"UART4_TX_DATA,");
-	gpio_request( IMX_GPIO_NR(5, 31), 			"UART4_RX_DATA,");
-
-	// Declare Direction
-	gpio_direction_output(IMX_GPIO_NR(5, 30), 	0);
-	gpio_direction_input(IMX_GPIO_NR(5, 31) );
-}
-
-// This implements a very simple software defined UART for sending a single character - this prints very early in the bootup
-void print_timing_character(int baudrate_delay)
-{
-	//udelay(baudrate_delay);
-	gpio_set_value(IMX_GPIO_NR(5, 30), 0);
-	udelay(baudrate_delay);
-
-	// Send data bit 0
-	gpio_set_value(IMX_GPIO_NR(5, 30), 0); udelay(baudrate_delay);
-	// Send data bit 1
-	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
-	// Send data bit 2
-	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
-	// Send data bit 3
-	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
-	// Send data bit 4
-	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
-	// Send data bit 5
-	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
-	// Send data bit 6
-	gpio_set_value(IMX_GPIO_NR(5, 30), 0); udelay(baudrate_delay);
-	// Send data bit 7
-	gpio_set_value(IMX_GPIO_NR(5, 30), 0); udelay(baudrate_delay);
-
-
-	// Send stop bit
-	gpio_set_value(IMX_GPIO_NR(5, 30), 1); udelay(baudrate_delay);
-}
-
-
-
-#endif // TEST_TIMING
-
-void board_init_f(ulong dummy)
-{
-	/* setup AIPS and disable watchdog */
-	arch_cpu_init();
-
-	ccgr_init();
-	gpr_init();
-
-	/* setup GP timer */
-	timer_init();
-
-	/* iomux */
-	board_early_init_f();
-
-	// Setup the LEDs as Output
-	gpio_direction_output(GPIO_LED_2, 0);			// LED2
-	gpio_direction_output(GPIO_LED_3, 1);			// LED3
-
-	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
-	setup_iomux_afb_gpio();
-
-	// Setup GPIOs
-	setup_iomux_gpio();
-
-	/* Clear the BSS. */ 
-	memset(__bss_start, 0, __bss_end - __bss_start);
-
-	/* UART clocks enabled and gd valid - init serial console */
-#ifdef CONFIG_SPL_SERIAL_SUPPORT
-	preloader_console_init();
-#else
-#ifdef TEST_TIMING
-	// Setup the early UART - only for timing metrics
-	setup_early_uart();
-
-	// Print Timing Character (the timings with GPIOs are not accurate.) - TODO: Remove this before setting tag and merging
-	print_timing_character(3);
-	print_timing_character(3);
-	print_timing_character(3);
-	print_timing_character(3);
-
-	print_timing_character(4);
-	print_timing_character(4);
-	print_timing_character(4);
-	print_timing_character(4);
-
-	print_timing_character(5);
-	print_timing_character(5);
-	print_timing_character(5);
-	print_timing_character(5);
-
-	print_timing_character(6);
-	print_timing_character(6);
-	print_timing_character(6);
-	print_timing_character(6);
-
-	print_timing_character(7);
-	print_timing_character(7);
-	print_timing_character(7);
-	print_timing_character(7);
-
-	print_timing_character(8);
-	print_timing_character(8);
-	print_timing_character(8);
-	print_timing_character(8);
-#endif /*		TEST_TIMING			*/
-#endif /*	CONFIG_SPL_SERIAL_SUPPORT	*/
-
-	// Increase bootcount Manually
-	bootcount_inc_logos();
-
-	/*
-#ifdef CONFIG_FSL_CAAM
-	if (sec_init() < 0)
-		puts("Countn't Initiate Security on Imx6\n");
-#endif
-	 */
-
-	/* load/boot image from boot device */
-	board_init_r(NULL, 0);
-}
-#endif
-
