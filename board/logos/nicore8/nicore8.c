@@ -27,7 +27,6 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 #include <usb/ehci-ci.h>
 
-
 // Watchdog
 #include <wdt.h>
 #include <watchdog.h>
@@ -415,51 +414,51 @@ static iomux_v3_cfg_t const conf_usb_pads[] = {
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 		// Pin configuration for GPIO[0-3]
-		IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, WEAK_PULLUP),
-		IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, 		WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, 		WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, 		OUTPUT_40OHM),
 
 		// Pin configuration for GPIO[4-11]
-		IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, WEAK_PULLUP),
-		IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, 	WEAK_PULLDOWN),
 
 		// Pin Configuration of GPIO_MCLK
 		// Here This GPIO controls a low frequency Audio clock for the chip MAX9860ETG+T on the TC (Minimum 10MHz clock) TODO: Check if we can generate this high clk
-		IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, 		OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, 	OUTPUT_40OHM),
 
 		// Pin configuration for SMARC inputs - Charging and Charger_PRSNT
-		IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, WEAK_PULLUP),
-		IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, 		WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, 		WEAK_PULLUP),
 
 		// Pin configuration for SMARC inputs - PMIC_INT_B
-		IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, NO_PAD_CTRL),
+		IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, 	NO_PAD_CTRL),
 
 		// Pin configuration for SMARC inputs - CARRIER_PWR_ON
-		IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, 	WEAK_PULLDOWN),
 
 		// SMARC_Test from test carrier
-		IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, 	WEAK_PULLDOWN),
 };
 
 /* AFB_GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 		// Pin configuration for AFB_GPIO[0-7]
-		IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, 	WEAK_PULLDOWN),
 		IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20,WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, 	WEAK_PULLDOWN),
 };
 
 /* Functions below */
@@ -533,7 +532,7 @@ static void setup_iomux_afb_gpio(void)
 	// Setup the rest of the AFB_GPIO pins and the corresponding padding for the i.MX6U -
 	SETUP_IOMUX_PADS(conf_afb_gpio_pads);
 
-	// Setup the AFB GPIOs as Output if specified on the Schematic - Also configured for the Test Carrier
+	// Setup the AFB GPIOs as Output if specified on the Schematic
 	gpio_direction_output(AFB_GPIO_4, 			1);		// AFB_GPIO_4 -> LED6 on the Test Carrier Board
 	gpio_direction_output(AFB_GPIO_5, 			0);		// AFB_GPIO_5 -> LED5 on the Test Carrier Board
 	gpio_direction_output(AFB_GPIO_6, 			0);		// AFB_GPIO_6 -> LED4 on the Test Carrier Board
@@ -924,7 +923,6 @@ int board_init(void)
 	// Map the Reset for the I2C MUX
 	SETUP_IOMUX_PADS(hdmi_reset_pads);
 
-
 	// Set reset high for IC2 Bus select - Chip is PCA954 - IC2 address 0x70 - (Reset is active low)
 	gpio_request(GPIO_I2C_BUS_SEL_RESET, "GPIO_I2C_BUS_SEL_RESET ");
 
@@ -966,10 +964,6 @@ int board_init(void)
 
 	return 0;
 }
-
-#ifdef CONFIG_PREBOOT
-// Here was the setup of the Preboot keys for Nitrogen 6 - see board/boundary/nitrogen6x.c
-#endif
 
 int misc_init_r(void)
 {
@@ -1036,7 +1030,6 @@ int board_late_init(void)
 	gpio_set_value(GPIO_LED_3, 0);
 
 	return 0;
-
 }
 
 // Enable the watchdog
