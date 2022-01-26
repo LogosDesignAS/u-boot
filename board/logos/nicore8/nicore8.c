@@ -34,11 +34,11 @@
 #include <fsl_wdog.h>
 #include <div64.h>
 
-// Thermal Configs
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
+// Thermal Configs
 #include <imx_thermal.h>
 #include <thermal.h>
-
+// Logo
 #include "logosLogo.h"
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
@@ -46,7 +46,7 @@
 #include <bootcount.h>
 
 #ifdef DEMO_MODE
-#include "bootmelody.h"
+#include "nicore8demo.h"
 #endif // DEMO_MODE
 
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
@@ -690,36 +690,6 @@ int board_eth_init(struct bd_info *bis)
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
-#ifdef DEMO_MODE
-static unsigned gpios_led_logosni8[] = {
-	GPIO_LED_2, /* LED 2 - LogosNi8 */
-	GPIO_LED_3, /* LED 3 - LogosNi8 */
-};
-
-static void led_logosni8_party_light(void)
-{
-	// This function will create a simple light demo - using the LED2 and LED3 - will run for 20 seconds
-	for (int i = 0; i < 30; i++) {
-		gpio_set_value(GPIO_LED_2, 1);
-		gpio_set_value(GPIO_LED_3, 1);
-
-		// Wait 0.5s
-		mdelay(500);
-
-		gpio_set_value(GPIO_LED_2, 0);
-		gpio_set_value(GPIO_LED_3, 0);
-
-		// Wait 0.5s
-		mdelay(500);
-	}
-
-	// After the initial heartbeat start the more serious stuff will initiate - Namely "Something - rename
-	// Insert some more LED config here, to make a nice demo.
-	gpio_set_value(GPIO_LED_2, 0);
-	gpio_set_value(GPIO_LED_3, 1);
-}
-#endif
-
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static int setup_fec(void)
 {
@@ -788,125 +758,6 @@ int print_Logos_Logo(void)
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
-#ifdef DEMO_MODE
-/*
- * This function generate beeps using the Buzzer on the Test Carrier board and takes in two parameters
- * note     - This is the frequency of the requested note - Hz
- * duration - For how long should this tone be played     - ms
- *
- * The function generates a square wave that activates the buzzer
- */
-int beep(int note, int duration)
-{
-	// Determine the Time Period
-	int T_sound = 1000000 / note;
-	// Determine the number of time periods to run to get the wanted duration.
-	int runTime = (duration * 1000)/T_sound;
-
-	for (int u = 0; u < runTime; u++) {
-		gpio_direction_output(GPIO_2, 1);					// GPIO_2 -> SOUND2
-		gpio_direction_output(GPIO_3, 0);					// GPIO_3 -> SOUND1
-		udelay(T_sound >> 1);								// Divide by two
-
-		gpio_direction_output(GPIO_2, 0);					// GPIO_2 -> SOUND2
-		gpio_direction_output(GPIO_3, 1);					// GPIO_3 -> SOUND1
-		udelay(T_sound >> 1);								// Divide by two
-	}
-	return 0;
-}
-
-int firstSection(void)
-{
-	beep(a,  500);
-	beep(a,  500);
-	beep(a,  500);
-	beep(f,  350);
-	beep(cH, 150);
-	beep(a,  500);
-	beep(f,  350);
-	beep(cH, 150);
-	beep(a,  650);
-
-	mdelay(500);
-
-	beep(eH, 500);
-	beep(eH, 500);
-	beep(eH, 500);
-	beep(fH, 350);
-	beep(cH, 150);
-	beep(gS, 500);
-	beep(f,  350);
-	beep(cH, 150);
-	beep(a,  650);
-
-	mdelay(500);
-
-	return 0;
-}
-
-int secondSection(void)
-{
-	beep(aH, 500);
-	beep(a,  300);
-	beep(a,  150);
-	beep(aH, 500);
-	beep(gSH,325);
-	beep(gH, 175);
-	beep(fSH,125);
-	beep(fH, 125);
-	beep(fSH,250);
-
-	mdelay(325);
-
-	beep(aS, 250);
-	beep(dSH,500);
-	beep(dH, 325);
-	beep(cSH,175);
-	beep(cH, 125);
-	beep(b,  125);
-	beep(cH, 250);
-
-	mdelay(350);
-
-	return 0;
-}
-
-int bootup_Song_Star_Wars(void)
-{
-	//Play first section
-	firstSection();
-
-	//Play second section
-	secondSection();
-
-	//Variant 1
-	beep(f,  250);
-	beep(gS, 500);
-	beep(f,  350);
-	beep(a,  125);
-	beep(cH, 500);
-	beep(a,  375);
-	beep(cH, 125);
-	beep(eH, 650);
-
-    mdelay(500);
-
-	//Repeat second section
-	secondSection();
-
-	//Variant 2
-	beep(f,  250);
-	beep(gS, 500);
-	beep(f,  375);
-	beep(cH, 125);
-	beep(a,  500);
-	beep(f,  375);
-	beep(cH, 125);
-	beep(a,  650);
-
-	return 0;
-}
-#endif // DEMO_MODE
 
 #ifdef CONFIG_CMD_BMODE // TODO Adapt to our board or remove
 static const struct boot_mode board_boot_modes[] = {
