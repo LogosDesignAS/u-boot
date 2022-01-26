@@ -19,10 +19,11 @@ CONFIG_BOARD_LATE_INIT=y
 
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
+CONFIG_OF_EMBED=y # TODO: Required for JTAG, test and remove.
 
 # Support fit image
-##CONFIG_LOAD_FIT=y
-##CONFIG_LEGACY_IMAGE_FORMAT=y
+CONFIG_LOAD_FIT=y
+CONFIG_LEGACY_IMAGE_FORMAT=n
 
 # Boot from eMMC Card
 CONFIG_SUPPORT_EMMC_BOOT=y
@@ -31,6 +32,10 @@ CONFIG_SUPPORT_EMMC_BOOT=y
 CONFIG_BLK=y
 
 # Environment Support
+CONFIG_ENV_IS_NOWHERE=y
+CONFIG_ENV_ACCESS_IGNORE_FORCE=y
+CONFIG_ENV_WRITEABLE_LIST=y
+CONFIG_ENV_APPEND=y
 CONFIG_ENV_IS_IN_MMC=y
 CONFIG_SYS_MMC_ENV_DEV=0
 CONFIG_SYS_MMC_ENV_PART=1
@@ -41,8 +46,6 @@ CONFIG_ENV_SIZE=0x8000
 # Negative value means backwards from the end.
 CONFIG_ENV_OFFSET=0xFFFF0000
 CONFIG_ENV_OFFSET_REDUND=0x1F8000
-CONFIG_SYS_RELOC_GD_ENV_ADDR=y
-CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 
 # Add startup scripts before boot in misc_init_r()
 CONFIG_MISC_INIT_R=y
@@ -50,23 +53,13 @@ CONFIG_MISC_INIT_R=y
 # Additional Options
 CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/nicore8/nicore8.cfg,DDR_MB=512"
 
-# Enable Thermal Measurement
-CONFIG_IMX_THERMAL=y
-CONFIG_DM_THERMAL=y
-
-# Enable Voltage Measurement
-CONFIG_IMX_TMU=y
-
 # Config eMMC
 CONFIG_MMC=y
 
 # I2C multi bus support
 CONFIG_I2C_MULTI_BUS=y
 
-# Boot Configs
-##CONFIG_SUPPORT_RAW_INITRD=y
-
-# Lower bootdelay to negative value means disable
+# set to -2 to autoboot with no delay and not check for abort
 CONFIG_BOOTDELAY=-2
 
 # Watchdog Configs
@@ -122,14 +115,14 @@ CONFIG_CMD_MMC=y
 CONFIG_CMD_PART=y
 CONFIG_CMD_FS_GENERIC=y
 CONFIG_CMD_FAT=y
-CONFIG_CMD_BMODE=y
+CONFIG_CMD_BMODE=n
 CONFIG_CMD_ECHO=y
 
 # Serial Available
 CONFIG_SERIAL_PRESENT=y
 CONFIG_MXC_UART=y
 
-# Silience the Console
+# Silence the Console
 CONFIG_SILENT_CONSOLE=y
 CONFIG_SILENT_U_BOOT_ONLY=y
 CONFIG_SILENT_CONSOLE_UPDATE_ON_SET=y
@@ -145,7 +138,8 @@ CONFIG_CMD_ELF=n
 CONFIG_CMD_FDT=n
 
 # Disable the Command Line interface - If this is disabled we cant use Commands in U-Boot prod.
-#CONFIG_CMDLINE=n
+CONFIG_CMDLINE=y # TODO test if this can be set to 'n'. Is environment evaluated anyway? Propably required for scripts...
+CONFIG_CMDLINE_EDITING=n
 
 ## Unneedded Network Commands
 CONFIG_NET=n
@@ -191,19 +185,17 @@ CONFIG_SIMPLE_PANEL=n
 CONFIG_CMD_EEPROM=n
 
 # Disable Console
-CONFIG_REQUIRE_SERIAL_CONSOLE=n
-CONFIG_SPECIFY_CONSOLE_INDEX=n
-CONFIG_SYS_CONSOLE_INFO_QUIET=n
+CONFIG_REQUIRE_SERIAL_CONSOLE=y
+CONFIG_SPECIFY_CONSOLE_INDEX=y
+#CONFIG_SYS_CONSOLE_INFO_QUIET=n
 CONFIG_DISPLAY_CPUINFO=n
 CONFIG_DISPLAY_BOARDINFO=n
 
 # Disable CMD
-CONFIG_CMDLINE_EDITING=n
 CONFIG_AUTO_COMPLETE=n
 CONFIG_SYS_LONGHELP=n
 CONFIG_SYS_XTRACE=n
 CONFIG_CMD_DEKBLOB=n
-
 
 # Disable the Hash CMD
 CONFIG_CMD_HASH=n
