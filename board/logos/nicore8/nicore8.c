@@ -225,24 +225,6 @@ DECLARE_GLOBAL_DATA_PTR;
 /* optimised drive strength for 1.3 .. 2.5 V signal on RGMII */
 #define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V					0x000C0000
 
-/* Defines above, declarations below */
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-/* Configuration of UART2 for Logosni8 */
-static iomux_v3_cfg_t const uart2_pads[] = {
-	IOMUX_PAD_CTRL(EIM_D26__UART2_TX_DATA, UART_PAD_CTRL),
-	IOMUX_PAD_CTRL(EIM_D27__UART2_RX_DATA, UART_PAD_CTRL),
-};
-
-/* Configuration of UART5 for Logosni8 */
-static iomux_v3_cfg_t const uart5_pads[] = {
-	IOMUX_PAD_CTRL(CSI0_DAT14__UART5_TX_DATA, UART_PAD_CTRL),
-	IOMUX_PAD_CTRL(CSI0_DAT15__UART5_RX_DATA, UART_PAD_CTRL),
-	// Configuring CTS and RTS
-	IOMUX_PAD_CTRL(CSI0_DAT18__UART5_RTS_B, UART_PAD_CTRL),
-	IOMUX_PAD_CTRL(CSI0_DAT19__UART5_CTS_B, UART_PAD_CTRL),
-};
-#endif // CONFIG_TARGET_LOGOSNICORE8DEV
-
 #ifdef CONFIG_MXC_SPI
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	/* SS1 */
@@ -622,15 +604,7 @@ static iomux_v3_cfg_t const usb_pads[] = {
 
 static void setup_iomux_uart(void)
 {
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-	SETUP_IOMUX_PADS(uart2_pads);
-#endif // CONFIG_TARGET_LOGOSNICORE8DEV
-
 	SETUP_IOMUX_PADS(uart4_pads);
-
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-	SETUP_IOMUX_PADS(uart5_pads);
-#endif // CONFIG_TARGET_LOGOSNICORE8DEV
 }
 
 #ifdef CONFIG_USB_EHCI_MX6
