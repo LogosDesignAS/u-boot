@@ -430,7 +430,6 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, 	WEAK_PULLDOWN),
 
 		// Pin Configuration of GPIO_MCLK
-		// Here This GPIO controls a low frequency Audio clock for the chip MAX9860ETG+T on the TC (Minimum 10MHz clock) TODO: Check if we can generate this high clk
 		IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, 		OUTPUT_40OHM),
 		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, 	OUTPUT_40OHM),
 
@@ -758,7 +757,7 @@ int print_Logos_Logo(void)
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 
-#ifdef CONFIG_CMD_BMODE // TODO Adapt to our board or remove
+#ifdef CONFIG_CMD_BMODE
 static const struct boot_mode board_boot_modes[] = {
 	/* 8 bit bus width */
 	{"sd1", MAKE_CFGVAL(0x42, 0x28, 0x00, 0x00)},
@@ -955,7 +954,7 @@ int board_init(void)
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif
 
-	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID TODO Verify if this is needed
+	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID
 	clrbits_le32(&iomux->gpr[1], IOMUXC_GPR1_OTG_ID_MASK);
 
 #ifdef CONFIG_MXC_SPI
@@ -1094,9 +1093,8 @@ void reset_cpu(void)
 	u64 timeout = 0;
 	ulong flags = 0;
 
-	// TODO: ADD some reset needed features - Have GPIO to PMIC to reset - This is not a true reset
- 	// Reset CPU
- 	imx_wdt_start(dev, timeout, flags);
+	// Reset CPU
+	imx_wdt_start(dev, timeout, flags);
 }
 
 #endif /* CONFIG_IMX_WATCHDOG */
