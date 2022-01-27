@@ -103,7 +103,7 @@
 
 /* Environment variables */
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-#define CONFIG_BOOTCOMMAND "echo <TODO>"
+#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
 #define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
   "rootwait ro printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel"
 #else
@@ -150,7 +150,9 @@
     "fi; " \
     "setenv fitimage ${default_fitimage}; " \
     "saveenv; \0" \
-  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
+  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
+  "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
+  "bootmenu_1=2. Install latest script and environment from tftp=echo Bye\0"
 #else
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
