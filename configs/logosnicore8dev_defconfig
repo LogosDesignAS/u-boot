@@ -93,13 +93,23 @@ CONFIG_I2C_MULTI_BUS=y
 # Boot Configs
 CONFIG_SUPPORT_RAW_INITRD=y
 
-# Lower bootdelay to 0 and comment CONFIG_ZERO_BOOTDELAY_CHECK
-CONFIG_BOOTDELAY=20
-
 # Set Password for entering U-Boot Console
 CONFIG_AUTOBOOT=y
-CONFIG_AUTOBOOT_KEYED=y
-CONFIG_AUTOBOOT_DELAY_STR="logos"
+#CONFIG_AUTOBOOT_KEYED=y
+#CONFIG_AUTOBOOT_KEYED_CTRLC=y
+#CONFIG_AUTOBOOT_DELAY_STR="logos"
+#CONFIG_AUTOBOOT_ENCRYPTION=y
+#CONFIG_AUTOBOOT_STOP_STR_SHA256="64330525d6aaf3cb84e6eaf1f230f9e31b8dd65a791249bc862a23b9afcaffa3"
+CONFIG_BOOT_RETRY_TIME=30
+CONFIG_RESET_TO_RETRY=y
+
+# Enable U-boot menu
+CONFIG_CMD_BOOTMENU=y
+CONFIG_MENU=y
+CONFIG_BOOTDELAY=10
+CONFIG_AUTOBOOT_MENU_SHOW=y
+#CONFIG_AUTOBOOT_USE_MENUKEY=y
+#CONFIG_AUTOBOOT_MENUKEY=33
 
 # Watchdog Configs
 # This config changes reset time - after calling reset it will wait 30s
@@ -175,8 +185,8 @@ CONFIG_NET_RANDOM_ETHADDR=y
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
 CONFIG_OF_CONTROL=y
 
-# Only during development, TODO: Remove before release
-CONFIG_OF_EMBED=n
+# Only during development, TODO: Remove before release - required for JTAG
+CONFIG_OF_EMBED=y
 
 # Enable Flattened Image Tree support
 CONFIG_FIT=y
