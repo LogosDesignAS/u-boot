@@ -198,9 +198,9 @@
   "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "bootm ${loadaddr}; reset; " \
+      "bootm ${loadaddr}; Preset; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; Preset; " \
     "fi;\0" \
   "set_defaults=" \
     "if test -z \"$bootpart\"; then " \
