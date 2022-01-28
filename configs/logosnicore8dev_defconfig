@@ -38,6 +38,9 @@ CONFIG_SUPPORT_EMMC_BOOT=y
 CONFIG_BLK=y
 
 # Environment Support
+CONFIG_CMD_ENV_FLAGS=y
+CONFIG_CMD_NVEDIT_INFO=y
+
 CONFIG_ENV_IS_IN_MMC=y
 CONFIG_SYS_MMC_ENV_DEV=0
 CONFIG_SYS_MMC_ENV_PART=1
@@ -90,14 +93,14 @@ CONFIG_I2C_MULTI_BUS=y
 # Boot Configs
 CONFIG_SUPPORT_RAW_INITRD=y
 
-# Lower bootdelay to 0 and comment CONFIG_ZERO_BOOTDELAY_CHECK
-CONFIG_BOOTDELAY=10
-#CONFIG_ZERO_BOOTDELAY_CHECK=y
-
-# Set Password for entering U-Boot Console
+# Enable U-boot menu
 CONFIG_AUTOBOOT=y
-CONFIG_AUTOBOOT_KEYED=y
-CONFIG_AUTOBOOT_DELAY_STR="logos"
+CONFIG_BOOT_RETRY_TIME=30
+CONFIG_RESET_TO_RETRY=y
+CONFIG_CMD_BOOTMENU=y
+CONFIG_MENU=y
+CONFIG_BOOTDELAY=10
+CONFIG_AUTOBOOT_MENU_SHOW=y
 
 # Watchdog Configs
 # This config changes reset time - after calling reset it will wait 30s
@@ -173,8 +176,8 @@ CONFIG_NET_RANDOM_ETHADDR=y
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
 CONFIG_OF_CONTROL=y
 
-# Only during development, TODO: Remove before release
-CONFIG_OF_EMBED=n
+# Only during development, TODO: Remove before release - required for JTAG
+CONFIG_OF_EMBED=y
 
 # Enable Flattened Image Tree support
 CONFIG_FIT=y

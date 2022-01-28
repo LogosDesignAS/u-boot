@@ -102,45 +102,128 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#define CONFIG_BOOTCOMMAND "run mmc_boot"
-
-// Add a different Boot method depending on prod or dev - TODO: This just enables the basic flow
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-/* Define Alternative Boot if bootcount is bigger than 3 - TODO: For now set to the same as normal boot */
-#define CONFIG_EXTRA_ENV_SETTINGS \
-  "altbootcmd=run bootcmd_fit;\0" \
-  "devtype=mmc\0" \
-  "devnum=2\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
-  "default_fitimage=image.itb\0" \
-  "loadaddr=0x12000000\0" \
-  "bootcmd_fit="\
-    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
-      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "bootm ${loadaddr}; reset; " \
-    "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
-    "fi;\0" \
-  "bootcmd=run bootcmd_fit;\0"
-
+#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
+#define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
+  "rootwait ro printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel"
 #else
+#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
+#define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
+  "rootwait ro quiet"
+#endif // CONFIG_TARGET_LOGOSNICORE8DEV
+
+// Add a different boot method depending on prod or dev
+#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
-  "altbootcmd=run bootcmd_fit;\0" \
   "devtype=mmc\0" \
-  "devnum=2\0" \
+  "devnum=0\0" \
   "bootpart_a=4\0" \
   "bootpart_b=5\0"\
   "default_fitimage=image.itb\0" \
   "loadaddr=0x12000000\0" \
-  "bootcmd_fit="\
+  "serverip=172.16.1.60\0" \
+  "bootscr=boot.scr\0" \
+  "bootenv=uEnv.txt\0 " \
+  "bootcmd_fit=" \
+    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
+      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
+      "bootm ${loadaddr}; echo 'reset'; " \
+    "else; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; echo 'reset'; " \
+    "fi;\0" \
+  "set_defaults=" \
+    "if test -z \"$bootpart\"; then " \
+      "setenv bootpart ${bootpart_a}; " \
+      "saveenv;" \
+    "fi; " \
+    "if test -z \"$fitimage\"; then " \
+      "setenv fitimage ${default_fitimage}; " \
+      "saveenv;" \
+    "fi;\0" \
+  "check_bootpart=" \
+    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
+      "setenv bootpart ${bootpart_a}; " \
+    "fi;\0" \
+  "swap_bootpart=" \
+    "if test ${bootpart} -eq ${bootpart_a}; then " \
+      "setenv bootpart ${bootpart_b}; " \
+    "else; " \
+      "setenv bootpart ${bootpart_a}; " \
+    "fi; " \
+    "setenv fitimage ${default_fitimage}; " \
+    "saveenv; \0" \
+  "install_env=" \
+    "setenv autoload no; dhcp; " \
+    "tftp ${loadaddr} nicore8/scripts/${bootscr}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; " \
+    "tftp ${loadaddr} nicore8/scripts/${bootenv}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; " \
+    "echo Installed ${bootscr} & ${bootenv} from ${serverip} to ${devtype} ${devnum}.${bootpart_a}.;\0" \
+  "load_env= " \
+    "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; then " \
+      "env import -t ${loadaddr} ${filesize}" \
+      "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; then " \
+        "source ${loadaddr}; " \
+      "else; " \
+        "echo Failed to load script from ${devtype} ${devnum}.${bootpart_a} ${bootscr}.; " \
+      "fi; " \
+    "else; " \
+      "echo Failed to load environment from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
+    "fi; \0" \
+  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
+  "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
+  "bootmenu_1=2. Install latest user supplied environment from tftp=run install_env;\0" \
+  "bootmenu_2=3. Load user supplied environment=run load_env;\0" \
+  "bootmenu_3=4. Reset bootcount=bootcount reset; bootmenu;\0"
+#else
+
+// CONFIG_ENV_WRITEABLE_LIST is defined in production,
+// we explicitly define (whitelist) the set of mutable variables below.
+#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw"
+
+// Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
+// GP partition 0 (hardware partition 4) with fallback to GP partition 1 (hardware partition 5).
+// Alternative boot will swap between partition 4 and 5. This means that if bootcount is reached
+// trying to boot partition 4 then alternative boot will try to boot partition 5 or vice versa.
+// bootpart variable can be set from a running Linux system to change the current active partition
+// after a firmware update. Alternative boot will always fall back to default_image.
+// 'reset' should be added after all final commands, to avoid falling back to consol in case
+// of any error scenario.
+#define CONFIG_EXTRA_ENV_SETTINGS \
+  "devtype=mmc\0" \
+  "devnum=0\0" \
+  "bootpart_a=4\0" \
+  "bootpart_b=5\0"\
+  "default_fitimage=image.itb\0" \
+  "loadaddr=0x12000000\0" \
+  "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "bootm ${loadaddr}; reset; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
     "fi;\0" \
-  "bootcmd=run bootcmd_fit;\0"
+  "set_defaults=" \
+    "if test -z \"$bootpart\"; then " \
+      "setenv bootpart ${bootpart_a}; " \
+      "saveenv;" \
+    "fi; " \
+    "if test -z \"$fitimage\"; then " \
+      "setenv fitimage ${default_fitimage}; " \
+      "saveenv;" \
+    "fi;\0" \
+  "check_bootpart=" \
+    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
+      "setenv bootpart ${bootpart_a}; " \
+    "fi;\0" \
+  "swap_bootpart=" \
+    "if test ${bootpart} -eq ${bootpart_a}; then " \
+      "setenv bootpart ${bootpart_b}; " \
+    "else; " \
+      "setenv bootpart ${bootpart_a}; " \
+    "fi; " \
+    "setenv fitimage ${default_fitimage}; " \
+    "saveenv; \0" \
+  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
