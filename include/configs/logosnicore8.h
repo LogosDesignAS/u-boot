@@ -122,6 +122,9 @@
   "bootpart_b=5\0"\
   "default_fitimage=image.itb\0" \
   "loadaddr=0x12000000\0" \
+  "serverip=172.16.1.60\0" \
+  "bootscr=boot.scr\0" \
+  "bootenv=uEnv.txt\0 " \
   "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
@@ -150,9 +153,27 @@
     "fi; " \
     "setenv fitimage ${default_fitimage}; " \
     "saveenv; \0" \
+  "install_env=" \
+    "setenv autoload no; dhcp; " \
+    "tftp ${loadaddr} nicore8/scripts/${bootscr}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; " \
+    "tftp ${loadaddr} nicore8/scripts/${bootenv}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; " \
+    "echo Installed ${bootscr} & ${bootenv} from ${serverip} to ${devtype} ${devnum}.${bootpart_a}.;\0" \
+  "load_env= " \
+    "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; then " \
+      "env import -t ${loadaddr} ${filesize}" \
+      "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; then " \
+        "source ${loadaddr}; " \
+      "else; " \
+        "echo Failed to load script from ${devtype} ${devnum}.${bootpart_a} ${bootscr}.; " \
+      "fi; " \
+    "else; " \
+      "echo Failed to load environment from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
+    "fi; \0" \
   "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
-  "bootmenu_1=2. Install latest script and environment from tftp=echo Bye\0"
+  "bootmenu_1=2. Install latest user supplied environment from tftp=run install_env;\0" \
+  "bootmenu_2=3. Load user supplied environment=run load_env;\0" \
+  "bootmenu_3=4. Reset bootcount=bootcount reset; bootmenu;\0"
 #else
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
