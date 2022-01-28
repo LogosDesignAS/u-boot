@@ -153,12 +153,27 @@
     "fi; " \
     "setenv fitimage ${default_fitimage}; " \
     "saveenv; \0" \
+  "load_and_run_env_from_tftp=" \
+    "setenv autoload no; dhcp; " \
+    "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
+      "if env import -t ${loadaddr} ${filesize}; then " \
+        "if tftp ${loadaddr} nicore8/scripts/${bootscr}; then " \
+          "source ${loadaddr}; " \
+        "else; " \
+          "echo Failed to download nicore8/scripts/${bootscr} from ${serverip}.; " \
+        "fi; " \
+      "else; " \
+        "echo Failed to import environment from ${bootenv} in memory at ${loadaddr}.; " \
+      "fi; " \
+    "else; " \
+      "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
+    "fi; \0" \
   "install_env=" \
     "setenv autoload no; dhcp; " \
-    "tftp ${loadaddr} nicore8/scripts/${bootscr}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; " \
-    "tftp ${loadaddr} nicore8/scripts/${bootenv}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; " \
+    "tftp ${loadaddr} nicore8/scripts/${bootscr}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr} ${filesize}; " \
+    "tftp ${loadaddr} nicore8/scripts/${bootenv}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv} ${filesize}; " \
     "echo Installed ${bootscr} & ${bootenv} from ${serverip} to ${devtype} ${devnum}.${bootpart_a}.;\0" \
-  "load_env= " \
+  "load_env_from_emmc=" \
     "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; then " \
       "env import -t ${loadaddr} ${filesize}" \
       "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; then " \
@@ -171,9 +186,10 @@
     "fi; \0" \
   "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
-  "bootmenu_1=2. Install latest user supplied environment from tftp=run install_env;\0" \
-  "bootmenu_2=3. Load user supplied environment=run load_env;\0" \
-  "bootmenu_3=4. Reset bootcount=bootcount reset; bootmenu;\0"
+  "bootmenu_1=2. Launch environment from tftp=run load_and_run_env_from_tftp;\0" \
+  "bootmenu_2=3. Install latest user supplied environment from tftp=if run install_env; then bootmenu; fi;\0" \
+  "bootmenu_3=4. Load user supplied environment from eMMC=run load_env_from_emmc;\0" \
+  "bootmenu_4=5. Reset bootcount=if bootcount reset; then bootmenu; fi;\0"
 #else
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
@@ -198,9 +214,9 @@
   "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "bootm ${loadaddr}; Preset; " \
+      "bootm ${loadaddr}; reset; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; Preset; " \
+      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
     "fi;\0" \
   "set_defaults=" \
     "if test -z \"$bootpart\"; then " \
