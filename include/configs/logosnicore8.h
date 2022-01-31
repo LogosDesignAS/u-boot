@@ -102,20 +102,15 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
-#define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
-  "rootwait ro printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel"
-#else
-#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
-#define CONFIG_BOOTARGS "bootargs=console=ttymxc3,115200 rootfstype=squashfs root=/dev/mmcblk0gp0p2 " \
-  "rootwait ro quiet"
-#endif // CONFIG_TARGET_LOGOSNICORE8DEV
+#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run set_bootargs; run bootcmd_fit;"
 
 // Add a different boot method depending on prod or dev
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+  "bootargs_base='console=ttymxc3,115200 rootwait ro printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel'\0" \
+  "bootargs_a='rootfstype=squashfs root=/dev/mmcblk0gp0p2'\0" \
+  "bootargs_b='rootfstype=squashfs root=/dev/mmcblk0gp1p2'\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
@@ -153,6 +148,12 @@
     "fi; " \
     "setenv fitimage ${default_fitimage}; " \
     "saveenv; \0" \
+  "set_bootargs=" \
+    "if test ${bootpart} -eq ${bootpart_a}; then " \
+      "setenv bootargs ${bootargs_base} ${bootargs_a}; " \
+    "else " \
+      "setenv bootargs ${bootargs_base} ${bootargs_b}; " \
+    "fi; \0" \
   "load_and_run_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
@@ -184,7 +185,7 @@
     "else; " \
       "echo Failed to load environment from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
     "fi; \0" \
-  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
+  "altbootcmd=run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_and_run_env_from_tftp;\0" \
   "bootmenu_2=3. Install latest user supplied environment from tftp=if run install_env; then bootmenu; fi;\0" \
@@ -205,6 +206,9 @@
 // 'reset' should be added after all final commands, to avoid falling back to consol in case
 // of any error scenario.
 #define CONFIG_EXTRA_ENV_SETTINGS \
+  "bootargs_base='console=ttymxc3,115200 rootwait ro quiet'\0" \
+  "bootargs_a='rootfstype=squashfs root=/dev/mmcblk0gp0p2'\0" \
+  "bootargs_b='rootfstype=squashfs root=/dev/mmcblk0gp1p2'\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
@@ -239,7 +243,13 @@
     "fi; " \
     "setenv fitimage ${default_fitimage}; " \
     "saveenv; \0" \
-  "altbootcmd=run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
+  "set_bootargs=" \
+    "if test ${bootpart} -eq ${bootpart_a}; then " \
+      "setenv bootargs ${bootargs_base} ${bootargs_a}; " \
+    "else " \
+      "setenv bootargs ${bootargs_base} ${bootargs_b}; " \
+    "fi; \0" \                                  \
+  "altbootcmd=run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
