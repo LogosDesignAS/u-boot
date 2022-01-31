@@ -19,7 +19,7 @@ CONFIG_BOARD_LATE_INIT=y
 
 # Enable LTO - enabled for release - removes debug functionality
 CONFIG_LTO=y
-CONFIG_OF_EMBED=y # TODO: Required for JTAG, test and remove.
+CONFIG_OF_EMBED=n
 
 # Support fit image
 CONFIG_LOAD_FIT=y

@@ -248,7 +248,7 @@
       "setenv bootargs ${bootargs_base} ${bootargs_a}; " \
     "else " \
       "setenv bootargs ${bootargs_base} ${bootargs_b}; " \
-    "fi; \0" \                                  \
+    "fi; \0" \
   "altbootcmd=run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
