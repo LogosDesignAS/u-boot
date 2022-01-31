@@ -118,7 +118,6 @@
   "default_fitimage=image.itb\0" \
   "loadaddr=0x12000000\0" \
   "serverip=172.16.1.60\0" \
-  "bootscr=boot.scr\0" \
   "bootenv=uEnv.txt\0 " \
   "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
@@ -158,11 +157,7 @@
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
       "if env import -t ${loadaddr} ${filesize}; then " \
-        "if tftp ${loadaddr} nicore8/scripts/${bootscr}; then " \
-          "source ${loadaddr}; " \
-        "else; " \
-          "echo Failed to download nicore8/scripts/${bootscr} from ${serverip}.; " \
-        "fi; " \
+        "bootmenu; " \
       "else; " \
         "echo Failed to import environment from ${bootenv} in memory at ${loadaddr}.; " \
       "fi; " \
@@ -171,16 +166,14 @@
     "fi; \0" \
   "install_env=" \
     "setenv autoload no; dhcp; " \
-    "tftp ${loadaddr} nicore8/scripts/${bootscr}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr} ${filesize}; " \
     "tftp ${loadaddr} nicore8/scripts/${bootenv}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv} ${filesize}; " \
-    "echo Installed ${bootscr} & ${bootenv} from ${serverip} to ${devtype} ${devnum}.${bootpart_a}.;\0" \
+    "echo Installed ${bootenv} from ${serverip} to ${devtype} ${devnum}.${bootpart_a}.;\0" \
   "load_env_from_emmc=" \
     "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; then " \
-      "env import -t ${loadaddr} ${filesize}" \
-      "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootscr}; then " \
-        "source ${loadaddr}; " \
+      "if env import -t ${loadaddr} ${filesize}; then; " \
+        "bootmenu; " \
       "else; " \
-        "echo Failed to load script from ${devtype} ${devnum}.${bootpart_a} ${bootscr}.; " \
+        "echo Failed to import environment loaded to ${loadaddr} from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
       "fi; " \
     "else; " \
       "echo Failed to load environment from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
