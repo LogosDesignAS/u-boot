@@ -178,7 +178,7 @@
     "else; " \
       "echo Failed to load environment from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
     "fi; \0" \
-  "altbootcmd=run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0" \
+  "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_and_run_env_from_tftp;\0" \
   "bootmenu_2=3. Install latest user supplied environment from tftp=if run install_env; then bootmenu; fi;\0" \
@@ -242,7 +242,7 @@
     "else " \
       "setenv bootargs ${bootargs_base} ${bootargs_b}; " \
     "fi; \0" \
-  "altbootcmd=run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0"
+  "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
