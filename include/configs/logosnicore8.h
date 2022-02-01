@@ -153,9 +153,10 @@
     "else " \
       "setenv bootargs ${bootargs_base} ${bootargs_b}; " \
     "fi; \0" \
-  "load_and_run_env_from_tftp=" \
+  "load_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
+      "env default -a -f; " \
       "if env import -t ${loadaddr} ${filesize}; then " \
         "bootmenu; " \
       "else; " \
@@ -164,25 +165,24 @@
     "else; " \
       "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
-  "install_env=" \
+  "install_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
-    "tftp ${loadaddr} nicore8/scripts/${bootenv}; fatwrite ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv} ${filesize}; " \
-    "echo Installed ${bootenv} from ${serverip} to ${devtype} ${devnum}.${bootpart_a}.;\0" \
-  "load_env_from_emmc=" \
-    "if fatload ${devtype} ${devnum}.${bootpart_a} ${loadaddr} ${bootenv}; then " \
-      "if env import -t ${loadaddr} ${filesize}; then; " \
+    "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
+      "env default -a -f; " \
+      "if env import -t ${loadaddr} ${filesize}; then " \
+        "saveenv; " \
         "bootmenu; " \
       "else; " \
-        "echo Failed to import environment loaded to ${loadaddr} from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
+        "echo Failed to import environment from ${bootenv} in memory at ${loadaddr}.; " \
       "fi; " \
     "else; " \
-      "echo Failed to load environment from ${devtype} ${devnum}.${bootpart_a} ${bootenv}.; " \
+      "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
   "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
-  "bootmenu_1=2. Launch environment from tftp=run load_and_run_env_from_tftp;\0" \
-  "bootmenu_2=3. Install latest user supplied environment from tftp=if run install_env; then bootmenu; fi;\0" \
-  "bootmenu_3=4. Load user supplied environment from eMMC=run load_env_from_emmc;\0" \
+  "bootmenu_1=2. Launch environment from tftp=run load_env_from_tftp;\0" \
+  "bootmenu_2=3. Install environment from tftp=run install_env_from_tftp;\0" \
+  "bootmenu_3=4. Reset environment=env default -a -f; saveenv; bootmenu;\0" \
   "bootmenu_4=5. Reset bootcount=if bootcount reset; then bootmenu; fi;\0"
 #else
 
