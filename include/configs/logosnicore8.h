@@ -108,7 +108,7 @@
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-  "bootargs_base='console=ttymxc3,115200 rootwait ro printk.time=y earlyprintk rootdelay=5 panic=10 debug ignore_loglevel'\0" \
+  "bootargs_base='console=ttymxc3,115200 rootwait ro printk.time=y panic=10 debug ignore_loglevel'\0" \
   "bootargs_a='rootfstype=squashfs root=/dev/mmcblk0gp0p2'\0" \
   "bootargs_b='rootfstype=squashfs root=/dev/mmcblk0gp1p2'\0" \
   "devtype=mmc\0" \
@@ -179,7 +179,7 @@
       "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
   "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run set_bootargs; run bootcmd_fit;\0" \
-  "bootmenu_0=1. Boot from eMMC=run set_defaults; run check_bootpart; run bootcmd_fit;\0" \
+  "bootmenu_0=1. Boot from eMMC=boot;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_env_from_tftp;\0" \
   "bootmenu_2=3. Install environment from tftp=run install_env_from_tftp;\0" \
   "bootmenu_3=4. Reset environment=env default -a -f; saveenv; bootmenu;\0" \
