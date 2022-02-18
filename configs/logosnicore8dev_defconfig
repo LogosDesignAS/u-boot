@@ -247,7 +247,20 @@ CONFIG_CMD_BOOTZ=y
 # Support FIT Signature
 CONFIG_FIT_SIGNATURE=y
 
+# OP-TEE Configurations
+CONFIG_TEE=y
+CONFIG_OPTEE=y
+CONFIG_OPTEE_IMAGE=y
+CONFIG_CMD_OPTEE_RPMB=y
+CONFIG_SUPPORT_EMMC_RPMB=y
+CONFIG_BOOTM_OPTEE=y
+CONFIG_OPTEE_LIB=y
+
+# OP-TEE load address
+CONFIG_OPTEE_LOAD_ADDR=0x2E000000
+CONFIG_OPTEE_TZDRAM_SIZE=0x01e00000
+CONFIG_OPTEE_TZDRAM_BASE=0x2E000000
+CONFIG_OF_LIBFDT=y
+
 # Comment following in later, for speed optimization
 # CONFIG_UBI_SILENCE_MSG
-# TODO: Measure with or without L2 cache enabled and choose best option for our platform and SPL.
-# TODO: Make sure all display support is disabled (DCU) for SPL.

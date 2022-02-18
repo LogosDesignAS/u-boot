@@ -463,8 +463,11 @@ static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 /* Functions below */
 int dram_init(void)
 {
+#ifdef CONFIG_TEE
+	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024) - 0x2000000;
+#else
 	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
-
+#endif
 	return 0;
 }
 
@@ -1010,6 +1013,13 @@ int board_late_init(void)
 	led_logosni8_party_light();
 #endif // DEMO_MODE
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
+
+	// OP-TEE Environment variable
+	env_set("tee", "no");
+#ifdef CONFIG_OPTEE
+	env_set("tee", "yes");
+#endif
+
 
 	// Set i2c bus to 3 - Boot Counter
 	struct udevice *dev;
