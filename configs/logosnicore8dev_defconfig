@@ -186,7 +186,7 @@ CONFIG_FIT=y
 CONFIG_DEFAULT_DEVICE_TREE="imx6dl-nicore8"
 
 # Lib for passing the device tree to the Kernel
-#CONFIG_OF_LIBFDT_OVERLAY=y
+CONFIG_OF_LIBFDT_OVERLAY=y
 
 # Driver models - (DM)'s
 CONFIG_DM=y
