@@ -120,14 +120,17 @@
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}#conf_optee_part_0; echo 'reset'; " \
+        "bootm ${loadaddr}#nicore8${carrier}#part_0_dbg; echo 'reset'; " \
       "else; " \
-        "bootm ${loadaddr}#conf_optee_part_1; echo 'reset'; " \
+        "bootm ${loadaddr}#nicore8${carrier}#part_1_dbg; echo 'reset'; " \
       "fi; " \
     "else; " \
       "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; echo 'reset'; " \
     "fi;\0" \
   "set_defaults=" \
+    "if test -z \"$carrier\"; then " \
+      "setenv carrier \"\"; " \
+      "saveenv;" \
     "if test -z \"$bootpart\"; then " \
       "setenv bootpart ${bootpart_a}; " \
       "saveenv;" \
@@ -183,7 +186,7 @@
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
 // we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw"
+#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw,carrier:sw"
 
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
 // GP partition 0 (hardware partition 4) with fallback to GP partition 1 (hardware partition 5).
@@ -204,14 +207,17 @@
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}#conf_optee_part_0; echo 'reset'; " \
+        "bootm ${loadaddr}#nicore8${carrier}#part_0; echo 'reset'; " \
       "else; " \
-        "bootm ${loadaddr}#conf_optee_part_1; echo 'reset'; " \
+        "bootm ${loadaddr}#nicore8${carrier}#part_1; echo 'reset'; " \
       "fi; " \
     "else; " \
       "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
     "fi;\0" \
   "set_defaults=" \
+    "if test -z \"$carrier\"; then " \
+      "setenv carrier \"\"; " \
+      "saveenv;" \
     "if test -z \"$bootpart\"; then " \
       "setenv bootpart ${bootpart_a}; " \
       "saveenv;" \
