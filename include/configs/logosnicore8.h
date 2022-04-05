@@ -155,7 +155,6 @@
   "load_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
-      "env default -a -f; " \
       "if env import -t ${loadaddr} ${filesize}; then " \
         "bootmenu; " \
       "else; " \
@@ -167,7 +166,6 @@
   "install_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
-      "env default -a -f; " \
       "if env import -t ${loadaddr} ${filesize}; then " \
         "saveenv; " \
         "bootmenu; " \
