@@ -75,8 +75,8 @@ enum LED_GPIOS {
 // Enum for GPIOs[0-11] on the LogosNi8 board
 enum GPIOS {
 	GPIO_0						= IMX_GPIO_NR(1,  1),
-	GPIO_1						= IMX_GPIO_NR(4,  5),
-	GPIO_2						= IMX_GPIO_NR(1,  3),
+	GPIO_1						= IMX_GPIO_NR(1,  3),
+	GPIO_2						= IMX_GPIO_NR(4,  5),
 	GPIO_3						= IMX_GPIO_NR(1,  4),
 	GPIO_4						= IMX_GPIO_NR(2, 23),
 	GPIO_5						= IMX_GPIO_NR(2, 24),
