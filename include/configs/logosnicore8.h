@@ -120,9 +120,9 @@
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}#config-a; echo 'reset'; " \
+        "bootm ${loadaddr}${fitconfig}; reset; " \
       "else; " \
-        "bootm ${loadaddr}#config-b; echo 'reset'; " \
+        "bootm ${loadaddr}${fitconfig}; reset; " \
       "fi; " \
     "else; " \
       "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; echo 'reset'; " \
@@ -185,7 +185,7 @@
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
 // we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw"
+#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw,fitconfig:sw"
 
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
 // GP partition 0 (hardware partition 4) with fallback to GP partition 1 (hardware partition 5).
@@ -193,7 +193,7 @@
 // trying to boot partition 4 then alternative boot will try to boot partition 5 or vice versa.
 // bootpart variable can be set from a running Linux system to change the current active partition
 // after a firmware update. Alternative boot will always fall back to default_image.
-// 'reset' should be added after all final commands, to avoid falling back to consol in case
+// 'reset' should be added after all final commands, to avoid falling back to console in case
 // of any error scenario.
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "devtype=mmc\0" \
@@ -206,9 +206,9 @@
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}#config-a; echo 'reset'; " \
+        "bootm ${loadaddr}${fitconfig}; reset; " \
       "else; " \
-        "bootm ${loadaddr}#config-b; echo 'reset'; " \
+        "bootm ${loadaddr}${fitconfig}; reset; " \
       "fi; " \
     "else; " \
       "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
