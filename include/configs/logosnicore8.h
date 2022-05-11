@@ -120,9 +120,9 @@
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
       "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}${fitconfig}; reset; " \
+        "bootm ${loadaddr}${fitconfig}; echo 'reset'; " \
       "else; " \
-        "bootm ${loadaddr}${fitconfig}; reset; " \
+        "bootm ${loadaddr}${fitconfig}; echo 'reset'; " \
       "fi; " \
     "else; " \
       "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; echo 'reset'; " \
