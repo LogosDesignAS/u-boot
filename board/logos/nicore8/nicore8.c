@@ -372,7 +372,7 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	IOMUX_PAD_CTRL(ENET_TXD1__I2C4_SDA, I2C_PAD_CTRL),
 
 };
-#endif
+#endif // CONFIG_CMD_I2C
 
 /* WatchDog Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_wdog_pads[] = {
@@ -408,7 +408,7 @@ static iomux_v3_cfg_t const conf_usb_pads[] = {
 	IOMUX_PAD_CTRL(NANDF_CS0__NAND_CE0_B, WEAK_PULLUP),
 
 };
-#endif
+#endif // CONFIG_USB
 
 /* GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
@@ -467,7 +467,7 @@ int dram_init(void)
 	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024) - 0x2000000;
 #else
 	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
-#endif
+#endif // CONFIG_TEE
 	return 0;
 }
 
@@ -601,7 +601,7 @@ static iomux_v3_cfg_t const usb_pads[] = {
 	// USB 0 PWR Enable
 	IOMUX_PAD_CTRL(KEY_ROW4__GPIO4_IO15, WEAK_PULLUP),
 };
-#endif
+#endif // CONFIG_USB
 
 static void setup_iomux_uart(void)
 {
@@ -646,7 +646,7 @@ int board_ehci_power(int port, int on)
 	return gpio_direction_output(GP_USB0_PWR, on);
 }
 
-#endif
+#endif // CONFIG_USB_EHCI_MX6
 
 #ifdef CONFIG_MXC_SPI
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
@@ -725,12 +725,12 @@ int board_early_init_r(void)
 #ifdef CONFIG_CMD_I2C
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
-#endif
+#endif // CONFIG_CMD_I2C
 
 #ifdef CONFIG_USB
 	// Early setup of USB
 	SETUP_IOMUX_PADS(conf_usb_pads);
-#endif
+#endif // CONFIG_USB
 
 	// Early setup of Watchdog
 	SETUP_IOMUX_PADS(conf_wdog_pads);
@@ -934,7 +934,7 @@ int board_init(void)
 	// Setup Clocks for Ethernet
 #ifdef CONFIG_FEC_MXC
 	setup_fec();
-#endif
+#endif // CONFIG_FEC_MXC
 
 #if defined(CONFIG_OF_CONTROL)
 	// Init mmc - Ontop of Device tree - Enable power for SD Card
@@ -955,14 +955,14 @@ int board_init(void)
 
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
-#endif
+#endif // CONFIG_OF_CONTROL
 
 	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID
 	clrbits_le32(&iomux->gpr[1], IOMUXC_GPR1_OTG_ID_MASK);
 
 #ifdef CONFIG_MXC_SPI
 	setup_spi();
-#endif
+#endif // CONFIG_MXC_SPI
 
 	return 0;
 }
@@ -971,7 +971,7 @@ int misc_init_r(void)
 {
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
-#endif
+#endif // CONFIG_CMD_BMODE
 	env_set_hex("reset_cause", get_imx_reset_cause());
 	return 0;
 }
@@ -1018,7 +1018,7 @@ int board_late_init(void)
 	env_set("tee", "no");
 #ifdef CONFIG_OPTEE
 	env_set("tee", "yes");
-#endif
+#endif // CONFIG_OPTEE
 
 
 	// Set i2c bus to 3 - Boot Counter
