@@ -261,6 +261,8 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 		IOMUX_PAD_CTRL(SD4_DAT5__SD4_DATA5, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
+		// EMMC Reset Core Board
+		IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET, 	USDHC_PAD_CTRL),
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
@@ -378,8 +380,8 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 static iomux_v3_cfg_t const conf_wdog_pads[] = {
 		// Pin configuration for the Watchdog
 
-		/* Configuration of GPIO_9 to WDOG1_B - Here called WDOG1_B in schematic  - see schematic page 10 */
-		IOMUX_PAD_CTRL(GPIO_9__WDOG1_B, WDOG_PAD_CTRL),
+		/* Configuration of KEY_ROW0 to WDOG1_B - Here called WDOG1_B in schematic  - see schematic page 10 */
+		IOMUX_PAD_CTRL(KEY_ROW0__WDOG1_B, WDOG_PAD_CTRL),
 };
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -431,7 +433,6 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 		// Pin Configuration of GPIO_MCLK
 		IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, 		OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08, 	OUTPUT_40OHM),
 
 		// Pin configuration for SMARC inputs - Charging and Charger_PRSNT
 		IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, 		WEAK_PULLUP),
@@ -571,19 +572,8 @@ static void setup_iomux_enet(void)
 	// Do all the first mapping - GPIOs for Configuring the PHY and the AR8035 Mode
 	SETUP_IOMUX_PADS(enet_pads1);
 
-	/* wait until 3.3V of PHY and clock become stable - see Ar8035 datasheet */
-	mdelay(10);
-
-	// Set output for configuring AR8035
+	// Set output for configuring AR8035 - Reset the AR8035
 	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 	0); 	// Logosni8 PHY rst
-
-	// Setup the correct mode for Ethernet chip - AR8035 - Should be 1110 - see page 8 in the datasheet
-	gpio_direction_output(GPIO_RGMII_RX_DV, 			0);
-	gpio_direction_output(GPIO_RGMII_RX_D0, 			0);
-	gpio_direction_output(GPIO_RGMII_RX_D1, 			0);
-	gpio_direction_output(GPIO_RGMII_RX_D2, 			1);
-	gpio_direction_output(GPIO_RGMII_RX_D3,				1);
-	gpio_direction_output(GPIO_RGMII_RX_CLK, 			1); 	// low voltage - 1.5 0 and 1.8 is 1 - for 2.5V - PULL DOWN/PULL UP (Hardwired)
 
 	// Need delay 5ms according to AR8035 spec - to make sure the clock is stable - logosni8
 	mdelay(10);
