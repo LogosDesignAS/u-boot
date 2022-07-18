@@ -381,7 +381,7 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 		// Pin configuration for the Watchdog
 
 		/* Configuration of KEY_ROW0 to WDOG1_B (GPIO4_IO07)- Here called WDOG1_B in schematic  - see schematic page 10 */
-		IOMUX_PAD_CTRL(KEY_ROW0__GPIO4_IO07, WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(KEY_ROW0__GPIO4_IO07, OUTPUT_40OHM),
 };
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
