@@ -89,6 +89,7 @@ enum GPIOS {
 	GPIO_RESET					= IMX_GPIO_NR(6, 10),
 	GPIO_WDOG					= IMX_GPIO_NR(4,  7),
 	GPIO_MCLK					= IMX_GPIO_NR(1,  2),
+	GPIO_EMMC_RESET				= IMX_GPIO_NR(6,  8),
 	GPIO_CHARGER_PRSNT			= IMX_GPIO_NR(1,  7),
 	GPIO_CHARGING				= IMX_GPIO_NR(1,  8),
 	GPIO_PMIC_INT_B				= IMX_GPIO_NR(7, 13),
@@ -262,8 +263,6 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 		IOMUX_PAD_CTRL(SD4_DAT5__SD4_DATA5, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
-		// EMMC Reset Core Board
-		IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET, USDHC_PAD_CTRL),
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
@@ -450,6 +449,10 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 		// SMARC_Test from test carrier
 		IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, 	WEAK_PULLDOWN),
+
+		// EMMC Reset Core Board
+		//IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET, USDHC_PAD_CTRL),
+		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08,	WEAK_PULLDOWN),
 };
 
 /* AFB_GPIO Pin Configuration on logosni8 */
@@ -496,6 +499,7 @@ static void setup_iomux_gpio(void)
 	gpio_request(GPIO_WDOG,				"GPIO_WDOG");
 	gpio_request(GPIO_MCLK,				"GPIO_MCLK");
 	gpio_request(GPIO_CHARGING,			"GPIO_CHARGING");
+	gpio_request(GPIO_EMMC_RESET,		"GPIO_EMMC_RESET");
 	gpio_request(GPIO_PMIC_INT_B, 		"GPIO_PMIC_INT_B");
 	gpio_request(GPIO_CHARGER_PRSNT,	"GPIO_CHARGER_PRSNT");
 	gpio_request(GPIO_CARRIER_PWR_ON,	"GPIO_CARRIER_PWR_ON");
@@ -513,6 +517,7 @@ static void setup_iomux_gpio(void)
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
 	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	1);		// Carrier_PWR_ON
 	gpio_direction_output(GPIO_MCLK, 			0);		// GPIO_MCLK
+	gpio_direction_output(GPIO_EMMC_RESET,		0);		// GPIO_EMMC_RESET - Active high
 	gpio_direction_output(GPIO_RESET, 			0);		// GPIO_RESET - Reset Bluetooth Chip on Carrier Board
 	gpio_direction_output(GPIO_WDOG, 			1);		// GPIO_WDOG - Turn off LED - only activate when watchdogging
 	gpio_direction_output(GPIO_0, 				0);		// GPIO_0 -> S_D_INT
@@ -1099,8 +1104,15 @@ void reset_cpu(void)
 	u64 timeout = 0;
 	ulong flags = 0;
 
-	// Reset CPU - Turn on WDOG LED
+	// Reset CPU
+
+	// Turn on WDOG LED
 	gpio_direction_output(GPIO_WDOG, 0);
+
+	// Reset EMMC
+	gpio_direction_output(GPIO_EMMC_RESET,		1);		// GPIO_EMMC_RESET - Active high
+
+	// Watchdog with timeout
 	imx_wdt_start(dev, timeout, flags);
 }
 
