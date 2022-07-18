@@ -86,7 +86,8 @@ enum GPIOS {
 	GPIO_9						= IMX_GPIO_NR(3, 25),
 	GPIO_10						= IMX_GPIO_NR(3, 29),
 	GPIO_11						= IMX_GPIO_NR(3, 31),
-	GPIO_RESET					= IMX_GPIO_NR(6,  8),
+	GPIO_RESET					= IMX_GPIO_NR(6, 10),
+	GPIO_WDOG					= IMX_GPIO_NR(4,  7),
 	GPIO_MCLK					= IMX_GPIO_NR(1,  2),
 	GPIO_CHARGER_PRSNT			= IMX_GPIO_NR(1,  7),
 	GPIO_CHARGING				= IMX_GPIO_NR(1,  8),
@@ -262,7 +263,7 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 		IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
 		// EMMC Reset Core Board
-		IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET, 	USDHC_PAD_CTRL),
+		IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET, USDHC_PAD_CTRL),
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
@@ -380,8 +381,8 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 static iomux_v3_cfg_t const conf_wdog_pads[] = {
 		// Pin configuration for the Watchdog
 
-		/* Configuration of KEY_ROW0 to WDOG1_B - Here called WDOG1_B in schematic  - see schematic page 10 */
-		IOMUX_PAD_CTRL(KEY_ROW0__WDOG1_B, WDOG_PAD_CTRL),
+		/* Configuration of KEY_ROW0 to WDOG1_B (GPIO4_IO07)- Here called WDOG1_B in schematic  - see schematic page 10 */
+		IOMUX_PAD_CTRL(KEY_ROW0__GPIO4_IO07, WEAK_PULLDOWN),
 };
 
 #ifdef CONFIG_USB		// Added for Logosni8 Testing
@@ -441,6 +442,9 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 		// Pin configuration for SMARC inputs - PMIC_INT_B
 		IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, 	NO_PAD_CTRL),
 
+		// PIN Configuration for GPIO_RESET for the bluetooth module (Can be used for any chip)
+		IOMUX_PAD_CTRL(NANDF_RB0__GPIO6_IO10, 	WEAK_PULLDOWN),
+
 		// Pin configuration for SMARC inputs - CARRIER_PWR_ON
 		IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, 	WEAK_PULLDOWN),
 
@@ -489,6 +493,7 @@ static void setup_iomux_gpio(void)
 	gpio_request(GPIO_10,				"GPIO_10");
 	gpio_request(GPIO_11,				"GPIO_11");
 	gpio_request(GPIO_RESET,			"GPIO_RESET");
+	gpio_request(GPIO_WDOG,				"GPIO_WDOG");
 	gpio_request(GPIO_MCLK,				"GPIO_MCLK");
 	gpio_request(GPIO_CHARGING,			"GPIO_CHARGING");
 	gpio_request(GPIO_PMIC_INT_B, 		"GPIO_PMIC_INT_B");
@@ -509,6 +514,7 @@ static void setup_iomux_gpio(void)
 	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	1);		// Carrier_PWR_ON
 	gpio_direction_output(GPIO_MCLK, 			0);		// GPIO_MCLK
 	gpio_direction_output(GPIO_RESET, 			0);		// GPIO_RESET - Reset Bluetooth Chip on Carrier Board
+	gpio_direction_output(GPIO_WDOG, 			1);		// GPIO_WDOG - Turn off LED - only activate when watchdogging
 	gpio_direction_output(GPIO_0, 				0);		// GPIO_0 -> S_D_INT
 	gpio_direction_output(GPIO_1, 				0);		// GPIO_1 -> AUDIO_AMP_EN
 	gpio_direction_output(GPIO_2, 				0);		// GPIO_2 -> SOUND2
@@ -1093,7 +1099,8 @@ void reset_cpu(void)
 	u64 timeout = 0;
 	ulong flags = 0;
 
-	// Reset CPU
+	// Reset CPU - Turn on WDOG LED
+	gpio_direction_output(GPIO_WDOG, 0);
 	imx_wdt_start(dev, timeout, flags);
 }
 
