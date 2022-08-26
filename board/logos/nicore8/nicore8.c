@@ -25,7 +25,6 @@
 #include <netdev.h>
 #include <version.h>
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-#include <usb/ehci-ci.h>
 
 // Watchdog
 #include <wdt.h>
@@ -53,118 +52,64 @@ enum I2C_RESET {
 	GPIO_I2C_BUS_SEL_RESET		= IMX_GPIO_NR(2, 0)
 };
 
-// ENUM for configuring the AR8035 ethernet adapter
-#ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-enum AR8035_CONFIGS {
-	GPIO_RGMII_RX_DV 			= IMX_GPIO_NR(6, 24),
-	GPIO_ENET_RXD0_INT 			= IMX_GPIO_NR(1, 27),
-	GPIO_RGMII_RX_D0 			= IMX_GPIO_NR(6, 25),
-	GPIO_RGMII_RX_D1 			= IMX_GPIO_NR(6, 27),
-	GPIO_RGMII_RX_D2 			= IMX_GPIO_NR(6, 28),
-	GPIO_RGMII_RX_D3			= IMX_GPIO_NR(6, 29),
-	GPIO_RGMII_RX_CLK 			= IMX_GPIO_NR(6, 30)
-};
-#endif /* CONFIG_TARGET_LOGOSNICORE8DEV */
-
 // Enum for LEDs on the Logosni8 board - enum idea came from board/beckhoff/mx53cx9020
 enum LED_GPIOS {
 	GPIO_LED_2 					= IMX_GPIO_NR(6, 7),
 	GPIO_LED_3 					= IMX_GPIO_NR(6, 9)
 };
 
-// Enum for GPIOs[0-11] on the LogosNi8 board
+// Enum NiCore8 GPIO signals
 enum GPIOS {
-	GPIO_0						= IMX_GPIO_NR(1,  1),
-	GPIO_1						= IMX_GPIO_NR(1,  3),
-	GPIO_2						= IMX_GPIO_NR(4,  5),
-	GPIO_3						= IMX_GPIO_NR(1,  4),
-	GPIO_4						= IMX_GPIO_NR(2, 23),
-	GPIO_5						= IMX_GPIO_NR(2, 24),
-	GPIO_6						= IMX_GPIO_NR(3, 19),
-	GPIO_7						= IMX_GPIO_NR(3, 23),
-	GPIO_8						= IMX_GPIO_NR(3, 24),
-	GPIO_9						= IMX_GPIO_NR(3, 25),
-	GPIO_10						= IMX_GPIO_NR(3, 29),
-	GPIO_11						= IMX_GPIO_NR(3, 31),
-	GPIO_RESET					= IMX_GPIO_NR(6, 10),
-	GPIO_WDOG					= IMX_GPIO_NR(4,  7),
-	GPIO_MCLK					= IMX_GPIO_NR(1,  2),
-	GPIO_EMMC_RESET				= IMX_GPIO_NR(6,  8),
-	GPIO_CHARGER_PRSNT			= IMX_GPIO_NR(1,  7),
-	GPIO_CHARGING				= IMX_GPIO_NR(1,  8),
-	GPIO_PMIC_INT_B				= IMX_GPIO_NR(7, 13),
-	GPIO_CARRIER_PWR_ON			= IMX_GPIO_NR(6, 31),
-	GPIO_RGMII_RESET_LOGISNI8 	= IMX_GPIO_NR(1, 25)
+	GPIO0						= IMX_GPIO_NR(1,  1), // i.MX6 GPIO_1
+	GPIO1						= IMX_GPIO_NR(1,  3), // i.MX6 GPIO_3
+	GPIO2						= IMX_GPIO_NR(4,  5), // i.MX6 GPIO_19
+	GPIO3						= IMX_GPIO_NR(1,  4), // i.MX6 GPIO_4
+	GPIO4						= IMX_GPIO_NR(2, 23), // i.MX6 EIM_CS0
+	GPIO5						= IMX_GPIO_NR(2, 24), // i.MX6 EIM_CS1
+	GPIO6						= IMX_GPIO_NR(3, 19), // i.MX6 EIM_D19
+	GPIO7						= IMX_GPIO_NR(3, 23), // i.MX6 EIM_D23
+	GPIO8						= IMX_GPIO_NR(3, 24), // i.MX6 EIM_D24
+	GPIO9						= IMX_GPIO_NR(3, 25), // i.MX6 EIM_D25
+	GPIO10						= IMX_GPIO_NR(3, 29), // i.MX6 EIM_D29
+	GPIO11						= IMX_GPIO_NR(3, 31), // i.MX6 EIM_D31
+	GPIO_RESET					= IMX_GPIO_NR(6, 10), // i.MX6 NANDF_RB0
+	GPIO_WDOG1_B     			= IMX_GPIO_NR(4,  7), // i.MX6 KEY_ROW0
+	GPIO_MCLK					= IMX_GPIO_NR(1,  2), // i.MX6 GPIO_2
+	GPIO_EMMC_RESET				= IMX_GPIO_NR(6,  8), // i.MX6 NANDF_ALE
+	GPIO_CHARGER_PRSNT			= IMX_GPIO_NR(1,  7), // i.MX6 GPIO_7
+	GPIO_CHARGING				= IMX_GPIO_NR(1,  8), // i.MX6 GPIO_8
+	GPIO_PMIC_INT_B				= IMX_GPIO_NR(7, 13), // i.MX6 GPIO_18
+	GPIO_CARRIER_PWR_ON			= IMX_GPIO_NR(6, 31), // i.MX6 EIM_BCLK
+	GPIO_RGMII_nRST          	= IMX_GPIO_NR(1, 25)  // i.MX6 ENET_CRS_DV
 };
 
-// Enum for AFB_GPIOs[0-7] on the Logosni8 board
+// Enum for NiCore8 Alternative Function Block GPIO signals
 enum AFB_GPIOS {
-	AFB_GPIO_0					= IMX_GPIO_NR(5, 19),
-	AFB_GPIO_1					= IMX_GPIO_NR(5, 18),
-	AFB_GPIO_2					= IMX_GPIO_NR(5, 21),
-	AFB_GPIO_3					= IMX_GPIO_NR(5, 20),
-	AFB_GPIO_4					= IMX_GPIO_NR(5, 22),
-	AFB_GPIO_5					= IMX_GPIO_NR(5, 23),
-	AFB_GPIO_6					= IMX_GPIO_NR(5, 24),
-	AFB_GPIO_7					= IMX_GPIO_NR(5, 25)
-};
-
-// Enum for SD_GPIOs on the Logosni8 board
-enum SD_GPIOS {
-	SDIO_CD						= IMX_GPIO_NR(6, 14),
-	SDIO_WP						= IMX_GPIO_NR(6, 15),
-	SDIO_PWR_EN					= IMX_GPIO_NR(6, 16)
+	AFB_GPIO0					= IMX_GPIO_NR(5, 19), // i.MX6 CSI0_MCLK
+	AFB_GPIO1					= IMX_GPIO_NR(5, 18), // i.MX6 CSI0_PIXCLK
+	AFB_GPIO2					= IMX_GPIO_NR(5, 21), // i.MX6 CSI0_VSYNC
+	AFB_GPIO3					= IMX_GPIO_NR(5, 20), // i.MX6 CSI0_DATA_EN
+	AFB_GPIO4					= IMX_GPIO_NR(5, 22), // i.MX6 CSI0_DAT4
+	AFB_GPIO5					= IMX_GPIO_NR(5, 23), // i.MX6 CSI0_DAT5
+	AFB_GPIO6					= IMX_GPIO_NR(5, 24), // i.MX6 CSI0_DAT6
+	AFB_GPIO7					= IMX_GPIO_NR(5, 25)  // i.MX6 CSI0_DAT7
 };
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define GP_USB_OTG_PWR	IMX_GPIO_NR(3, 22)
-#define GP_USB1_PWR		IMX_GPIO_NR(1, 0)
-#define GP_USB0_PWR		IMX_GPIO_NR(4, 15)
-#define GP_TEST_SMARC	IMX_GPIO_NR(4, 9)
+#define GP_TEST_SMARC IMX_GPIO_NR(4, 9)
 
-#define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP |							\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
-
-#define ENET_PAD_CTRL_PD  (PAD_CTL_PUS_100K_DOWN |						\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
-
-#define ENET_PAD_CTRL_CLK  ((PAD_CTL_PUS_100K_UP & ~PAD_CTL_PKE) |		\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
-
-#define UART_PAD_CTRL  (PAD_CTL_PUS_100K_UP |							\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm 	|							\
-	PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
-
-#define USDHC_PAD_CTRL (PAD_CTL_PUS_47K_UP	|							\
-	PAD_CTL_SPEED_LOW | PAD_CTL_DSE_80ohm 	|							\
-	PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
-
-#define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED |					\
-	PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
-
-#define BUTTON_PAD_CTRL (PAD_CTL_PUS_100K_UP |							\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
-
-#define I2C_PAD_CTRL	(PAD_CTL_PUS_100K_UP |							\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |	 PAD_CTL_HYS |				\
-	PAD_CTL_ODE | PAD_CTL_SRE_FAST)
-
-#define RGB_PAD_CTRL	PAD_CTL_DSE_120ohm
-
-#define WEAK_PULLUP	(PAD_CTL_PUS_100K_UP |								\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS |				\
-	PAD_CTL_SRE_SLOW)
-
-#define WEAK_PULLDOWN	(PAD_CTL_PUS_100K_DOWN |						\
-	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm		|						\
-	PAD_CTL_HYS | PAD_CTL_SRE_SLOW)
-
+#define ENET_PAD_CTRL (PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
+#define ENET_PAD_CTRL_PD (PAD_CTL_PUS_100K_DOWN | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
+#define ENET_PAD_CTRL_CLK ((PAD_CTL_PUS_100K_UP & ~PAD_CTL_PKE) | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
+#define UART_PAD_CTRL (PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
+#define USDHC_PAD_CTRL (PAD_CTL_PUS_47K_UP	| PAD_CTL_SPEED_LOW | PAD_CTL_DSE_80ohm | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
+#define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED |	PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
+#define I2C_PAD_CTRL (PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS | PAD_CTL_ODE | PAD_CTL_SRE_FAST)
+#define WDOG_PAD_CTRL (PAD_CTL_PUE | PAD_CTL_PKE | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm)
+#define WEAK_PULLUP	(PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS | PAD_CTL_SRE_SLOW)
+#define WEAK_PULLDOWN (PAD_CTL_PUS_100K_DOWN | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS | PAD_CTL_SRE_SLOW)
 #define OUTPUT_40OHM (PAD_CTL_SPEED_MED|PAD_CTL_DSE_40ohm)
-
-// Added a define for the Watchdog Padding - from freescale
-#define WDOG_PAD_CTRL (PAD_CTL_PUE | PAD_CTL_PKE | PAD_CTL_SPEED_MED |	\
-	PAD_CTL_DSE_40ohm)
 
 /* Prevent compiler error if gpio number 08 or 09 is used */
 #define not_octal(gp) ((((0x##gp >> 4) & 0xf) * 10) + ((0x##gp & 0xf)))
@@ -201,9 +146,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define I2C_PADS_INFO_ENTRY_SPACING 1
 
-
 #define IOMUX_PAD_CTRL(name, pad_ctrl) NEW_PAD_CTRL(MX6_PAD_##name, pad_ctrl)
-
 
 // Change driving strength
 #define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII						0x20e0768
@@ -213,7 +156,7 @@ DECLARE_GLOBAL_DATA_PTR;
 // Enable Reference CLock
 #define IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK		0x00000001
 
-/* disable on die termination for RGMII */
+// Disable on die termination for RGMII
 #define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_DISABLE					0x00000000
 #define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_30OHMS				0x00000400
 #define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_40OHMS				0x00000300
@@ -221,9 +164,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_120OHMS				0x00000100
 #define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS				0x00000000
 #define IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_17OHMS 				0x00000700
-/* optimised drive strength for 1.0 .. 1.3 V signal on RGMII */
+// Optimised drive strength for 1.0 .. 1.3 V signal on RGMII
 #define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P2V					0x00080000
-/* optimised drive strength for 1.3 .. 2.5 V signal on RGMII */
+// Optimised drive strength for 1.3 .. 2.5 V signal on RGMII
 #define IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V					0x000C0000
 
 #ifdef CONFIG_MXC_SPI
@@ -237,12 +180,11 @@ static iomux_v3_cfg_t const ecspi1_pads[] = {
 #endif // CONFIG_MXC_SPI
 
 // I2C MUX Reset Pad Config
-static iomux_v3_cfg_t const hdmi_reset_pads[] = {
-		IOMUX_PAD_CTRL(NANDF_D0__GPIO2_IO00, WEAK_PULLUP),
-		IOMUX_PAD_CTRL(NANDF_D1__GPIO2_IO01, WEAK_PULLUP),
-		};
+static iomux_v3_cfg_t const mux_reset_pads[] = {
+		IOMUX_PAD_CTRL(NANDF_D0__GPIO2_IO00, WEAK_PULLUP)
+};
 
-/* Configuration of UART4 for Logosni8 */
+// Configuration of UART4 for Logosni8
 static iomux_v3_cfg_t const uart4_pads[] = {
 		IOMUX_PAD_CTRL(CSI0_DAT12__UART4_TX_DATA, UART_PAD_CTRL),
 		IOMUX_PAD_CTRL(CSI0_DAT13__UART4_RX_DATA, UART_PAD_CTRL),
@@ -266,42 +208,11 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
-		{USDHC4_BASE_ADDR}, /* SD Card Slot */
-		{USDHC1_BASE_ADDR}, /* eMMC on Test Carrier */
-		{USDHC3_BASE_ADDR}, /* eMMC on Nicore8 */
-};
-
-//Logosni8 - Map the SD CARD on the Test Carrier Board
-static iomux_v3_cfg_t const sdmmc_pads[] = {
-		IOMUX_PAD_CTRL(SD1_CLK__SD1_CLK, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD1_CMD__SD1_CMD, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD1_DAT0__SD1_DATA0, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD1_DAT1__SD1_DATA1, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD1_DAT2__SD1_DATA2, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD1_DAT3__SD1_DATA3, USDHC_PAD_CTRL),
-		// Map GPIO to enable SD CARD
-		IOMUX_PAD_CTRL(NANDF_CS3__GPIO6_IO16, WEAK_PULLUP),
-		IOMUX_PAD_CTRL(NANDF_CS2__GPIO6_IO15, WEAK_PULLUP),
-		IOMUX_PAD_CTRL(NANDF_CS1__GPIO6_IO14, WEAK_PULLUP),
-};
-
-// Logosni8 - Map eMMC on Test Carrier
-static iomux_v3_cfg_t const usdhc3_pads[] = {
-		IOMUX_PAD_CTRL(SD3_CLK__SD3_CLK, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_CMD__SD3_CMD, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_RST__SD3_RESET, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT0__SD3_DATA0, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT1__SD3_DATA1, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT2__SD3_DATA2, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT3__SD3_DATA3, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT4__SD3_DATA4, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT5__SD3_DATA5, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT6__SD3_DATA6, USDHC_PAD_CTRL),
-		IOMUX_PAD_CTRL(SD3_DAT7__SD3_DATA7, USDHC_PAD_CTRL),
+		{USDHC3_BASE_ADDR}
 };
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-static iomux_v3_cfg_t const enet_pads1[] = {
+static iomux_v3_cfg_t const enet_pads[] = {
 	/* MDIO */
 	IOMUX_PAD_CTRL(ENET_MDIO__ENET_MDIO, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_MDC__ENET_MDC, ENET_PAD_CTRL),
@@ -317,28 +228,11 @@ static iomux_v3_cfg_t const enet_pads1[] = {
 	/* Reference Clock */
 	IOMUX_PAD_CTRL(ENET_REF_CLK__ENET_TX_CLK, ENET_PAD_CTRL),
 
-	/* First use these pins to config the AR8035 to the correct mode
-	* Should be in the RGMII, PLLON , INT mode - meaning Mode[3..0] = 1110  */
-	/* pin 31 - RX_CLK */
-	IOMUX_PAD_CTRL(RGMII_RXC__GPIO6_IO30, WEAK_PULLUP),
-	/* pin 29 - Value: 0 - PHY ADDDRES0 */
-	IOMUX_PAD_CTRL(RGMII_RD0__GPIO6_IO25, WEAK_PULLDOWN),
-	/* pin 28 - Value: 0 - PHY ADDDRES1 */
-	IOMUX_PAD_CTRL(RGMII_RD1__GPIO6_IO27, WEAK_PULLDOWN),
-	/* pin 26 - Value: 1 - (MODE1) all */
-	IOMUX_PAD_CTRL(RGMII_RD2__GPIO6_IO28, WEAK_PULLUP),
-	/* pin 25 - Value: 1 - (MODE3) all */
-	IOMUX_PAD_CTRL(RGMII_RD3__GPIO6_IO29, WEAK_PULLUP),
-	/* pin 30 - Value: 0 - (MODE0) all */
-	IOMUX_PAD_CTRL(RGMII_RX_CTL__GPIO6_IO24, WEAK_PULLUP),
 	/* pin 1 PHY nRST */
 	IOMUX_PAD_CTRL(ENET_CRS_DV__GPIO1_IO25, WEAK_PULLUP),
 	/* Interrupt pin */
 	IOMUX_PAD_CTRL(ENET_RXD0__GPIO1_IO27, ENET_PAD_CTRL),
-};
 
-/* Ethernet Pad Initialisation for Logosni8 */
-static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RXC__RGMII_RXC, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RD0__RGMII_RD0, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RD1__RGMII_RD1, ENET_PAD_CTRL),
@@ -346,6 +240,7 @@ static iomux_v3_cfg_t const enet_pads2[] = {
 	IOMUX_PAD_CTRL(RGMII_RD3__RGMII_RD3, ENET_PAD_CTRL),
 	IOMUX_PAD_CTRL(RGMII_RX_CTL__RGMII_RX_CTL, ENET_PAD_CTRL),
 };
+
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* LED2 and LED3 pads on logosni8 */
@@ -354,25 +249,15 @@ static iomux_v3_cfg_t const ni8_led_pads[] = {
 		IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), // - Configured as output 40Ohm
 };
 
-#ifdef CONFIG_CMD_I2C 		// Added for Logosni8 Testing
+#ifdef CONFIG_CMD_I2C
 /* I2C Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_i2c_pads[] = {
-	// Pin configuration for I2C
-
-	/* Configuration of GPIO_5 to I2C3_SCL - Here called I2C3_SCL in schematic - see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(GPIO_5__I2C3_SCL, I2C_PAD_CTRL),
-	/* Configuration of GPIO_6 to I2C3_SDA - Here called I2C3_SDA in schematic - see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(GPIO_6__I2C3_SDA, I2C_PAD_CTRL),
-
-	//new I2C bus for the EEPROM
 	IOMUX_PAD_CTRL(KEY_ROW3__I2C2_SDA, I2C_PAD_CTRL),
-	/* see schematic page 10  - Here the I2C pad is used*/
 	IOMUX_PAD_CTRL(KEY_COL3__I2C2_SCL, I2C_PAD_CTRL),
-
-	
 	IOMUX_PAD_CTRL(ENET_TX_EN__I2C4_SCL, I2C_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_TXD1__I2C4_SDA, I2C_PAD_CTRL),
-
 };
 #endif // CONFIG_CMD_I2C
 
@@ -383,34 +268,6 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 		/* Configuration of KEY_ROW0 to WDOG1_B (GPIO4_IO07)- Here called WDOG1_B in schematic  - see schematic page 10 */
 		IOMUX_PAD_CTRL(KEY_ROW0__GPIO4_IO07, OUTPUT_40OHM),
 };
-
-#ifdef CONFIG_USB		// Added for Logosni8 Testing
-/* USB Pin Configuration on logosni8 */
-static iomux_v3_cfg_t const conf_usb_pads[] = {
-	// Pin configuration for USB
-
-	//USB1:
-	IOMUX_PAD_CTRL(EIM_D30__USB_H1_OC, WEAK_PULLUP),
-
-	/* Configuration of GPIO_0 to USB_H1_PWR - Here called USB_1_PWREN in schematic - see schematic page 10 - The Same padding is used for USB on Nitrogen */
-	// Mapped to a GPIO as done for the nitrogen board  inorder to enable the usb port.
-	//IOMUX_PAD_CTRL(GPIO_0__USB_H1_PWR, WEAK_PULLDOWN),
-	IOMUX_PAD_CTRL(GPIO_0__GPIO1_IO00, WEAK_PULLUP),
-
-	// The datalines UBS+/- can not be multiplexed - therefore not mapped
-
-	//USB_Micro - OTG:
-	IOMUX_PAD_CTRL(ENET_RX_ER__USB_OTG_ID, WEAK_PULLUP),
-	//IOMUX_PAD_CTRL(KEY_ROW4__USB_OTG_PWR, WEAK_PULLDOWN),  // This have been changed to a gpio
-	// USB 0 PWR Enable
-	IOMUX_PAD_CTRL(KEY_ROW4__GPIO4_IO15, WEAK_PULLUP),
-	// USB 0 Over Current
-	IOMUX_PAD_CTRL(KEY_COL4__USB_OTG_OC, WEAK_PULLUP),
-	// USB 0 VBus Detect
-	IOMUX_PAD_CTRL(NANDF_CS0__NAND_CE0_B, WEAK_PULLUP),
-
-};
-#endif // CONFIG_USB
 
 /* GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
@@ -483,25 +340,25 @@ int dram_init(void)
 static void setup_iomux_gpio(void)
 {
 	// Add a GPIO request for all the GPIOs - without requesting a gpio the driver will not let us use the GPIOs
-	gpio_request(GPIO_0,				"GPIO_0");
-	gpio_request(GPIO_1,				"GPIO_1");
-	gpio_request(GPIO_2,				"GPIO_2");
-	gpio_request(GPIO_3,				"GPIO_3");
-	gpio_request(GPIO_4,				"GPIO_4");
-	gpio_request(GPIO_5,				"GPIO_5");
-	gpio_request(GPIO_6,				"GPIO_6");
-	gpio_request(GPIO_7,				"GPIO_7");
-	gpio_request(GPIO_8,				"GPIO_8");
-	gpio_request(GPIO_9,				"GPIO_9");
-	gpio_request(GPIO_10,				"GPIO_10");
-	gpio_request(GPIO_11,				"GPIO_11");
-	gpio_request(GPIO_RESET,			"GPIO_RESET");
-	gpio_request(GPIO_WDOG,				"GPIO_WDOG");
-	gpio_request(GPIO_MCLK,				"GPIO_MCLK");
-	gpio_request(GPIO_CHARGING,			"GPIO_CHARGING");
-	gpio_request(GPIO_EMMC_RESET,		"GPIO_EMMC_RESET");
-	gpio_request(GPIO_PMIC_INT_B, 		"GPIO_PMIC_INT_B");
-	gpio_request(GPIO_CHARGER_PRSNT,	"GPIO_CHARGER_PRSNT");
+	gpio_request(GPIO0,				    "GPIO0");
+	gpio_request(GPIO1,				    "GPIO1");
+	gpio_request(GPIO2,				    "GPIO2");
+	gpio_request(GPIO3,				    "GPIO3");
+	gpio_request(GPIO4,				    "GPIO4");
+	gpio_request(GPIO5,				    "GPIO5");
+	gpio_request(GPIO6,				    "GPIO6");
+	gpio_request(GPIO7,				    "GPIO7");
+	gpio_request(GPIO8,				    "GPIO8");
+	gpio_request(GPIO9,				    "GPIO9");
+	gpio_request(GPIO10,			    "GPIO10");
+	gpio_request(GPIO11,			    "GPIO11");
+	gpio_request(GPIO_RESET,		    "GPIO_RESET");
+	gpio_request(GPIO_WDOG1_B,		    "GPIO_WDOG1_B");
+	gpio_request(GPIO_MCLK,			    "GPIO_MCLK");
+	gpio_request(GPIO_CHARGING,		    "GPIO_CHARGING");
+	gpio_request(GPIO_EMMC_RESET,	    "GPIO_EMMC_RESET");
+	gpio_request(GPIO_PMIC_INT_B, 	    "GPIO_PMIC_INT_B");
+	gpio_request(GPIO_CHARGER_PRSNT,    "GPIO_CHARGER_PRSNT");
 	gpio_request(GPIO_CARRIER_PWR_ON,	"GPIO_CARRIER_PWR_ON");
 
 	// Setup the rest of the GPIO pins and the corresponding padding for the i.MX6U -
@@ -511,59 +368,60 @@ static void setup_iomux_gpio(void)
 	gpio_direction_input(GPIO_CHARGER_PRSNT);			// CHARGER_PRNST#
 	gpio_direction_input(GPIO_CHARGING);				// CHARGING#
 	gpio_direction_input(GPIO_PMIC_INT_B);				// PMIC_INT_B
-	gpio_direction_input(GPIO_4);						// GPIO_4 -> AUDIO_IRQ
-	gpio_direction_input(GPIO_7);						// GPIO_7 -> SMART_INT_1V8 -> SMART_INT
+	gpio_direction_input(GPIO4);						// GPIO_4 -> AUDIO_IRQ
+	gpio_direction_input(GPIO7);						// GPIO_7 -> SMART_INT_1V8 -> SMART_INT
 
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
-	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	1);		// Carrier_PWR_ON
+	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	0);		// Carrier_PWR_ON
 	gpio_direction_output(GPIO_MCLK, 			0);		// GPIO_MCLK
 	gpio_direction_output(GPIO_EMMC_RESET,		0);		// GPIO_EMMC_RESET - Active high
 	gpio_direction_output(GPIO_RESET, 			0);		// GPIO_RESET - Reset Bluetooth Chip on Carrier Board
-	gpio_direction_output(GPIO_WDOG, 			1);		// GPIO_WDOG - Turn off LED - only activate when watchdogging
-	gpio_direction_output(GPIO_0, 				0);		// GPIO_0 -> S_D_INT
-	gpio_direction_output(GPIO_1, 				0);		// GPIO_1 -> AUDIO_AMP_EN
-	gpio_direction_output(GPIO_2, 				0);		// GPIO_2 -> SOUND2
-	gpio_direction_output(GPIO_3, 				0);		// GPIO_3 -> SOUND1
+	gpio_direction_output(GPIO_WDOG1_B, 		1);		// GPIO_WDOG - Turn off LED - only activate when watchdogging
+	gpio_direction_output(GPIO0, 				0);		// GPIO_0 -> S_D_INT
+	gpio_direction_output(GPIO1, 				0);		// GPIO_1 -> AUDIO_AMP_EN
+	gpio_direction_output(GPIO2, 				0);		// GPIO_2 -> SOUND2
+	gpio_direction_output(GPIO3, 				0);		// GPIO_3 -> SOUND1
 
 	// After setting up the GPIOs - Set one LED on and one off, to signal how fare the bootup is.
 	gpio_set_value(GPIO_LED_2, 					0);
 	gpio_set_value(GPIO_LED_3,					1);
-	gpio_set_value(GPIO_CARRIER_PWR_ON, 		1);
 };
-// Setup AFB_GPIOs - which goes to AFB[0-7] on the SMARC interface- Are mapped to GPIOs on the Test Carrier board
+
 static void setup_iomux_afb_gpio(void)
 {
-	// Add a GPIO request for all the GPIOs - without requesting a gpio the driver will not let us use the GPIOs
-	gpio_request(AFB_GPIO_0,				"AFB_GPIO_0");
-	gpio_request(AFB_GPIO_1,				"AFB_GPIO_1");
-	gpio_request(AFB_GPIO_2,				"AFB_GPIO_2");
-	gpio_request(AFB_GPIO_3,				"AFB_GPIO_3");
-	gpio_request(AFB_GPIO_4,				"AFB_GPIO_4");
-	gpio_request(AFB_GPIO_5,				"AFB_GPIO_5");
-	gpio_request(AFB_GPIO_6,				"AFB_GPIO_6");
-	gpio_request(AFB_GPIO_7,				"AFB_GPIO_7");
+    // Setup AFB_GPIOs - which goes to AFB[0-7] on the SMARC interface
+    gpio_request(AFB_GPIO0,				"AFB_GPIO0");
+    gpio_request(AFB_GPIO1,				"AFB_GPIO1");
+    gpio_request(AFB_GPIO2,				"AFB_GPIO2");
+    gpio_request(AFB_GPIO3,				"AFB_GPIO3");
+    gpio_request(AFB_GPIO4,				"AFB_GPIO4");
+    gpio_request(AFB_GPIO5,				"AFB_GPIO5");
+    gpio_request(AFB_GPIO6,				"AFB_GPIO6");
+    gpio_request(AFB_GPIO7,				"AFB_GPIO7");
 
-	// Setup the rest of the AFB_GPIO pins and the corresponding padding for the i.MX6U -
-	SETUP_IOMUX_PADS(conf_afb_gpio_pads);
+    SETUP_IOMUX_PADS(conf_afb_gpio_pads);
 
-	// Setup the AFB GPIOs as Output if specified on the Schematic
-	gpio_direction_output(AFB_GPIO_4, 			1);		// AFB_GPIO_4 -> LED6 on the Test Carrier Board
-	gpio_direction_output(AFB_GPIO_5, 			0);		// AFB_GPIO_5 -> LED5 on the Test Carrier Board
-	gpio_direction_output(AFB_GPIO_6, 			0);		// AFB_GPIO_6 -> LED4 on the Test Carrier Board
-	gpio_direction_output(AFB_GPIO_7, 			0);		// AFB_GPIO_7 -> LED3 on the Test Carrier Board
+    gpio_direction_output(AFB_GPIO0, 		    0);
+    gpio_direction_output(AFB_GPIO1, 			0);
+    gpio_direction_output(AFB_GPIO2, 			0);
+    gpio_direction_output(AFB_GPIO3, 			0);
+    gpio_direction_output(AFB_GPIO4, 			0);
+    gpio_direction_output(AFB_GPIO5, 			0);
+    gpio_direction_output(AFB_GPIO6, 			0);
+    gpio_direction_output(AFB_GPIO7, 			0);
 }
 
-/* Setup the LEDS on the Logosni8 board */
+// Set up the LED's on the NiCore8 board
 static void setup_iomux_leds(void)
 {
 	// Add a GPIO request for the two LEDS
-	gpio_request(GPIO_LED_2, 				"GPIO_LED_2");
-	gpio_request(GPIO_LED_3, 				"GPIO_LED_3");
+	gpio_request(GPIO_LED_2, "GPIO_LED_2");
+	gpio_request(GPIO_LED_3, "GPIO_LED_3");
 
-	// Setup the LEDS and the corresponding padding
+	// Set up the LED's and the corresponding padding
 	SETUP_IOMUX_PADS(ni8_led_pads);
 
-	// Setup the LEDs as Output
+	// Set up the LED's as output
 	gpio_direction_output(GPIO_LED_2, 1);			// LED2
 	gpio_direction_output(GPIO_LED_3, 0);			// LED3
 };
@@ -571,83 +429,20 @@ static void setup_iomux_leds(void)
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 static void setup_iomux_enet(void)
 {
-	gpio_request(GPIO_RGMII_RESET_LOGISNI8, "GPIO_RGMII_RESET_LOGOSNI8");
-	gpio_request(GPIO_RGMII_RX_DV,			"GPIO_RGMII_RX_DV");
-	gpio_request(GPIO_RGMII_RX_D0,			"GPIO_RGMII_RX_D0");
-	gpio_request(GPIO_RGMII_RX_D1,			"GPIO_RGMII_RX_D1");
-	gpio_request(GPIO_RGMII_RX_D2,			"GPIO_RGMII_RX_D2");
-	gpio_request(GPIO_RGMII_RX_D3,			"GPIO_RGMII_RX_D3");
-	gpio_request(GPIO_RGMII_RX_CLK,			"GPIO_RGMII_RX_CLK");
-	gpio_request(GPIO_ENET_RXD0_INT,		"GPIO_ENET_RXD0_INT");
+    gpio_request(GPIO_RGMII_nRST, "GPIO_RGMII_nRST");
 
 	// Do all the first mapping - GPIOs for Configuring the PHY and the AR8035 Mode
-	SETUP_IOMUX_PADS(enet_pads1);
+	SETUP_IOMUX_PADS(enet_pads);
 
 	// Set output for configuring AR8035 - Reset the AR8035
-	gpio_direction_output(GPIO_RGMII_RESET_LOGISNI8, 	0); 	// Logosni8 PHY rst
-
-	// Need delay 5ms according to AR8035 spec - to make sure the clock is stable - logosni8
-	mdelay(10);
-	gpio_set_value(GPIO_RGMII_RESET_LOGISNI8, 			1); 	// Logosni8 PHY reset
-
-	SETUP_IOMUX_PADS(enet_pads2);
-	mdelay(10);	// Wait 5000 us before using mii interface - and pull the reset pin low
+	gpio_direction_output(GPIO_RGMII_nRST, 1);
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-
-#ifdef CONFIG_USB		// Added for Logosni8 Testing
-static iomux_v3_cfg_t const usb_pads[] = {
-	// USB 1 PWR Enable
-	IOMUX_PAD_CTRL(GPIO_0__GPIO1_IO00, WEAK_PULLUP),
-	// USB 0 PWR Enable
-	IOMUX_PAD_CTRL(KEY_ROW4__GPIO4_IO15, WEAK_PULLUP),
-};
-#endif // CONFIG_USB
 
 static void setup_iomux_uart(void)
 {
 	SETUP_IOMUX_PADS(uart4_pads);
 }
-
-#ifdef CONFIG_USB_EHCI_MX6
-int board_ehci_hcd_init(int port)
-{
-	SETUP_IOMUX_PADS(usb_pads);
-	if (port == 1)
-	{
-		//printf("Reseting the USB HUB 1");
-		gpio_request(GP_USB1_PWR, "GP_USB1_PWR");
-
-		// Reset USB hub
-		gpio_direction_output(GP_USB1_PWR, 0);
-		mdelay(2);
-		gpio_set_value(GP_USB1_PWR, 1);
-	}
-	else
-	{
-		// Otherwise it is port 0
-		//printf("Reseting the USB HUB 0");
-		gpio_request(GP_USB0_PWR, "GP_USB0_PWR");
-
-		// Reset USB hub
-		gpio_direction_output(GP_USB0_PWR, 0);
-		mdelay(2);
-		gpio_set_value(GP_USB0_PWR, 1);
-	}
-
-	return 0;
-}
-
-int board_ehci_power(int port, int on)
-{
-	if (port)
-		return 0;
-	gpio_request(GP_USB0_PWR, "GP_USB0_PWR");
-
-	return gpio_direction_output(GP_USB0_PWR, on);
-}
-
-#endif // CONFIG_USB_EHCI_MX6
 
 #ifdef CONFIG_MXC_SPI
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
@@ -660,7 +455,6 @@ static void setup_spi(void)
 	SETUP_IOMUX_PADS(ecspi1_pads);
 }
 #endif // CONFIG_MXC_SPI
-
 
 // Function for increasing Boot Count
 static inline void bootcount_inc_logos(void) {
@@ -697,18 +491,15 @@ static int setup_fec(void)
 {
 	struct iomuxc *iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
 
-	/* Clear gpr1[ENET_CLK_SEL] for external clock  - see page 2032 in reference manual */
+	// Clear gpr1[ENET_CLK_SEL] for external clock  - see page 2032 in reference manual
 	clrbits_le32(&iomuxc_regs->gpr[1], IOMUXC_GPR1_ENET_CLK_SEL_MASK);
 
 	// Change the drive strength
-	__raw_writel(IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS,
-				 (void *)IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM);
-	__raw_writel(IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V,
-				 (void *)IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII);
+	__raw_writel(IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM_ENABLE_0OHMS, (void *)IOMUX_SW_PAD_CTRL_GRP_RGMII_TERM);
+	__raw_writel(IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII_1P5V, (void *)IOMUX_SW_PAD_CTRL_GRP_DDR_TYPE_RGMII);
 
 	// Daisy Chain
-	__raw_writel(IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK,
-				 (void *)IOMUXC_ENET_REF_CLK_SELECT_INPUT);
+	__raw_writel(IOMUXC_ENET_REF_CLK_SELECT_INPUT_ENABLE_ENET_REF_CLK, (void *)IOMUXC_ENET_REF_CLK_SELECT_INPUT);
 
 	return 0;
 }
@@ -728,11 +519,6 @@ int board_early_init_r(void)
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif // CONFIG_CMD_I2C
 
-#ifdef CONFIG_USB
-	// Early setup of USB
-	SETUP_IOMUX_PADS(conf_usb_pads);
-#endif // CONFIG_USB
-
 	// Early setup of Watchdog
 	SETUP_IOMUX_PADS(conf_wdog_pads);
 
@@ -749,7 +535,7 @@ int overwrite_console(void)
 	return 1;
 }
 
-int print_Logos_Logo(void)
+int print_logos_logo(void)
 {
 	printf("\n");
 	for(int h = 0; h < LOGOS_LOGO_ROWS; h++)
@@ -760,44 +546,8 @@ int print_Logos_Logo(void)
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
-
-#ifdef CONFIG_CMD_BMODE
-static const struct boot_mode board_boot_modes[] = {
-	/* 8 bit bus width */
-	{"sd1", MAKE_CFGVAL(0x42, 0x28, 0x00, 0x00)},
-	/* 8 bit bus width */
-	{"emmc0", MAKE_CFGVAL(0x40, 0x30, 0x00, 0x00)},
-	/* 8 bit bus width */
-	{"emmc1", MAKE_CFGVAL(0x40, 0x38, 0x00, 0x00)},
-	{NULL, 0},
-};
-#endif // CONFIG_CMD_BMODE
-
-// Card detected function for seeing if a card is present
-int board_mmc_getcd(struct mmc *mmc)
-{
-	struct fsl_esdhc_cfg *cfg = (struct fsl_esdhc_cfg *)mmc->priv;
-	int ret = 0;
-
-	if (cfg->esdhc_base == USDHC1_BASE_ADDR) {
-		gpio_request(SDIO_CD, "SDIO_CD");
-		ret = !(gpio_get_value(SDIO_CD));
-		return ret;
-	}
-	else
-	{
-		ret = -1; // If it is not the SD card - it should be marked as present
-		return ret;
-	}
-
-	return -1;
-}
-
 // I2c Functions for the full u-boot
-int i2c_read(uint8_t chip, unsigned int addr, int alen,
-			 uint8_t *buffer, int len)
-
-// Call I2c DM read ..
+int i2c_read(uint8_t chip, unsigned int addr, int alen, uint8_t *buffer, int len)
 {
 	struct udevice *dev;
 	int err;
@@ -807,12 +557,12 @@ int i2c_read(uint8_t chip, unsigned int addr, int alen,
 		printf("%s: Cannot find FRAM \n", __func__);
 		return err;
 	}
+
 	// Reading from FRAM
 	return dm_i2c_read(dev, 0x0, buffer, alen);
 }
 
-int i2c_write(uint8_t chip, unsigned int addr, int alen,
-			  uint8_t *buffer, int len)
+int i2c_write(uint8_t chip, unsigned int addr, int alen, uint8_t *buffer, int len)
 {
 	struct udevice *dev;
 	int err;
@@ -822,6 +572,7 @@ int i2c_write(uint8_t chip, unsigned int addr, int alen,
 		printf("%s: Cannot find FRAM\n", __func__);
 		return err;
 	}
+
 	// Write to the I2c Device
 	return dm_i2c_write(dev, 0x00, buffer, alen);
 }
@@ -839,32 +590,10 @@ int board_mmc_init(struct bd_info *bis) {
 	// Configure Pins for eMMC
 	SETUP_IOMUX_PADS(usdhc4_pads);
 
-	// Configure Pins for eMMC on Test Carrier
-	SETUP_IOMUX_PADS(usdhc3_pads);
-
-	// Configure and Map Pins for SD Card on Test Carrier
-	SETUP_IOMUX_PADS(sdmmc_pads);
-
-	// Request GPIOs
-	gpio_request(SDIO_PWR_EN, 			"SDIO_PWR_EN,");
-	gpio_request(SDIO_WP, 				"SDIO_WP");
-	gpio_request(SDIO_CD, 				"SDIO_CD");
-
-	// Enable power to SDCARD
-	gpio_direction_output(SDIO_PWR_EN, 	1);
-	gpio_direction_output(SDIO_WP, 		1);
-	gpio_direction_output(SDIO_CD, 		1);
-
 	// Initialise all mmc - Define clocks first
 	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
-	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 
-	if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
-		puts("WARNING: failed to initialize SD\n");
-	if(fsl_esdhc_initialize(bis, &usdhc_cfg[1]))
-		puts("WARNING: failed to initialize eMMC on Test Carrier\n");
-	if(fsl_esdhc_initialize(bis, &usdhc_cfg[2]))
+    if(fsl_esdhc_initialize(bis, &usdhc_cfg[0]))
 		puts("WARNING: failed to initialize eMMC on Nicore8\n");
 
 	return 0;
@@ -883,34 +612,14 @@ int board_mmc_init_dts(void) {
 	// Configure Pins for eMMC
 	SETUP_IOMUX_PADS(usdhc4_pads);
 
-	// Configure Pins for eMMC on Test Carrier
-	SETUP_IOMUX_PADS(usdhc3_pads);
-
-	// Configure and Map Pins for SD Card on Test Carrier
-	SETUP_IOMUX_PADS(sdmmc_pads);
-
-	// Request GPIOs
-	gpio_request(SDIO_PWR_EN, 			"SDIO_PWR_EN,");
-	gpio_request(SDIO_WP, 				"SDIO_WP");
-	gpio_request(SDIO_CD, 				"SDIO_CD");
-
-	// Enable power to SDCARD
-	gpio_direction_output(SDIO_PWR_EN, 	1);
-	gpio_direction_output(SDIO_WP, 		1);
-	gpio_direction_output(SDIO_CD, 		1);
-
 	// Initialise all mmc - Define clocks first
 	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
-	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
-	usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
 
 	return 0;
 }
 
 int board_init(void)
 {
-	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
-
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 
@@ -919,14 +628,12 @@ int board_init(void)
 
 	// Setup of GPIOs
 	setup_iomux_gpio();
-
-	// Early setup of AFB_GPIOs - These are only valid for SMARC Version 1.1 - have changed with the new spec 2.1
-	setup_iomux_afb_gpio();
+    setup_iomux_afb_gpio();
 
 	// Map the Reset for the I2C MUX
-	SETUP_IOMUX_PADS(hdmi_reset_pads);
+	SETUP_IOMUX_PADS(mux_reset_pads);
 
-	// Set reset high for IC2 Bus select - Chip is PCA954 - IC2 address 0x70 - (Reset is active low)
+	// Set reset high for IC2 Bus select - chip is PCA954 - IC2 address 0x70 - reset is active low
 	gpio_request(GPIO_I2C_BUS_SEL_RESET, "GPIO_I2C_BUS_SEL_RESET ");
 
 	// Set output high - reset disabled
@@ -941,25 +648,14 @@ int board_init(void)
 	// Init mmc - Ontop of Device tree - Enable power for SD Card
 	board_mmc_init_dts();
 
-	// Init USB
-#ifdef CONFIG_USB_EHCI_MX6
-	board_ehci_hcd_init(0);
-	board_ehci_hcd_init(1);
-	board_ehci_power(0, 1);
-#endif
-
-
-	// ETH init
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
+	// Ethernet init
 	setup_iomux_enet();
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 	// Early setup of I2C
 	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif // CONFIG_OF_CONTROL
-
-	// Setting up USB OTG - We have ENET_RX_ER connected to OTG_ID
-	clrbits_le32(&iomux->gpr[1], IOMUXC_GPR1_OTG_ID_MASK);
 
 #ifdef CONFIG_MXC_SPI
 	setup_spi();
@@ -970,12 +666,10 @@ int board_init(void)
 
 int misc_init_r(void)
 {
-#ifdef CONFIG_CMD_BMODE
-	add_board_boot_modes(board_boot_modes);
-#endif // CONFIG_CMD_BMODE
 	env_set_hex("reset_cause", get_imx_reset_cause());
 	return 0;
 }
+
 /*
  * The board_late_init function is called late during the bootloader initialisation
  * Therefore, all the functionality needed late during the bootup should be added here - this is e.g. the UART printing
@@ -984,8 +678,8 @@ int misc_init_r(void)
 int board_late_init(void)
 {
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
-	// The test carrier board is now powered up and the UART is ready - make a startup screen
-	print_Logos_Logo();
+	// The carrier board is now powered up and the UART is ready - make a startup screen
+	print_logos_logo();
 	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
 
 #ifdef CONFIG_IMX_THERMAL
@@ -1021,7 +715,6 @@ int board_late_init(void)
 	env_set("tee", "yes");
 #endif // CONFIG_OPTEE
 
-
 	// Set i2c bus to 3 - Boot Counter
 	struct udevice *dev;
 	int err;
@@ -1035,7 +728,7 @@ int board_late_init(void)
 	// Increase bootcount Manually
 	bootcount_inc_logos();
 
-	// Turn on the LEDS on the Core Board to verify that the Production Image Works and have finished all initialsation
+	// Turn on the LEDS on the Core Board to verify that the Production Image Works and have finished all initialisation
 	gpio_set_value(GPIO_LED_2, 0);
 	gpio_set_value(GPIO_LED_3, 0);
 
@@ -1107,7 +800,7 @@ void reset_cpu(void)
 	// Reset CPU
 
 	// Turn on WDOG LED
-	gpio_direction_output(GPIO_WDOG, 0);
+	gpio_direction_output(GPIO_WDOG1_B, 0);
 
 	// Reset EMMC
 	gpio_direction_output(GPIO_EMMC_RESET,		1);		// GPIO_EMMC_RESET - Active high
