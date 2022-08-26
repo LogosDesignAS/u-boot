@@ -273,56 +273,54 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 		// Pin configuration for GPIO[0-3]
-		IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, 		WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, 		WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, 		OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, 		OUTPUT_40OHM),
 		IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, 	OUTPUT_40OHM),
 		IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, 		OUTPUT_40OHM),
 
 		// Pin configuration for GPIO[4-11]
-		IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, 	WEAK_PULLUP),
-		IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, 	OUTPUT_40OHM),
 
-		// Pin Configuration of GPIO_MCLK
 		IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, 		OUTPUT_40OHM),
 
-		// Pin configuration for SMARC inputs - Charging and Charger_PRSNT
+		// Pin configuration for SMARC inputs - CHARGING and CHARGER_PRSNT
 		IOMUX_PAD_CTRL(GPIO_7__GPIO1_IO07, 		WEAK_PULLUP),
 		IOMUX_PAD_CTRL(GPIO_8__GPIO1_IO08, 		WEAK_PULLUP),
 
 		// Pin configuration for SMARC inputs - PMIC_INT_B
 		IOMUX_PAD_CTRL(GPIO_18__GPIO7_IO13, 	NO_PAD_CTRL),
 
-		// PIN Configuration for GPIO_RESET for the bluetooth module (Can be used for any chip)
+		// PIN Configuration for GPIO_RESET
 		IOMUX_PAD_CTRL(NANDF_RB0__GPIO6_IO10, 	WEAK_PULLDOWN),
 
 		// Pin configuration for SMARC inputs - CARRIER_PWR_ON
 		IOMUX_PAD_CTRL(EIM_BCLK__GPIO6_IO31, 	WEAK_PULLDOWN),
 
-		// SMARC_Test from test carrier
-		IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, 	WEAK_PULLDOWN),
+		// SMARC_TESTn from carrier
+		IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, 	WEAK_PULLUP),
 
 		// EMMC Reset Core Board
-		//IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08,	WEAK_PULLDOWN),
 };
 
 /* AFB_GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 		// Pin configuration for AFB_GPIO[0-7]
-		IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18, WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20,WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, 	WEAK_PULLDOWN),
-		IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, 	WEAK_PULLDOWN),
+		IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, 	    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18,     OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, 	    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20,    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, 	    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, 	    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, 	    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, 	    OUTPUT_40OHM),
 };
 
 /* Functions below */
@@ -364,23 +362,23 @@ static void setup_iomux_gpio(void)
 	// Setup the rest of the GPIO pins and the corresponding padding for the i.MX6U -
 	SETUP_IOMUX_PADS(conf_gpio_pads);
 
-	// Setup the GPIOs as Input if specified on the Schematic and Test Carrier board
-	gpio_direction_input(GPIO_CHARGER_PRSNT);			// CHARGER_PRNST#
-	gpio_direction_input(GPIO_CHARGING);				// CHARGING#
-	gpio_direction_input(GPIO_PMIC_INT_B);				// PMIC_INT_B
-	gpio_direction_input(GPIO4);						// GPIO_4 -> AUDIO_IRQ
-	gpio_direction_input(GPIO7);						// GPIO_7 -> SMART_INT_1V8 -> SMART_INT
+	// Setup the GPIOs as Input if specified on the Schematic and carrier board
+	gpio_direction_input(GPIO_CHARGER_PRSNT);
+	gpio_direction_input(GPIO_CHARGING);
+	gpio_direction_input(GPIO_PMIC_INT_B);
+	gpio_direction_input(GPIO4);
+	gpio_direction_input(GPIO7);
 
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
-	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	0);		// Carrier_PWR_ON
-	gpio_direction_output(GPIO_MCLK, 			0);		// GPIO_MCLK
-	gpio_direction_output(GPIO_EMMC_RESET,		0);		// GPIO_EMMC_RESET - Active high
-	gpio_direction_output(GPIO_RESET, 			0);		// GPIO_RESET - Reset Bluetooth Chip on Carrier Board
-	gpio_direction_output(GPIO_WDOG1_B, 		1);		// GPIO_WDOG - Turn off LED - only activate when watchdogging
-	gpio_direction_output(GPIO0, 				0);		// GPIO_0 -> S_D_INT
-	gpio_direction_output(GPIO1, 				0);		// GPIO_1 -> AUDIO_AMP_EN
-	gpio_direction_output(GPIO2, 				0);		// GPIO_2 -> SOUND2
-	gpio_direction_output(GPIO3, 				0);		// GPIO_3 -> SOUND1
+	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	0);
+	gpio_direction_output(GPIO_MCLK, 			0);
+	gpio_direction_output(GPIO_EMMC_RESET,		0);
+	gpio_direction_output(GPIO_RESET, 			0);
+	gpio_direction_output(GPIO_WDOG1_B, 		1);
+	gpio_direction_output(GPIO0, 				0);
+	gpio_direction_output(GPIO1, 				0);
+	gpio_direction_output(GPIO2, 				0);
+	gpio_direction_output(GPIO3, 				0);
 
 	// After setting up the GPIOs - Set one LED on and one off, to signal how fare the bootup is.
 	gpio_set_value(GPIO_LED_2, 					0);
