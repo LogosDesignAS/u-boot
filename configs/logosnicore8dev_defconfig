@@ -7,6 +7,7 @@ CONFIG_ARCH_MISC_INIT=y
 
 CONFIG_VERSION_VARIABLE=y
 
+
 # Memory and address settings
 CONFIG_SYS_TEXT_BASE=0x17800000
 CONFIG_SYS_MALLOC_F_LEN=0x4000
@@ -59,7 +60,10 @@ CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 CONFIG_MISC_INIT_R=y
 
 # Additional Options
-CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/nicore8/nicore8.cfg,DDR_MB=512"
+CONFIG_SYS_EXTRA_OPTIONS="DDR_MB=512"
+
+# Add configuration file for nicore8
+CONFIG_IMX_CONFIG="board/logos/nicore8/nicore8.cfg"
 
 # This define is used to suppress the output on the UART - "IN: serial, Out: serial, ERR: serial"
 CONFIG_SYS_CONSOLE_INFO_QUIET=y
@@ -173,6 +177,7 @@ CONFIG_RGMII=y
 CONFIG_MII=y
 # Random MAC ADDR - to be removed
 CONFIG_NET_RANDOM_ETHADDR=y
+CONFIG_FEC_XCV_TYPE="RGMII"
 
 # Configurations of device tree - Make it possible to do runtime configuration via the device tree (uncomment to use device tree)
 CONFIG_OF_CONTROL=y

@@ -47,6 +47,10 @@
 #include "nicore8demo.h"
 #endif // DEMO_MODE
 
+// Version String
+#include <version.h>
+#include <version_string.h>
+
 // ENUM for controlling the reset for I2c select for LCDs, HDMI, GP and CAM
 enum I2C_RESET {
 	GPIO_I2C_BUS_SEL_RESET		= IMX_GPIO_NR(2, 0)
@@ -678,7 +682,7 @@ int board_late_init(void)
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 	// The carrier board is now powered up and the UART is ready - make a startup screen
 	print_logos_logo();
-	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", U_BOOT_VERSION_STRING, env_get("serial#"));
+	printf("\n%s\nNiCore8 HW id: %s - Logos Payment Solutions A/S.\n", version_string, env_get("serial#"));
 
 #ifdef CONFIG_IMX_THERMAL
 	struct udevice *thermal_dev;

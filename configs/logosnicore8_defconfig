@@ -51,7 +51,10 @@ CONFIG_ENV_OFFSET_REDUND=0x1F8000
 CONFIG_MISC_INIT_R=y
 
 # Additional Options
-CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=board/logos/nicore8/nicore8.cfg,DDR_MB=512"
+CONFIG_SYS_EXTRA_OPTIONS="DDR_MB=512"
+
+# Add configuration file for nicore8
+CONFIG_IMX_CONFIG="board/logos/nicore8/nicore8.cfg"
 
 # Config eMMC
 CONFIG_MMC=y
