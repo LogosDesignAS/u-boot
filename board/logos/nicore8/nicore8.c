@@ -277,20 +277,20 @@ static iomux_v3_cfg_t const conf_wdog_pads[] = {
 static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 		// Pin configuration for GPIO[0-3]
-		IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, 		OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, 		OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, 		OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(GPIO_1__GPIO1_IO01, 		WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_3__GPIO1_IO03, 		WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_19__GPIO4_IO05, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(GPIO_4__GPIO1_IO04, 		WEAK_PULLUP),
 
 		// Pin configuration for GPIO[4-11]
-		IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, 	OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, 	OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(EIM_CS0__GPIO2_IO23, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_CS1__GPIO2_IO24, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_D19__GPIO3_IO19, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_D23__GPIO3_IO23, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_D24__GPIO3_IO24, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_D25__GPIO3_IO25, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_D29__GPIO3_IO29, 	WEAK_PULLUP),
+		IOMUX_PAD_CTRL(EIM_D31__GPIO3_IO31, 	WEAK_PULLUP),
 
 		IOMUX_PAD_CTRL(GPIO_2__GPIO1_IO02, 		OUTPUT_40OHM),
 
@@ -317,14 +317,14 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 /* AFB_GPIO Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_afb_gpio_pads[] = {
 		// Pin configuration for AFB_GPIO[0-7]
-		IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, 	    OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18,     OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, 	    OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20,    OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, 	    OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, 	    OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, 	    OUTPUT_40OHM),
-		IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, 	    OUTPUT_40OHM),
+		IOMUX_PAD_CTRL(CSI0_MCLK__GPIO5_IO19, 	    WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_PIXCLK__GPIO5_IO18,     WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_VSYNC__GPIO5_IO21, 	    WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_DATA_EN__GPIO5_IO20,    WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_DAT4__GPIO5_IO22, 	    WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_DAT5__GPIO5_IO23, 	    WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_DAT6__GPIO5_IO24, 	    WEAK_PULLUP),
+		IOMUX_PAD_CTRL(CSI0_DAT7__GPIO5_IO25, 	    WEAK_PULLUP),
 };
 
 /* Functions below */
@@ -370,23 +370,28 @@ static void setup_iomux_gpio(void)
 	gpio_direction_input(GPIO_CHARGER_PRSNT);
 	gpio_direction_input(GPIO_CHARGING);
 	gpio_direction_input(GPIO_PMIC_INT_B);
-	gpio_direction_input(GPIO4);
+    gpio_direction_input(GPIO0);
+    gpio_direction_input(GPIO1);
+    gpio_direction_input(GPIO3);
 	gpio_direction_input(GPIO7);
+    gpio_direction_input(GPIO8);
+    gpio_direction_input(GPIO9);
+    gpio_direction_input(GPIO10);
+    gpio_direction_input(GPIO11);
 
 	// Setup the GPIOs as Output if specified on the Schematic and Test Carrier board
-	gpio_direction_output(GPIO_CARRIER_PWR_ON, 	0);
-	gpio_direction_output(GPIO_MCLK, 			0);
-	gpio_direction_output(GPIO_EMMC_RESET,		0);
-	gpio_direction_output(GPIO_RESET, 			0);
-	gpio_direction_output(GPIO_WDOG1_B, 		1);
-	gpio_direction_output(GPIO0, 				0);
-	gpio_direction_output(GPIO1, 				0);
-	gpio_direction_output(GPIO2, 				0);
-	gpio_direction_output(GPIO3, 				0);
+	gpio_direction_output(GPIO_CARRIER_PWR_ON, 0);
+	gpio_direction_output(GPIO_MCLK, 0);
+	gpio_direction_output(GPIO_EMMC_RESET, 0);
+	gpio_direction_output(GPIO_RESET, 0);
+	gpio_direction_output(GPIO_WDOG1_B, 1);
+	gpio_direction_output(GPIO2, 0);
+    gpio_direction_output(GPIO4, 1);
+    gpio_direction_output(GPIO5, 1);
 
 	// After setting up the GPIOs - Set one LED on and one off, to signal how fare the bootup is.
-	gpio_set_value(GPIO_LED_2, 					0);
-	gpio_set_value(GPIO_LED_3,					1);
+	gpio_set_value(GPIO_LED_2, 0);
+	gpio_set_value(GPIO_LED_3, 1);
 };
 
 static void setup_iomux_afb_gpio(void)
@@ -403,14 +408,16 @@ static void setup_iomux_afb_gpio(void)
 
     SETUP_IOMUX_PADS(conf_afb_gpio_pads);
 
-    gpio_direction_output(AFB_GPIO0, 		    0);
-    gpio_direction_output(AFB_GPIO1, 			0);
-    gpio_direction_output(AFB_GPIO2, 			0);
-    gpio_direction_output(AFB_GPIO3, 			0);
-    gpio_direction_output(AFB_GPIO4, 			0);
-    gpio_direction_output(AFB_GPIO5, 			0);
-    gpio_direction_output(AFB_GPIO6, 			0);
-    gpio_direction_output(AFB_GPIO7, 			0);
+    gpio_direction_output(AFB_GPIO0, 0);
+    gpio_direction_output(AFB_GPIO1, 0);
+    gpio_direction_output(AFB_GPIO2, 0);
+
+    gpio_direction_input(AFB_GPIO3);
+    gpio_direction_input(AFB_GPIO4);
+    gpio_direction_input(AFB_GPIO5);
+
+    gpio_direction_output(AFB_GPIO6, 0);
+    gpio_direction_output(AFB_GPIO7, 0);
 }
 
 // Set up the LED's on the NiCore8 board
