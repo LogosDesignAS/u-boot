@@ -209,10 +209,13 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 		IOMUX_PAD_CTRL(SD4_DAT5__SD4_DATA5, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT6__SD4_DATA6, USDHC_PAD_CTRL),
 		IOMUX_PAD_CTRL(SD4_DAT7__SD4_DATA7, USDHC_PAD_CTRL),
+
+		// EMMC Reset Core Board
+		IOMUX_PAD_CTRL(NANDF_ALE__SD4_RESET,	WEAK_PULLDOWN),
 };
 
 static struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
-		{USDHC3_BASE_ADDR}
+		{USDHC4_BASE_ADDR}
 };
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
@@ -309,9 +312,6 @@ static iomux_v3_cfg_t const conf_gpio_pads[] = {
 
 		// SMARC_TESTn from carrier
 		IOMUX_PAD_CTRL(KEY_ROW1__GPIO4_IO09, 	WEAK_PULLUP),
-
-		// EMMC Reset Core Board
-		IOMUX_PAD_CTRL(NANDF_ALE__GPIO6_IO08,	WEAK_PULLDOWN),
 };
 
 /* AFB_GPIO Pin Configuration on logosni8 */
@@ -444,6 +444,11 @@ static void setup_iomux_enet(void)
 	SETUP_IOMUX_PADS(enet_pads);
 
 	// Set output for configuring AR8035 - Reset the AR8035
+	gpio_direction_output(GPIO_RGMII_nRST, 0);
+
+	// Wait 20ms
+	mdelay(20);
+
 	gpio_direction_output(GPIO_RGMII_nRST, 1);
 }
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
