@@ -30,6 +30,11 @@
 	};
  */
 
+	wdt-reboot {
+		compatible = "wdt-reboot";
+		wdt = <&wdog2>;
+	};
+
 	aliases {
 		mmc0 = &usdhc4;
 		ethernet0 = &fec;

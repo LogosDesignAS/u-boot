@@ -691,6 +691,10 @@ int board_late_init(void)
 	// Get the device
 	ret = uclass_get_device(UCLASS_THERMAL, 0, &thermal_dev);
 
+	if (ret)
+		printf("Thermal init failed: %d\n", ret);
+
+
 	// Get some information about the temperatur of the CPU
 	//ret = imx_thermal_get_temp(thermal_dev, &cpu_tmp);
 	ret = thermal_get_temp(thermal_dev, &cpu_tmp);
@@ -737,79 +741,43 @@ int board_late_init(void)
 	return 0;
 }
 
-// Enable the watchdog
+// Watchdog Functionality
 #ifdef CONFIG_WDT
 #if defined(CONFIG_IMX_WATCHDOG)
-static void imx_watchdog_reset(struct watchdog_regs *wdog)
+
+static void imx_watchdog_expire_now(struct watchdog_regs *wdog, bool ext_reset)
 {
-#ifndef CONFIG_WATCHDOG_RESET_DISABLE
-	writew(0x5555, &wdog->wsr);
-	writew(0xaaaa, &wdog->wsr);
-#endif /* CONFIG_WATCHDOG_RESET_DISABLE*/
-}
+	u16 wcr = WCR_WDE;
 
-static void imx_watchdog_init(struct watchdog_regs *wdog, bool ext_reset,
-				u64 timeout)
-{
-	u16 wcr;
-	/*
-	 * The timer watchdog can be set between
-	 * 0.5 and 128 Seconds. If not defined
-	 * in configuration file, sets 128 Seconds
-	 */
-#ifndef CONFIG_WATCHDOG_TIMEOUT_MSECS
-#define CONFIG_WATCHDOG_TIMEOUT_MSECS 128000
-#endif
-
-	timeout = max_t(u64, timeout, TIMEOUT_MIN);
-	timeout = min_t(u64, timeout, TIMEOUT_MAX);
-	timeout = lldiv(timeout, 500) - 1;
-
-#ifdef CONFIG_FSL_LSCH2
-	wcr = (WCR_WDA | WCR_SRS | WCR_WDE) << 8 | timeout;
-#else
-	wcr = WCR_WDZST | WCR_WDBG | WCR_WDE | WCR_SRS |
-			WCR_WDA | SET_WCR_WT(timeout);
 	if (ext_reset)
-		wcr |= WCR_WDT;
-#endif /* CONFIG_FSL_LSCH2*/
+		wcr |= WCR_SRS; /* do not assert internal reset */
+	else
+		wcr |= WCR_WDA; /* do not assert external reset */
+
+	/* Write 3 times to ensure it works, due to IMX6Q errata ERR004346 */
 	writew(wcr, &wdog->wcr);
-	imx_watchdog_reset(wdog);
-}
+	writew(wcr, &wdog->wcr);
+	writew(wcr, &wdog->wcr);
 
-static int imx_wdt_start(struct udevice *dev, u64 timeout, ulong flags)
-{
-	struct watchdog_regs *wdog = (struct watchdog_regs *)WDOG1_BASE_ADDR;
-
-	imx_watchdog_init(wdog, true, CONFIG_WATCHDOG_TIMEOUT_MSECS);
-
-	while(1)
-	{
-		//Wait for reboot
+	while (1) {
+		/*
+		 * spin before reset
+		 */
 	}
-	return 0;
 }
+
 
 /*
  * Board specific reset that is system reset.
  */
 
 void reset_cpu(void)
-{ 	struct udevice *dev = 0;
-	u64 timeout = 0;
-	ulong flags = 0;
+{
+	// TODO(LMB): Add PMIC Reset here when new rev is received or change function below to use external reset (PMIC)
 
-	// Reset CPU
+	struct watchdog_regs *wdog = (struct watchdog_regs *)WDOG1_BASE_ADDR;
 
-	// Turn on WDOG LED
-	gpio_direction_output(GPIO_WDOG1_B, 0);
-
-	// Reset EMMC
-	gpio_direction_output(GPIO_EMMC_RESET,		1);		// GPIO_EMMC_RESET - Active high
-
-	// Watchdog with timeout
-	imx_wdt_start(dev, timeout, flags);
+	imx_watchdog_expire_now(wdog, false);
 }
-
 #endif /* CONFIG_IMX_WATCHDOG */
 #endif /* CONFIG_WDT */
