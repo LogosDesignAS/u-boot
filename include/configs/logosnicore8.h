@@ -106,6 +106,7 @@
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+  "BOOT_ORDER=A B\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
@@ -183,7 +184,7 @@
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
 // we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw,fitconfig:sw"
+#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw,fitconfig:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw"
 
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
 // GP partition 0 (hardware partition 4) with fallback to GP partition 1 (hardware partition 5).
@@ -194,6 +195,7 @@
 // 'reset' should be added after all final commands, to avoid falling back to console in case
 // of any error scenario.
 #define CONFIG_EXTRA_ENV_SETTINGS \
+  "BOOT_ORDER=A B\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
