@@ -107,6 +107,8 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "BOOT_ORDER=A B\0" \
+  "BOOT_A_LEFT=0\0" \
+  "BOOT_B_LEFT=0\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
@@ -196,6 +198,8 @@
 // of any error scenario.
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "BOOT_ORDER=A B\0" \
+  "BOOT_A_LEFT=0\0" \
+  "BOOT_B_LEFT=0\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
