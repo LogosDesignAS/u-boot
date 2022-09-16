@@ -73,16 +73,47 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "BOOT_ORDER=A B\0" \
-  "BOOT_A_LEFT=0\0" \
-  "BOOT_B_LEFT=0\0" \
-  "devtype=mmc\0" \
-  "devnum=0\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
-  "default_fitimage=image.itb\0" \
+  "BOOT_A_LEFT=3\0" \
+  "BOOT_B_LEFT=3\0" \
+  "fitconfig_base=\0" \
   "loadaddr=0x12000000\0" \
   "serverip=172.16.1.60\0" \
   "bootenv=uEnv.txt\0 " \
+  "bootcmd_fit2=" \
+    "setenv fitconfig;" \
+    "for BOOT_SLOT in '${BOOT_ORDER}'; do " \
+      "if test 'x${fitconfig}' != 'x'; then " \
+        "# skip remaining slots " \
+      "elif test 'x${BOOT_SLOT}' = 'xA'; then " \
+        "if test ${BOOT_A_LEFT} -gt 0; then " \
+          "echo 'Found valid slot A, ${BOOT_A_LEFT} attempts remaining'; " \
+          "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
+		  "# Set bootpart and fitconfig " \
+		  "if fatload mmc 0.4 ${loadaddr} image.itb; then " \
+            "setenv fitconfig '${fitconfig_base}-a'; " \
+		  "fi; " \
+        "fi; " \
+      "elif test 'x${BOOT_SLOT}' = 'xB'; then " \
+        "if test ${BOOT_B_LEFT} -gt 0; then " \
+          "echo 'Found valid slot B, ${BOOT_B_LEFT} attempts remaining'; " \
+          "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
+          "# Set bootpart and fitconfig " \
+		  "if fatload mmc 0.5 ${loadaddr} image.itb; then " \
+		    "setenv fitconfig '${fitconfig_base}-b'; " \
+		  "fi; " \
+        "fi; " \
+      "fi; " \
+    "done; " \
+    "if test -n '${fitconfig}'; then " \
+      "saveenv; " \
+    "else; " \
+      "echo 'No valid slot found, resetting tries to 3'; " \
+      "setenv BOOT_A_LEFT 3; " \
+      "setenv BOOT_B_LEFT 3; " \
+      "saveenv; " \
+      "reset; " \
+    "fi; " \
+    "bootm ${loadaddr}${fitconfig}; echo 'reset';\0" \
   "bootcmd_fit=" \
     "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
       "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
@@ -163,8 +194,8 @@
 // of any error scenario.
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "BOOT_ORDER=A B\0" \
-  "BOOT_A_LEFT=0\0" \
-  "BOOT_B_LEFT=0\0" \
+  "BOOT_A_LEFT=3\0" \
+  "BOOT_B_LEFT=3\0" \
   "devtype=mmc\0" \
   "devnum=0\0" \
   "bootpart_a=4\0" \
