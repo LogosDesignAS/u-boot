@@ -256,7 +256,6 @@ static iomux_v3_cfg_t const ni8_led_pads[] = {
 		IOMUX_PAD_CTRL(NANDF_WP_B__GPIO6_IO09, OUTPUT_40OHM), // - Configured as output 40Ohm
 };
 
-#ifdef CONFIG_CMD_I2C
 /* I2C Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	IOMUX_PAD_CTRL(GPIO_5__I2C3_SCL, I2C_PAD_CTRL),
@@ -266,7 +265,6 @@ static iomux_v3_cfg_t const conf_i2c_pads[] = {
 	IOMUX_PAD_CTRL(ENET_TX_EN__I2C4_SCL, I2C_PAD_CTRL),
 	IOMUX_PAD_CTRL(ENET_TXD1__I2C4_SDA, I2C_PAD_CTRL),
 };
-#endif // CONFIG_CMD_I2C
 
 /* WatchDog Pin Configuration on logosni8 */
 static iomux_v3_cfg_t const conf_wdog_pads[] = {
@@ -471,6 +469,7 @@ static void setup_spi(void)
 #endif // CONFIG_MXC_SPI
 
 // Function for increasing Boot Count
+/*
 static inline void bootcount_inc_logos(void) {
 	unsigned long bootcount = bootcount_load();
 
@@ -479,6 +478,7 @@ static inline void bootcount_inc_logos(void) {
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 	bootcount_store(++bootcount);
 }
+*/
 
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 int board_phy_config(struct phy_device *phydev)
@@ -527,11 +527,6 @@ int board_early_init_r(void)
 	// Config environment variables
 	env_set("ethact", "FEC");
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
-
-#ifdef CONFIG_CMD_I2C
-	// Early setup of I2C
-	SETUP_IOMUX_PADS(conf_i2c_pads);
-#endif // CONFIG_CMD_I2C
 
 	// Early setup of Watchdog
 	SETUP_IOMUX_PADS(conf_wdog_pads);
@@ -667,8 +662,6 @@ int board_init(void)
 	setup_iomux_enet();
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
-	// Early setup of I2C
-	SETUP_IOMUX_PADS(conf_i2c_pads);
 #endif // CONFIG_OF_CONTROL
 
 #ifdef CONFIG_MXC_SPI
@@ -734,6 +727,7 @@ int board_late_init(void)
 #endif // CONFIG_OPTEE
 
 	// Set i2c bus to 3 - Boot Counter
+    /*
 	struct udevice *dev;
 	int err;
 
@@ -745,6 +739,7 @@ int board_late_init(void)
 
 	// Increase bootcount Manually
 	bootcount_inc_logos();
+    */
 
 	// Turn on the LEDS on the Core Board to verify that the Production Image Works and have finished all initialisation
 	gpio_set_value(GPIO_LED_2, 0);
