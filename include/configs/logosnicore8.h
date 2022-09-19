@@ -145,7 +145,8 @@
   "bootmenu_0=1. Boot from eMMC=boot;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_env_from_tftp;\0" \
   "bootmenu_2=3. Install environment from tftp=run install_env_from_tftp;\0" \
-  "bootmenu_3=4. Reset environment=env default -a -f; saveenv; bootmenu;\0"
+  "bootmenu_3=4. Reset environment=env default -a -f; saveenv; bootmenu;\0" \
+  "bootmenu_4=5. <placeholder>=bootmenu;\0"
 #else
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
