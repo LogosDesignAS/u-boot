@@ -66,7 +66,7 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
+#define CONFIG_BOOTCOMMAND "run bootcmd_fit;"
 
 // Add a different boot method depending on prod or dev
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
@@ -75,78 +75,50 @@
   "BOOT_ORDER=A B\0" \
   "BOOT_A_LEFT=3\0" \
   "BOOT_B_LEFT=3\0" \
-  "fitconfig_base=\0" \
+  "DEVTYPE=mmc\0" \
+  "DEVNUM=0\0" \
+  "BOOTPART_A=4\0" \
+  "BOOTPART_B=5\0"\
+  "FITIMAGE=image.itb\0" \
+  "FITCONFIG_BASE=\0" \
   "loadaddr=0x12000000\0" \
   "serverip=172.16.1.60\0" \
   "bootenv=uEnv.txt\0 " \
-  "bootcmd_fit2=" \
-    "setenv fitconfig; " \
+  "bootcmd_fit=" \
+    "setenv FITCONFIG; " \
     "for BOOT_SLOT in ${BOOT_ORDER}; do " \
-      "if test x${fitconfig} != x; then; " \
-      "elif test x${BOOT_SLOT} = xA; then " \
+      "if test \"x${FITCONFIG}\" != \"x\"; then " \
+        "echo Skip remaining; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xA\"; then " \
         "if test ${BOOT_A_LEFT} -gt 0; then " \
-          "echo 'Found valid slot A, ${BOOT_A_LEFT} attempts remaining'; " \
+          "echo Found valid slot A, ${BOOT_A_LEFT} attempts remaining; " \
           "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
-		  "if fatload mmc 0.4 ${loadaddr} image.itb; then " \
-            "setenv fitconfig ${fitconfig_base}-a; " \
+		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_A} ${loadaddr} ${FITIMAGE}; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-a\"; " \
+            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_A}, set fit config to ${FITCONFIG}\"; " \
 		  "fi; " \
         "fi; " \
-      "elif test x${BOOT_SLOT} = xB; then " \
+      "elif test \"x${BOOT_SLOT}\" = \"xB\"; then " \
         "if test ${BOOT_B_LEFT} -gt 0; then " \
-          "echo 'Found valid slot B, ${BOOT_B_LEFT} attempts remaining'; " \
+          "echo Found valid slot B, ${BOOT_B_LEFT} attempts remaining; " \
           "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
-		  "if fatload mmc 0.5 ${loadaddr} image.itb; then " \
-		    "setenv fitconfig ${fitconfig_base}-b; " \
+		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_B} ${loadaddr} ${FITIMAGE}; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-b\"; " \
+            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_B}, set fit config to ${FITCONFIG}\"; " \
 		  "fi; " \
         "fi; " \
       "fi; " \
     "done; " \
-    "if test -n ${fitconfig}; then " \
+    "if test -n \"${FITCONFIG}\"; then " \
       "saveenv; " \
     "else; " \
-      "echo 'No valid slot found, resetting tries to 3'; " \
+      "echo No valid slot found, resetting tries to 3; " \
       "setenv BOOT_A_LEFT 3; " \
       "setenv BOOT_B_LEFT 3; " \
       "saveenv; " \
       "reset; " \
     "fi; " \
-    "bootm ${loadaddr}${fitconfig}; echo 'reset';\0" \
-  "bootcmd_fit=" \
-    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
-      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}${fitconfig}; echo 'reset'; " \
-      "else; " \
-        "bootm ${loadaddr}${fitconfig}; echo 'reset'; " \
-      "fi; " \
-    "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; echo 'reset'; " \
-    "fi;\0" \
-  "set_defaults=" \
-    "if test -z \"$carrier\"; then " \
-      "setenv carrier \"\"; " \
-      "saveenv;" \
-    "fi; " \
-    "if test -z \"$bootpart\"; then " \
-      "setenv bootpart ${bootpart_a}; " \
-      "saveenv;" \
-    "fi; " \
-    "if test -z \"$fitimage\"; then " \
-      "setenv fitimage ${default_fitimage}; " \
-      "saveenv;" \
-    "fi;\0" \
-  "check_bootpart=" \
-    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
-      "setenv bootpart ${bootpart_a}; " \
-    "fi;\0" \
-  "swap_bootpart=" \
-    "if test ${bootpart} -eq ${bootpart_a}; then " \
-      "setenv bootpart ${bootpart_b}; " \
-    "else; " \
-      "setenv bootpart ${bootpart_a}; " \
-    "fi; " \
-    "setenv fitimage ${default_fitimage}; " \
-    "saveenv; \0" \
+    "bootm ${loadaddr}${FITCONFIG}; reset;\0" \
   "load_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
@@ -170,7 +142,6 @@
     "else; " \
       "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
-  "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=boot;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_env_from_tftp;\0" \
   "bootmenu_2=3. Install environment from tftp=run install_env_from_tftp;\0" \
@@ -179,55 +150,57 @@
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
 // we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw,fitconfig:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw"
+#define CONFIG_ENV_FLAGS_LIST_STATIC "FITCONFIG_BASE:sw,FITCONFIG:sw,BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw"
 
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
-// GP partition 0 (hardware partition 4) with fallback to GP partition 1 (hardware partition 5).
-// Alternative boot will swap between partition 4 and 5. This means that if bootcount is reached
-// trying to boot partition 4 then alternative boot will try to boot partition 5 or vice versa.
-// bootpart variable can be set from a running Linux system to change the current active partition
-// after a firmware update. Alternative boot will always fall back to default_image.
-// 'reset' should be added after all final commands, to avoid falling back to console in case
-// of any error scenario.
+// RAUC slot A is eMMC GP partition 0 (hardware partition 4).
+// RAUC slot B is eMMV GP partition 1 (hardware partition 5).
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "BOOT_ORDER=A B\0" \
   "BOOT_A_LEFT=3\0" \
   "BOOT_B_LEFT=3\0" \
-  "devtype=mmc\0" \
-  "devnum=0\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
-  "default_fitimage=image.itb\0" \
+  "DEVTYPE=mmc\0" \
+  "DEVNUM=0\0" \
+  "BOOTPART_A=4\0" \
+  "BOOTPART_B=5\0"\
+  "FITIMAGE=image.itb\0" \
+  "FITCONFIG_BASE=\0" \
   "loadaddr=0x12000000\0" \
   "bootcmd_fit=" \
-    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
-      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}${fitconfig}; reset; " \
-      "else; " \
-        "bootm ${loadaddr}${fitconfig}; reset; " \
+    "setenv FITCONFIG; " \
+    "for BOOT_SLOT in ${BOOT_ORDER}; do " \
+      "if test \"x${FITCONFIG}\" != \"x\"; then " \
+        "echo Skip remaining; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xA\"; then " \
+        "if test ${BOOT_A_LEFT} -gt 0; then " \
+          "echo Found valid slot A, ${BOOT_A_LEFT} attempts remaining; " \
+          "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
+		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_A} ${loadaddr} ${FITIMAGE}; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-a\"; " \
+            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_A}, set fit config to ${FITCONFIG}\"; " \
+		  "fi; " \
+        "fi; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xB\"; then " \
+        "if test ${BOOT_B_LEFT} -gt 0; then " \
+          "echo Found valid slot B, ${BOOT_B_LEFT} attempts remaining; " \
+          "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
+		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_B} ${loadaddr} ${FITIMAGE}; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-b\"; " \
+            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_B}, set fit config to ${FITCONFIG}\"; " \
+		  "fi; " \
+        "fi; " \
       "fi; " \
+    "done; " \
+    "if test -n \"${FITCONFIG}\"; then " \
+      "saveenv; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
-    "fi;\0" \
-  "set_defaults=" \
-    "if test -z \"$bootpart\"; then " \
-      "setenv bootpart ${bootpart_a}; " \
-      "saveenv;" \
-    "fi;\0" \
-  "check_bootpart=" \
-    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
-      "setenv bootpart ${bootpart_a}; " \
-    "fi;\0" \
-  "swap_bootpart=" \
-    "if test ${bootpart} -eq ${bootpart_a}; then " \
-      "setenv bootpart ${bootpart_b}; " \
-    "else; " \
-      "setenv bootpart ${bootpart_a}; " \
+      "echo No valid slot found, resetting tries to 3; " \
+      "setenv BOOT_A_LEFT 3; " \
+      "setenv BOOT_B_LEFT 3; " \
+      "saveenv; " \
+      "reset; " \
     "fi; " \
-    "setenv fitimage ${default_fitimage}; " \
-    "saveenv; \0" \
-  "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
+    "bootm ${loadaddr}${FITCONFIG}; reset;\0" \
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
