@@ -155,7 +155,10 @@
 
 // CONFIG_ENV_WRITEABLE_LIST is defined in production,
 // we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "FITCONFIG_BASE:sw,FITCONFIG:sw,BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw"
+#define CONFIG_ENV_FLAGS_LIST_STATIC \
+  "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw," \
+  "DEVTYPE:sr,DEVNUM:dr,BOOTPART_A:dr,BOOTPART_B:dr,FITIMAGE:sr," \
+  "loadaddr:dr,bootcmd_fit:sr"
 
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
 // RAUC slot A is eMMC GP partition 0 (hardware partition 4).
@@ -203,7 +206,7 @@
       "saveenv; " \
       "reset; " \
     "fi; " \
-    "bootm ${loadaddr}${FITCONFIG}; reset;\0" \
+    "bootm ${loadaddr}${FITCONFIG}; reset;\0"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
