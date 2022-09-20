@@ -120,9 +120,8 @@
       "setenv BOOT_A_LEFT 3; " \
       "setenv BOOT_B_LEFT 3; " \
       "saveenv; " \
-      "reset; " \
     "fi; " \
-    "bootm ${loadaddr}${FITCONFIG}; reset;\0" \
+    "bootm ${loadaddr}${FITCONFIG}; \0" \
   "load_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
