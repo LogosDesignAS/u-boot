@@ -86,7 +86,7 @@
   "bootenv=uEnv.txt\0 " \
   "bootcmd_fit=" \
     "setenv FITCONFIG; " \
-    "if test \"x${FITCONFIG_BASE}\" == \"x\"; then " \
+    "if test \"x${FITCONFIG_BASE}\" = \"x\"; then " \
       "setenv FITCONFIG_BASE \"#config-core\"; " \
       "echo \"No FITCONFIG_BASE set, fallback to ${FITCONFIG_BASE}\"; " \
     "fi; " \
@@ -173,7 +173,7 @@
   "loadaddr=0x12000000\0" \
   "bootcmd_fit=" \
     "setenv FITCONFIG; " \
-    "if test \"x${FITCONFIG_BASE}\" == \"x\"; then " \
+    "if test \"x${FITCONFIG_BASE}\" = \"x\"; then " \
       "setenv FITCONFIG_BASE \"#config-core\"; " \
     "fi; " \
     "for BOOT_SLOT in ${BOOT_ORDER}; do " \
