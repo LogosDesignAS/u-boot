@@ -32,16 +32,16 @@ CONFIG_BLK=y
 
 # Environment Support
 # Don't allow the -f switch to env set override variable access flags.
-CONFIG_ENV_ACCESS_IGNORE_FORCE=y
+#CONFIG_ENV_ACCESS_IGNORE_FORCE=y
 # If defined, only environment variables which explicitly set the 'w' writeable flag can be written and
 # modified at runtime. No variables can be otherwise created, written or imported into the environment.
-CONFIG_ENV_WRITEABLE_LIST=y
+#CONFIG_ENV_WRITEABLE_LIST=y
 # If defined, the environment hash table is only ever appended with new data, but the existing hash
 # table can never be dropped and reloaded with newly imported data. This may be used in combination
 # with static flags to e.g. to protect variables which must not be modified.
-CONFIG_ENV_APPEND=y
+#CONFIG_ENV_APPEND=y
+#CONFIG_ENV_IS_NOWHERE=y
 
-CONFIG_ENV_IS_NOWHERE=y
 CONFIG_ENV_IS_IN_MMC=y
 CONFIG_SYS_REDUNDAND_ENVIRONMENT=y
 CONFIG_SYS_MMC_ENV_DEV=0
