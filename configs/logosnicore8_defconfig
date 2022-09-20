@@ -67,7 +67,6 @@ CONFIG_IMX_CONFIG="board/logos/nicore8/nicore8.cfg"
 CONFIG_MMC=y
 
 # Boot options
-CONFIG_AUTOBOOT=y
 # set to -2 to autoboot with no delay and not check for abort
 CONFIG_BOOTDELAY=-2
 CONFIG_BOOTCOUNT_LIMIT=n
@@ -149,7 +148,7 @@ CONFIG_CMD_ELF=n
 CONFIG_CMD_FDT=n
 
 # Disable the Command Line interface - If this is disabled we cant use Commands in U-Boot prod.
-CONFIG_CMDLINE=y # TODO test if this can be set to 'n'. Is environment evaluated anyway? Propably required for scripts...
+CONFIG_CMDLINE=y
 CONFIG_CMDLINE_EDITING=n
 
 ## Unneedded Network Commands
