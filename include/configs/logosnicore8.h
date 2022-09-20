@@ -86,6 +86,10 @@
   "bootenv=uEnv.txt\0 " \
   "bootcmd_fit=" \
     "setenv FITCONFIG; " \
+    "if test \"x${FITCONFIG_BASE}\" == \"x\"; then " \
+      "setenv FITCONFIG_BASE \"#config-core\"; " \
+      "echo \"No FITCONFIG_BASE set, fallback to ${FITCONFIG_BASE}\"; " \
+    "fi; " \
     "for BOOT_SLOT in ${BOOT_ORDER}; do " \
       "if test \"x${FITCONFIG}\" != \"x\"; then " \
         "echo Skip remaining; " \
@@ -169,25 +173,24 @@
   "loadaddr=0x12000000\0" \
   "bootcmd_fit=" \
     "setenv FITCONFIG; " \
+    "if test \"x${FITCONFIG_BASE}\" == \"x\"; then " \
+      "setenv FITCONFIG_BASE \"#config-core\"; " \
+    "fi; " \
     "for BOOT_SLOT in ${BOOT_ORDER}; do " \
       "if test \"x${FITCONFIG}\" != \"x\"; then " \
         "echo Skip remaining; " \
       "elif test \"x${BOOT_SLOT}\" = \"xA\"; then " \
         "if test ${BOOT_A_LEFT} -gt 0; then " \
-          "echo Found valid slot A, ${BOOT_A_LEFT} attempts remaining; " \
           "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
 		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_A} ${loadaddr} ${FITIMAGE}; then " \
             "setenv FITCONFIG \"${FITCONFIG_BASE}-a\"; " \
-            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_A}, set fit config to ${FITCONFIG}\"; " \
 		  "fi; " \
         "fi; " \
       "elif test \"x${BOOT_SLOT}\" = \"xB\"; then " \
         "if test ${BOOT_B_LEFT} -gt 0; then " \
-          "echo Found valid slot B, ${BOOT_B_LEFT} attempts remaining; " \
           "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
 		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_B} ${loadaddr} ${FITIMAGE}; then " \
             "setenv FITCONFIG \"${FITCONFIG_BASE}-b\"; " \
-            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_B}, set fit config to ${FITCONFIG}\"; " \
 		  "fi; " \
         "fi; " \
       "fi; " \
@@ -195,7 +198,6 @@
     "if test -n \"${FITCONFIG}\"; then " \
       "saveenv; " \
     "else; " \
-      "echo No valid slot found, resetting tries to 3; " \
       "setenv BOOT_A_LEFT 3; " \
       "setenv BOOT_B_LEFT 3; " \
       "saveenv; " \
