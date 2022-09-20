@@ -158,7 +158,7 @@
 #define CONFIG_ENV_FLAGS_LIST_STATIC \
   "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw," \
   "DEVTYPE:sr,DEVNUM:dr,BOOTPART_A:dr,BOOTPART_B:dr,FITIMAGE:sr," \
-  "loadaddr:dr,bootcmd_fit:sr"
+  "loadaddr:sr,bootcmd_fit:sr"
 
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
 // RAUC slot A is eMMC GP partition 0 (hardware partition 4).
