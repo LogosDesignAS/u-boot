@@ -66,10 +66,11 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#define CONFIG_BOOTCOMMAND "run bootcmd_fit;"
 
 // Add a different boot method depending on prod or dev
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
+
+#define CONFIG_BOOTCOMMAND "run bootcmd_fit;"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
   "BOOT_ORDER=A B\0" \
@@ -152,42 +153,29 @@
   "bootmenu_4=5. <placeholder>=bootmenu;\0"
 #else
 
-// If CONFIG_ENV_WRITEABLE_LIST is se, we explicitly define (whitelist) the set of mutable variables below.
-// #define CONFIG_ENV_FLAGS_LIST_STATIC "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw"
-
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
 // RAUC slot A is eMMC GP partition 0 (hardware partition 4).
 // RAUC slot B is eMMV GP partition 1 (hardware partition 5).
-#define CONFIG_EXTRA_ENV_SETTINGS \
-  "BOOT_ORDER=A B\0" \
-  "BOOT_A_LEFT=3\0" \
-  "BOOT_B_LEFT=3\0" \
-  "DEVTYPE=mmc\0" \
-  "DEVNUM=0\0" \
-  "BOOTPART_A=4\0" \
-  "BOOTPART_B=5\0"\
-  "FITIMAGE=image.itb\0" \
-  "FITCONFIG_BASE=\0" \
-  "loadaddr=0x12000000\0" \
-  "bootcmd_fit=" \
+#define CONFIG_BOOTCOMMAND \
+    "test -n \"${BOOT_ORDER}\" || setenv BOOT_ORDER \"A B\"; " \
+    "test -n \"${BOOT_A_LEFT}\" || setenv BOOT_A_LEFT 3; " \
+    "test -n \"${BOOT_B_LEFT}\" || setenv BOOT_B_LEFT 3; " \
+    "test -n \"${FITCONFIG_BASE}\" || setenv FITCONFIG_BASE \"#config-core\"; " \
     "setenv FITCONFIG; " \
-    "if test \"x${FITCONFIG_BASE}\" = \"x\"; then " \
-      "setenv FITCONFIG_BASE \"#config-core\"; " \
-    "fi; " \
     "for BOOT_SLOT in ${BOOT_ORDER}; do " \
       "if test \"x${FITCONFIG}\" != \"x\"; then " \
         "echo Skip remaining; " \
       "elif test \"x${BOOT_SLOT}\" = \"xA\"; then " \
         "if test ${BOOT_A_LEFT} -gt 0; then " \
           "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
-		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_A} ${loadaddr} ${FITIMAGE}; then " \
+		  "if fatload mmc 0.4 0x12000000 image.itb; then " \
             "setenv FITCONFIG \"${FITCONFIG_BASE}-a\"; " \
 		  "fi; " \
         "fi; " \
       "elif test \"x${BOOT_SLOT}\" = \"xB\"; then " \
         "if test ${BOOT_B_LEFT} -gt 0; then " \
           "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
-		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_B} ${loadaddr} ${FITIMAGE}; then " \
+		  "if fatload mmc 0.5 0x12000000 image.itb; then " \
             "setenv FITCONFIG \"${FITCONFIG_BASE}-b\"; " \
 		  "fi; " \
         "fi; " \
@@ -201,7 +189,10 @@
       "saveenv; " \
       "reset; " \
     "fi; " \
-    "bootm ${loadaddr}${FITCONFIG}; reset;\0"
+    "bootm 0x12000000${FITCONFIG}; reset;\0"
+
+// If CONFIG_ENV_WRITEABLE_LIST is se, we explicitly define (whitelist) the set of mutable variables below.
+#define CONFIG_ENV_FLAGS_LIST_STATIC "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
