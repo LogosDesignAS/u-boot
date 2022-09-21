@@ -23,7 +23,6 @@ CONFIG_OF_EMBED=n
 
 # Support fit image
 CONFIG_LOAD_FIT=y
-CONFIG_LEGACY_IMAGE_FORMAT=n
 
 # Boot from eMMC Card
 CONFIG_SUPPORT_EMMC_BOOT=y
@@ -32,20 +31,28 @@ CONFIG_SUPPORT_EMMC_BOOT=y
 CONFIG_BLK=y
 
 # Environment Support
-CONFIG_ENV_IS_NOWHERE=y
+# Don't allow the -f switch to env set override variable access flags.
 CONFIG_ENV_ACCESS_IGNORE_FORCE=y
+# If defined, only environment variables which explicitly set the 'w' writeable flag can be written and
+# modified at runtime. No variables can be otherwise created, written or imported into the environment.
 CONFIG_ENV_WRITEABLE_LIST=y
+# If defined, the environment hash table is only ever appended with new data, but the existing hash
+# table can never be dropped and reloaded with newly imported data. This may be used in combination
+# with static flags to e.g. to protect variables which must not be modified.
 CONFIG_ENV_APPEND=y
+CONFIG_ENV_IS_NOWHERE=y
+
 CONFIG_ENV_IS_IN_MMC=y
-CONFIG_SYS_MMC_ENV_DEV=0
-CONFIG_SYS_MMC_ENV_PART=1
 CONFIG_SYS_REDUNDAND_ENVIRONMENT=y
-# Last 64 KB off first eMMC boot partition is for user environment variables.
-# Two 32 KB areas for redundancy.
+CONFIG_SYS_MMC_ENV_DEV=0
+# Place environment at specific offset at the beginning of user partition.
+CONFIG_SYS_MMC_ENV_PART=0
+# User environment, two 32 KB areas for redundancy.
 CONFIG_ENV_SIZE=0x8000
-# Negative value means backwards from the end.
-CONFIG_ENV_OFFSET=0xFFFF0000
-CONFIG_ENV_OFFSET_REDUND=0x1F8000
+CONFIG_ENV_OFFSET=0x2000
+CONFIG_ENV_OFFSET_REDUND=0xA000
+CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 
 # Add startup scripts before boot in misc_init_r()
 CONFIG_MISC_INIT_R=y
@@ -59,27 +66,14 @@ CONFIG_IMX_CONFIG="board/logos/nicore8/nicore8.cfg"
 # Config eMMC
 CONFIG_MMC=y
 
-# I2C multi bus support
-CONFIG_I2C_MULTI_BUS=y
-
+# Boot options
 # set to -2 to autoboot with no delay and not check for abort
 CONFIG_BOOTDELAY=-2
+CONFIG_BOOTCOUNT_LIMIT=n
 
 # Watchdog Configs
-# This config changes reset time - after calling reset it will wait until timeout
-CONFIG_WATCHDOG_TIMEOUT_MSECS=10
+CONFIG_WATCHDOG_TIMEOUT_MSECS=60000
 CONFIG_IMX_WATCHDOG=y
-CONFIG_SYSRESET_WATCHDOG=y
-CONFIG_WDT_CDNS=y
-
-# Config Boot Count - Save in FRAM - I2C bus 3
-CONFIG_SYS_BOOTCOUNT_ADDR=0x10008000
-CONFIG_SYS_BOOTCOUNT_I2C_BUS=3
-CONFIG_SYS_BOOTCOUNT_I2C_ADDR=0x51
-CONFIG_BOOTCOUNT_ALEN=2
-CONFIG_BOOTCOUNT_LIMIT=y
-CONFIG_BOOTCOUNT_BOOTLIMIT=3
-CONFIG_BOOTCOUNT_I2C=y
 
 # HAB - High Assurance Boot
 CONFIG_IMX_HAB=y
@@ -111,14 +105,13 @@ CONFIG_DM_SERIAL=y
 CONFIG_WDT=y
 
 # Commands
-CONFIG_CMD_I2C=y
 CONFIG_CMD_MMC=y
 
 # Read and display information about the partition table on various media.
 CONFIG_CMD_PART=y
 CONFIG_CMD_FS_GENERIC=y
 CONFIG_CMD_FAT=y
-CONFIG_CMD_BMODE=n
+CONFIG_CMD_BMODE=y
 CONFIG_CMD_ECHO=y
 
 # Serial Available
@@ -154,8 +147,8 @@ CONFIG_CMD_BOOTEFI_HELLO_COMPILE=n
 CONFIG_CMD_ELF=n
 CONFIG_CMD_FDT=n
 
-# Disable the Command Line interface - If this is disabled we cant use Commands in U-Boot prod.
-CONFIG_CMDLINE=y # TODO test if this can be set to 'n'. Is environment evaluated anyway? Propably required for scripts...
+# The Command Line interface is required to run scripts.
+CONFIG_CMDLINE=y
 CONFIG_CMDLINE_EDITING=n
 
 ## Unneedded Network Commands
@@ -204,7 +197,7 @@ CONFIG_CMD_EEPROM=n
 # Disable Console
 CONFIG_REQUIRE_SERIAL_CONSOLE=y
 CONFIG_SPECIFY_CONSOLE_INDEX=y
-#CONFIG_SYS_CONSOLE_INFO_QUIET=n
+CONFIG_SYS_CONSOLE_INFO_QUIET=y
 CONFIG_DISPLAY_CPUINFO=n
 CONFIG_DISPLAY_BOARDINFO=n
 

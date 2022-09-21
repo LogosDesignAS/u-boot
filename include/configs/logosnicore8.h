@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright (C) 2021 Logos Payment Solutions A/S.
+ * Copyright (C) 2022 Logos Payment Solutions A/S.
  *
  * Configuration settings for the Logos Ni8 board.
  */
@@ -13,31 +13,6 @@
 // Watchdog defines
 #define TIMEOUT_MAX	128000
 #define TIMEOUT_MIN	500
-
-// If SPL is enabled include the SPL header file for imx6
-#ifdef CONFIG_SPL
-#include "imx6_spl.h"
-
-// Parameters below is for SPL loading FIT image from FS on partition.
-/*
-#define		CONFIG_SPL_FS_LOAD_KERNEL_NAME				  "nicore8br_initrd.itb"
-#define 	CONFIG_SPL_FS_LOAD_ARGS_NAME				  "Nicore8.itb"
-*/
-
-//Parameters below is for SPL loading FIT image from raw partition.
-#define		CONFIG_SYS_SPL_ARGS_ADDR                      0x1ffe5000
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR         0x6000// Block offset for Arguments - fdt
-#define 	CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS        0x76
-#define		CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR	      0x0 // 0MB at partition 4 in MMC dev 2 - offset of kernel
-#define     CONFIG_SYS_MMCSD_RAW_MODE_EMMC_BOOT_PARTITION 4
-
-// Add possibilities to adjust the Malloc size - which is needed with SPL and large kernels
-#ifdef CONFIG_SYS_SPL_MALLOC_SIZE
-#undef CONFIG_SYS_SPL_MALLOC_SIZE
-#define	CONFIG_SYS_SPL_MALLOC_SIZE						  0x1000000 // 16 MB
-#endif
-
-#endif /* CONFIG_SPL */
 
 // Mach Type
 // 'MACH_TYPE_NITROGEN6X 4296' from arch/arm/include/asm/mach-types.h
@@ -67,11 +42,6 @@
 
 
 /* I2C Configs */
-#ifdef CONFIG_SPL_BUILD
-// For SPL use Legacy I2C Settings
-#define CONFIG_SYS_I2C_LEGACY
-#define CONFIG_SYS_SPL_MALLOC_START 0x18300000
-#endif /* CONFIG_SPL_BUILD */
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1				// enable I2C bus 1
 #define CONFIG_SYS_I2C_MXC_I2C2				// enable I2C bus 2
@@ -82,10 +52,6 @@
 
 // Set the I2C EEPROM Address
 #define CONFIG_SYS_I2C_EEPROM_ADDR_LEN		1
-
-/* Bootcount Commands - Use i2C */
-#define BOOTCOUNT_I2C_BUS					3
-#define CONFIG_SYS_I2C_RTC_ADDR				0x51
 
 /* MMC Configs */
 #define CONFIG_SYS_FSL_ESDHC_ADDR			USDHC4_BASE_ADDR
@@ -100,56 +66,63 @@
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
 /* Environment variables */
-#define CONFIG_BOOTCOMMAND "run set_defaults; run check_bootpart; run bootcmd_fit;"
 
 // Add a different boot method depending on prod or dev
 #ifdef CONFIG_TARGET_LOGOSNICORE8DEV
 
+#define CONFIG_BOOTCOMMAND "run bootcmd_fit;"
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
-  "devtype=mmc\0" \
-  "devnum=0\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
-  "default_fitimage=image.itb\0" \
+  "BOOT_ORDER=A B\0" \
+  "BOOT_A_LEFT=3\0" \
+  "BOOT_B_LEFT=3\0" \
+  "DEVTYPE=mmc\0" \
+  "DEVNUM=0\0" \
+  "BOOTPART_A=4\0" \
+  "BOOTPART_B=5\0"\
+  "FITIMAGE=image.itb\0" \
+  "FITCONFIG_BASE=\0" \
   "loadaddr=0x12000000\0" \
   "serverip=172.16.1.60\0" \
   "bootenv=uEnv.txt\0 " \
   "bootcmd_fit=" \
-    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
-      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}${fitconfig}; echo 'reset'; " \
-      "else; " \
-        "bootm ${loadaddr}${fitconfig}; echo 'reset'; " \
+    "setenv FITCONFIG; " \
+    "if test \"x${FITCONFIG_BASE}\" = \"x\"; then " \
+      "setenv FITCONFIG_BASE \"#config-core\"; " \
+      "echo \"No FITCONFIG_BASE set, fallback to ${FITCONFIG_BASE}\"; " \
+    "fi; " \
+    "for BOOT_SLOT in ${BOOT_ORDER}; do " \
+      "if test \"x${FITCONFIG}\" != \"x\"; then " \
+        "echo Skip remaining; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xA\"; then " \
+        "if test ${BOOT_A_LEFT} -gt 0; then " \
+          "echo Found valid slot A, ${BOOT_A_LEFT} attempts remaining; " \
+          "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
+		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_A} ${loadaddr} ${FITIMAGE}; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-a\"; " \
+            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_A}, set fit config to ${FITCONFIG}\"; " \
+		  "fi; " \
+        "fi; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xB\"; then " \
+        "if test ${BOOT_B_LEFT} -gt 0; then " \
+          "echo Found valid slot B, ${BOOT_B_LEFT} attempts remaining; " \
+          "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
+		  "if fatload ${DEVTYPE} ${DEVNUM}.${BOOTPART_B} ${loadaddr} ${FITIMAGE}; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-b\"; " \
+            "echo \"Loaded ${FITIMAGE} from ${DEVTYPE} ${DEVNUM}.${BOOTPART_B}, set fit config to ${FITCONFIG}\"; " \
+		  "fi; " \
+        "fi; " \
       "fi; " \
+    "done; " \
+    "if test -n \"${FITCONFIG}\"; then " \
+      "saveenv; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; echo 'reset'; " \
-    "fi;\0" \
-  "set_defaults=" \
-    "if test -z \"$carrier\"; then " \
-      "setenv carrier \"\"; " \
-      "saveenv;" \
+      "echo No valid slot found, resetting tries to 3; " \
+      "setenv BOOT_A_LEFT 3; " \
+      "setenv BOOT_B_LEFT 3; " \
+      "saveenv; " \
     "fi; " \
-    "if test -z \"$bootpart\"; then " \
-      "setenv bootpart ${bootpart_a}; " \
-      "saveenv;" \
-    "fi; " \
-    "if test -z \"$fitimage\"; then " \
-      "setenv fitimage ${default_fitimage}; " \
-      "saveenv;" \
-    "fi;\0" \
-  "check_bootpart=" \
-    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
-      "setenv bootpart ${bootpart_a}; " \
-    "fi;\0" \
-  "swap_bootpart=" \
-    "if test ${bootpart} -eq ${bootpart_a}; then " \
-      "setenv bootpart ${bootpart_b}; " \
-    "else; " \
-      "setenv bootpart ${bootpart_a}; " \
-    "fi; " \
-    "setenv fitimage ${default_fitimage}; " \
-    "saveenv; \0" \
+    "bootm ${loadaddr}${FITCONFIG}; \0" \
   "load_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
     "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
@@ -173,62 +146,53 @@
     "else; " \
       "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
-  "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run bootcmd_fit;\0" \
   "bootmenu_0=1. Boot from eMMC=boot;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_env_from_tftp;\0" \
   "bootmenu_2=3. Install environment from tftp=run install_env_from_tftp;\0" \
   "bootmenu_3=4. Reset environment=env default -a -f; saveenv; bootmenu;\0" \
-  "bootmenu_4=5. Reset bootcount=if bootcount reset; then bootmenu; fi;\0"
+  "bootmenu_4=5. <placeholder>=bootmenu;\0"
 #else
 
-// CONFIG_ENV_WRITEABLE_LIST is defined in production,
-// we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "bootpart:dw,fitimage:sw,fitconfig:sw"
-
 // Defaults to booting FIT image 'image.itb' file from FAT fs from eMMC 0.
-// GP partition 0 (hardware partition 4) with fallback to GP partition 1 (hardware partition 5).
-// Alternative boot will swap between partition 4 and 5. This means that if bootcount is reached
-// trying to boot partition 4 then alternative boot will try to boot partition 5 or vice versa.
-// bootpart variable can be set from a running Linux system to change the current active partition
-// after a firmware update. Alternative boot will always fall back to default_image.
-// 'reset' should be added after all final commands, to avoid falling back to console in case
-// of any error scenario.
-#define CONFIG_EXTRA_ENV_SETTINGS \
-  "devtype=mmc\0" \
-  "devnum=0\0" \
-  "bootpart_a=4\0" \
-  "bootpart_b=5\0"\
-  "default_fitimage=image.itb\0" \
-  "loadaddr=0x12000000\0" \
-  "bootcmd_fit=" \
-    "if test -e ${devtype} ${devnum}.${bootpart} ${fitimage}; then " \
-      "fatload ${devtype} ${devnum}.${bootpart} ${loadaddr} ${fitimage}; " \
-      "if test ${bootpart} -eq ${bootpart_a}; then " \
-        "bootm ${loadaddr}${fitconfig}; reset; " \
-      "else; " \
-        "bootm ${loadaddr}${fitconfig}; reset; " \
+// RAUC slot A is eMMC GP partition 0 (hardware partition 4).
+// RAUC slot B is eMMV GP partition 1 (hardware partition 5).
+#define CONFIG_BOOTCOMMAND \
+    "test -n \"${BOOT_ORDER}\" || setenv BOOT_ORDER \"A B\"; " \
+    "test -n \"${BOOT_A_LEFT}\" || setenv BOOT_A_LEFT 3; " \
+    "test -n \"${BOOT_B_LEFT}\" || setenv BOOT_B_LEFT 3; " \
+    "test -n \"${FITCONFIG_BASE}\" || setenv FITCONFIG_BASE \"#config-core\"; " \
+    "setenv FITCONFIG; " \
+    "for BOOT_SLOT in ${BOOT_ORDER}; do " \
+      "if test \"x${FITCONFIG}\" != \"x\"; then " \
+        "echo Skip remaining; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xA\"; then " \
+        "if test ${BOOT_A_LEFT} -gt 0; then " \
+          "setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1; " \
+		  "if fatload mmc 0.4 0x12000000 image.itb; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-a\"; " \
+		  "fi; " \
+        "fi; " \
+      "elif test \"x${BOOT_SLOT}\" = \"xB\"; then " \
+        "if test ${BOOT_B_LEFT} -gt 0; then " \
+          "setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1; " \
+		  "if fatload mmc 0.5 0x12000000 image.itb; then " \
+            "setenv FITCONFIG \"${FITCONFIG_BASE}-b\"; " \
+		  "fi; " \
+        "fi; " \
       "fi; " \
+    "done; " \
+    "if test -n \"${FITCONFIG}\"; then " \
+      "saveenv; " \
     "else; " \
-      "echo ${devtype} ${devnum}.${bootpart} does not contain FIT image ${fitimage}; reset; " \
-    "fi;\0" \
-  "set_defaults=" \
-    "if test -z \"$bootpart\"; then " \
-      "setenv bootpart ${bootpart_a}; " \
-      "saveenv;" \
-    "fi;\0" \
-  "check_bootpart=" \
-    "if test ${bootpart} != ${bootpart_a} && test ${bootpart} != ${bootpart_b}; then " \
-      "setenv bootpart ${bootpart_a}; " \
-    "fi;\0" \
-  "swap_bootpart=" \
-    "if test ${bootpart} -eq ${bootpart_a}; then " \
-      "setenv bootpart ${bootpart_b}; " \
-    "else; " \
-      "setenv bootpart ${bootpart_a}; " \
+      "setenv BOOT_A_LEFT 3; " \
+      "setenv BOOT_B_LEFT 3; " \
+      "saveenv; " \
+      "reset; " \
     "fi; " \
-    "setenv fitimage ${default_fitimage}; " \
-    "saveenv; \0" \
-  "altbootcmd=run set_defaults; run check_bootpart; run swap_bootpart; run bootcmd_fit;\0"
+    "bootm 0x12000000${FITCONFIG}; reset;\0"
+
+// If CONFIG_ENV_WRITEABLE_LIST is se, we explicitly define (whitelist) the set of mutable variables below.
+#define CONFIG_ENV_FLAGS_LIST_STATIC "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
