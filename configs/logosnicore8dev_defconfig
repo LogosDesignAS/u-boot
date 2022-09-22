@@ -231,6 +231,7 @@ CONFIG_CMD_BOOTZ=y
 
 # Support FIT Signature
 CONFIG_FIT_SIGNATURE=y
+CONFIG_RSA=y
 
 # OP-TEE Configurations
 CONFIG_TEE=y
