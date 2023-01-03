@@ -184,6 +184,7 @@
     "if test -n \"${FITCONFIG}\"; then " \
       "saveenv; " \
     "else; " \
+      "setenv FITCONFIG_BASE \"#config-core\"; " \
       "setenv BOOT_A_LEFT 3; " \
       "setenv BOOT_B_LEFT 3; " \
       "saveenv; " \
@@ -191,8 +192,8 @@
     "fi; " \
     "bootm 0x12000000${FITCONFIG}; reset;\0"
 
-// If CONFIG_ENV_WRITEABLE_LIST is se, we explicitly define (whitelist) the set of mutable variables below.
-#define CONFIG_ENV_FLAGS_LIST_STATIC "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw"
+// If CONFIG_ENV_WRITEABLE_LIST is set, we explicitly define (whitelist) the set of mutable variables below.
+#define CONFIG_ENV_FLAGS_LIST_STATIC "BOOT_ORDER:sw,BOOT_A_LEFT:dw,BOOT_B_LEFT:dw,FITCONFIG_BASE:sw,FITCONFIG:sw,ethaddr:sw"
 
 #endif // CONFIG_TARGET_LOGOSNICORE8DEV
 
