@@ -83,7 +83,7 @@
   "FITIMAGE=image.itb\0" \
   "FITCONFIG_BASE=\0" \
   "loadaddr=0x12000000\0" \
-  "serverip=172.16.1.60\0" \
+  "serverip=172.16.1.126\0" \
   "bootenv=uEnv.txt\0 " \
   "bootcmd_fit=" \
     "setenv FITCONFIG; " \
@@ -125,18 +125,18 @@
     "bootm ${loadaddr}${FITCONFIG}; \0" \
   "load_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
-    "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
+    "if tftp ${loadaddr} ni8/scripts/${bootenv}; then " \
       "if env import -t ${loadaddr} ${filesize}; then " \
         "bootmenu; " \
       "else; " \
         "echo Failed to import environment from ${bootenv} in memory at ${loadaddr}.; " \
       "fi; " \
     "else; " \
-      "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
+      "echo Failed to download ni8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
   "install_env_from_tftp=" \
     "setenv autoload no; dhcp; " \
-    "if tftp ${loadaddr} nicore8/scripts/${bootenv}; then " \
+    "if tftp ${loadaddr} ni8/scripts/${bootenv}; then " \
       "if env import -t ${loadaddr} ${filesize}; then " \
         "saveenv; " \
         "bootmenu; " \
@@ -144,7 +144,7 @@
         "echo Failed to import environment from ${bootenv} in memory at ${loadaddr}.; " \
       "fi; " \
     "else; " \
-      "echo Failed to download nicore8/scripts/${bootenv} from ${serverip}.; " \
+      "echo Failed to download ni8/scripts/${bootenv} from ${serverip}.; " \
     "fi; \0" \
   "bootmenu_0=1. Boot from eMMC=boot;\0" \
   "bootmenu_1=2. Launch environment from tftp=run load_env_from_tftp;\0" \
